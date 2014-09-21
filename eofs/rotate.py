@@ -12,3 +12,16 @@ def varimax(Phi, gamma = 1.0, q = 20, tol = 1e-6):
         d = sum(s)
         if d_old!=0 and d/d_old < 1 + tol: break
     return dot(Phi, R)
+
+def kaiser_norm(M):
+    """normalise() scales the weightings of the input matrix according to the kaiser normalisation.
+    Kaiser normaisation divides each element of the matrix by h_i, where h_i^2 is the communality if the jth test.
+    The communality is simply the sum of the square of the weightings for a given pc."""
+    from numpy import array
+    import math
+    mshape = array(M.shape)
+    for j in range(mshape[1])
+        pc = M[:,j]
+        h_i2 = sum(pc**2)
+        M[:,j] = M[:,j] / math.sqrt(h_i2)
+    return M 
