@@ -17,12 +17,16 @@ temp = ncin.variables['tmax'][:]
 #temp_anom = temp - temp_mean
 lon = ncin.variables['lon'][:]
 lat = ncin.variables['lat'][:]
-time = ncin.variables['time'][:]
+nctime = ncin.variables['time'][:]
+# The time axis in the nc file is all screwy so I'll just use a fake time axis for now.
+time = np.arange(nctime.size) 
 
-#Set up the EOF solver and find the first eof and pc.
+# Set up the EOF solver.
 solver = Eof(temp)
+# Find the first eof.
 eof1 = solver.eofsAsCovariance(neofs=1)
-pc1 = solver.pcs(npcs=1)
+# Find the first pc series scaled to unit variance.
+pc1 = solver.pcs(npcs=1, pcscaling=1)
 
 # Plotting.
 # Use an equidistant cylyndrical map projection.
