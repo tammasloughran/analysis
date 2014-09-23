@@ -1,6 +1,11 @@
+"""
+This module provides functions for performing varmiax rotations on
+principle components or factor analasis.
+"""
+
 def varimax(X, gamma = 1.0, q = 20, tol = 1e-6):
     """
-    varimax() performs an varimax rotation on the input matrix 
+    varimax(X) performs a varimax rotation on the input matrix 
     and returns the rotated matrix. The method used uses a 
     singular value decomposition (SVD) of the varimax criterion. The
     rotation matrix is found itteratively.
@@ -29,11 +34,16 @@ def varimax(X, gamma = 1.0, q = 20, tol = 1e-6):
     rotation. The matrices C and D are consistent with the explanation of
     the varimax method given in chapter 6 of "Factor Analysis as a 
     Statistacal Method" D. N. Lawley & A. E. Maxwell, 1963, London 
-    Butterworths.
+    Butterworths. The varimax rotation criterion is
+
+    A = L'*C - (1/p)*L'*L*D
+
+    Example
+    B = rotate.varimax(N)
 
     Tammas F. Loughran
     """
-    from numpy import eye, asarray, dot, sum, diag
+    from numpy import eye, dot, sum, diag
     from numpy.linalg import svd
     p,k = X.shape
     R = eye(k)
@@ -47,21 +57,65 @@ def varimax(X, gamma = 1.0, q = 20, tol = 1e-6):
         R = dot(U,VT)
         sums = sum(S)
         if sums_old!=0 and sums/sums_old < 1 + tol: break
-    return dot(X, R)
+    return dot(X, R), R
 
-def kaiser_normalise(M):
-    """kaiser_normalise() scales the weightings of the input matrix according to the kaiser normalisation.
-    Kaiser normaisation divides each element of the matrix by h_i, where h_i^2 is the communality if the jth test.
-    The communality is simply the sum of the square of the weightings for a given pc.
-
-    DO NOT USE THIS YET! ITS COMPLETELY WRONG.
-
+def kaiser_normalise(X):
     """
-    from numpy import array
-    import math
-    mshape = array(M.shape)
-    for j in range(mshape[1])
-        pc = M[:,j]
-        h_i2 = sum(pc**2)
-        M[:,j] = M[:,j] / math.sqrt(h_i2)
-    return M 
+    kaiser_normalise(X) scales the weightings of the input matrix 
+    according to the kaiser normalisation. 
+
+    Input
+    X - The matrix to be normalised.
+
+    Output
+    X - The normalised matrix.
+    h - A vector containing the communalities of the unscaled X.
+
+    Kaiser normaisation divides each row of the matrix by h_i, 
+    where h_i^2 is the communality. The communality is simply 
+    the sum of the square of the weightings for each row.
+
+    Example
+    N,h1 = rotate.kaiser_normalise(A)
+    """
+    from numpy import sum, sqrt, newaxis
+    h = sqrt(sum(X**2,1))
+    X = X / h[:,newaxis]
+    return X, h
+
+def kaiser_denormalise(X, h):
+    """
+    kaiser_denormalise(X, h) denormalises a matrix that has been rotated.
+    It arguments are a matix to denormalise and a vector of 
+    communalities. The length of the vector containing the communalities 
+    must match with the number of rows of the input matrix.
+
+    Input
+    X - Matrix to denormalise
+    h - communality vector from kaiser normalise.
+
+    Output
+    X - denormalised matrix.
+
+    Example
+    Ar = rotate.kaiser_denormalise(B,h1)
+    """
+    from numpy import newaxis
+    class CommunalitiesMismatch(Exception):
+        """
+        This exception returns the length of h and the length of
+        second axis of X.
+        """
+        def __init__(self, lenh, xshape):
+            self.shapes = [lenh, xshape]
+        def __str__(self):
+            return repr(self.shapes)
+    pass
+ 
+    # Check if the lengths agree.
+    if len(h) != X.shape[0]:
+        raise CommunalitiesMismatch(len(h), X.shape[0])
+    
+    # Normalise
+    X = X * h[:,newaxis]
+    return X
