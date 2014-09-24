@@ -12,8 +12,9 @@ def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
 
     Inputs
     X     - A pxk input matrix that will be rotated.
+    normalize - If True normalize matrix for rotation & denormalise after.
     gamma - Specifies the rotation type. 1 for varimax and 0 for quartimax.
-    q     - Maximum number of itterations.
+    it    - Maximum number of itterations.
     tol   - Tollerance of convergence.
 
     Local variables.
@@ -22,7 +23,6 @@ def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
             estimation for R is R = I_k (i.e. an identity matrix that
             rotates by nothing.)
     sums  - A measure to test if the solution has converged. 
-    s     - Contains the singular values of the varimax criterion SVD.
     Lambda - Itteratively rotated input matrix.
     D     - Diagonal matrix containing the sum of the squared weightings.
     C     - Cubed weightings.
@@ -62,7 +62,7 @@ def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
         sums = sum(S)
         if sums_old!=0 and sums/sums_old < 1 + tol: break
     X = dot(X,R)
-    # Denormalize
+    # Denormalize.
     if normalize==True:
         X = kaiser_denormalize(X, h_i)
     return X
@@ -70,7 +70,7 @@ def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
 def kaiser_normalize(X):
     """
     kaiser_normalize(X) scales the weightings of the input matrix 
-    according to the kaiser normalisation. 
+    according to the kaiser normalization. 
 
     Input
     X - The matrix to be normalized.
