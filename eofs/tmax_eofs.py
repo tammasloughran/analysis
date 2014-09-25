@@ -54,7 +54,10 @@ def plot_pcs(pcs,time):
     import matplotlib.pyplot as plt
     plt.figure()
     plt.plot(time, pcs)
-    plt.xlim([1,20200])
+    plt.xlim([1,len(time)])
+    plt.title("PC1")
+    plt.xlabel("Days since 1st Jan 1951")
+    plt.ylabel("Normalized Score")
     plt.savefig('pc1_v0.2.eps', format='eps')
 
 def plot_eofs(eofs,lon,lat):
@@ -63,24 +66,46 @@ def plot_eofs(eofs,lon,lat):
     """
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
-    import numpy as np
+    from numpy import arange, meshgrid
+
     # Use an equidistant cylyndrical map projection.
-    m = Basemap(projection='cyl', 
-                llcrnrlat=-44, urcrnrlat=-10, 
-                llcrnrlon=112, urcrnrlon=156)
-    x, y = m(*np.meshgrid(lon, lat))
-    #levs = np.arange(-8.,8.,1.)
-    m.contourf(x, y, eof1.squeeze(), cmap=plt.cm.RdBu_r)
-    parallels = np.arange(-45., -10., 10.)
-    m.drawparallels(parallels, labels=[True,False,False,False])
-    meridians = np.arange(115., 156., 10.,)
-    m.drawmeridians(meridians, labels=[False,False,False,True])
-    m.drawcoastlines()
-    plt.title("EOF 1")
-    cb = plt.colorbar(orientation='horizontal')
-    #plt.show()
+    levs = arange(-4.,4.,0.5)
+    parallels = arange(-45., -10., 10.)
+    meridians = arange(120., 150., 10.,)
+    string = "EOF "
+
+    plt.figure()
+    fig, axes = plt.subplots(nrows=2, ncols=2)
+    count = 0
+    for ax in axes.flat:
+        map_axes = Basemap(ax=ax, projection='cyl',
+            llcrnrlat=-44, urcrnrlat=-10,
+            llcrnrlon=112, urcrnrlon=156)
+        x, y = map_axes(*meshgrid(lon, lat))
+        cs = map_axes.contourf(x, y, eofs[count,:,:].squeeze(),
+            levels=levs, cmap=plt.cm.RdBu_r)
+        map_axes.drawparallels(parallels, labels=[True,False,False,False])
+        map_axes.drawmeridians(meridians, labels=[False,False,False,True])
+        map_axes.drawcoastlines()
+        ax.set_title(string+str(count+1))
+        count = count+1
+
+    fig.subplots_adjust(right=0.8)
+    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    cb = plt.colorbar(cs, cax=cbar_ax, orientation="vertical")
+
     plt.savefig('eof1_v0.2.eps', format='eps')
 
+def plot_eigenvalues(eigens):
+    import matplotlib.pyplot as plt
+    from numpy import log
+    plt.figure()
+    neig = range(len(eigens))
+    plt.plot(range(1,20), eigens[0:19], "bs")
+    plt.xlabel("PC")
+    plt.ylabel(r'$\lambda$')
+    plt.title("Scree Plot")
+    plt.savefig("scree_v0.2.eps")
 
 if __name__ == "__main__":
     from eofs.standard import Eof
@@ -96,12 +121,14 @@ if __name__ == "__main__":
 
     # Set up the EOF solver.
     solver = Eof(t_max3)
+    # Find the first four pc series scaled to unit variance.
+    pc1 = solver.pcs(npcs=4, pcscaling=1)
+    eigen = solver.varianceFraction()
     # Find the first eof.
-    eof1 = solver.eofsAsCovariance(neofs=1)
-    # Find the first pc series scaled to unit variance.
-    pc1 = solver.pcs(npcs=1, pcscaling=1)
+    eofs = solver.eofsAsCovariance(neofs=4)
 
     # Plotting.
-    plot_eofs(eof1,lon,lat)
+    plot_eigenvalues(eigen)
+    plot_eofs(eofs,lon,lat)
     plot_pcs(pc1,time[16:len(time)-16])
 
