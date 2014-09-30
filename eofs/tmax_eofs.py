@@ -108,7 +108,7 @@ def plot_pcs(pcs,time):
     plot_pcs(pcs,time) plots the 1st and 2nd principle component time series.
     """
     import matplotlib.pyplot as plt
-    from pandas import date_range, Series, resample
+    from pandas import date_range, Series
     string = str(int(time[0]))
     start_date = string[6:]+"/"+string[4:6]+"/"+string[0:4]
     string = str(time[-1])
