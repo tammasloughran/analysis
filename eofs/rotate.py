@@ -65,7 +65,7 @@ def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
     # Denormalize.
     if normalize==True:
         X = kaiser_denormalize(X, h_i)
-    return X
+    return X, R
 
 def kaiser_normalize(X):
     """
