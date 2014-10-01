@@ -180,26 +180,51 @@ def plot_eigenvalues(eigens):
 
 if __name__ == "__main__":
     from eofs.standard import Eof
+    import sys
+    import numpy as np
+    import rotate
 
-    # Load the t_max data.
-    print 'Loading data'
-    filename = 'AWAP_tmax_1951-2009_1deg.nc'
-    maskname = 'AWAP_Land-Sea-Mask_1deg.nc'
-    t_max, lon, lat, time = load_data(filename, maskname)
-
-    # We are not interested in the seasonal cycle so this will be
-    # removed with a +-7 (15 day) moving window average.
-    print 'Deseasoning'
-    t_max = deseason(t_max,time,n=7)
-
+    if sys.argv[1] == '--reload':
+        # Load the t_max data.
+        print 'Loading data'
+        filename = 'AWAP_tmax_1951-2009_1deg.nc'
+        maskname = 'AWAP_Land-Sea-Mask_1deg.nc'
+        t_max, lon, lat, time = load_data(filename, maskname)
+        # We are not interested in the seasonal cycle so this will be
+        # removed with a +-7 (15 day) moving window average.
+        print 'Deseasoning'
+        t_max = deseason(t_max,time,n=7)
+        # Save the masked and deseasoned data to file.
+        t_max.dump("masked_deseasoned_tmax")
+        lon.dump("lons")
+        lat.dump("lats")
+        time.dump("times")
+    elif sys.argv[1] == '--continue':
+        print 'Loading masked and deseasoned data.'
+        t_max = np.load('masked_deseasoned_tmax')
+        lon = np.load("lons")
+        lat = np.load("lats")
+        time = np.load("times")
+    else:
+        print "Specify --load or --continue"
+        sys.exit()
     # Set up the EOF solver.
     print 'Solving eofs, pcs and eigenvalues'
     solver = Eof(t_max)
     # Find the first four pc series scaled to unit variance.
     pcs = solver.pcs(npcs=4, pcscaling=1)
     eigen = solver.varianceFraction()
-    # Find the first eof.
+    # Find the first four eofs.
     eofs = solver.eofsAsCovariance(neofs=4)
+
+    # Apply rotation
+    if sys.argv[2] == '--rotate':
+        pcs, R = rotate.varimax(pcs)
+        nmaps, ny, nx = eofs.shape
+        channels = nx*ny
+        eofs2d = eofs.reshape([nmaps, channels])
+        rot_eofs = np.dot(R, eofs2d)
+        eofs = rot_eofs.reshape([nmaps,ny,nx])
 
     # Plotting.
     print 'Plotting'
