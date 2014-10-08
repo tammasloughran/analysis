@@ -10,7 +10,7 @@ def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
     singular value decomposition (SVD) of the varimax criterion. The
     rotation matrix is found itteratively.
 
-    Inputs
+    Arguments
     X     - A pxk input matrix that will be rotated.
     normalize - If True normalize matrix for rotation & denormalise after.
     gamma - Specifies the rotation type. 1 for varimax and 0 for quartimax.
@@ -43,11 +43,14 @@ def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
 
     Tammas F. Loughran
     """
-    from numpy import eye, dot, sum, diag
+    from numpy import eye, dot, sum, diag, sqrt, newaxis
     from numpy.linalg import svd
+
     # Normalize the matrix.
     if normalize==True:
-        X, h_i = kaiser_normalize(X)
+        h = sqrt(sum(X**2,1))
+        X = X / h[:,newaxis]
+
     # Rotate the matrix.
     p,k = X.shape
     R = eye(k)
@@ -62,68 +65,9 @@ def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
         sums = sum(S)
         if sums_old!=0 and sums/sums_old < 1 + tol: break
     X = dot(X,R)
+
     # Denormalize.
     if normalize==True:
-        X = kaiser_denormalize(X, h_i)
+        X = X * h[:,newaxis]
+
     return X, R
-
-def kaiser_normalize(X):
-    """
-    kaiser_normalize(X) scales the weightings of the input matrix 
-    according to the kaiser normalization. 
-
-    Input
-    X - The matrix to be normalized.
-
-    Output
-    X - The normalized matrix.
-    h - A vector containing the communalities of the unscaled X.
-
-    Kaiser normaization divides each row of the matrix by h_i, 
-    where h_i^2 is the communality. The communality is simply 
-    the sum of the square of the weightings for each row.
-
-    Example
-    N,h1 = rotate.kaiser_normalize(A)
-    """
-    from numpy import sum, sqrt, newaxis
-    h = sqrt(sum(X**2,1))
-    X = X / h[:,newaxis]
-    return X, h
-
-def kaiser_denormalize(X, h):
-    """
-    kaiser_denormalize(X, h) denormalizes a matrix that has been rotated.
-    It arguments are a matix to denormalise and a vector of 
-    communalities. The length of the vector containing the communalities 
-    must match with the number of rows of the input matrix.
-
-    Input
-    X - Matrix to denormalize
-    h - communality vector from kaiser normalize.
-
-    Output
-    X - denormalized matrix.
-
-    Example
-    Ar = rotate.kaiser_denormalize(B,h1)
-    """
-    from numpy import newaxis
-    class CommunalitiesMismatch(Exception):
-        """
-        This exception returns the length of h and the length of
-        second axis of X.
-        """
-        def __init__(self, lenh, xshape):
-            self.shapes = [lenh, xshape]
-        def __str__(self):
-            return repr(self.shapes)
-    pass
- 
-    # Check if the lengths agree.
-    if len(h) != X.shape[0]:
-        raise CommunalitiesMismatch(len(h), X.shape[0])
-    
-    # Denormalize
-    X = X * h[:,newaxis]
-    return X
