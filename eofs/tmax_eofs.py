@@ -125,7 +125,7 @@ def plot_pcs(pcs,time):
     plt.title("PC1 (blue) & PC2 (green)")
     plt.xlabel("Date")
     plt.ylabel("Normalized Score")
-    plt.savefig('pcs_v0.3.eps', format='eps')
+    plt.savefig('pcs_0.5d.v0.3.eps', format='eps')
 
 def plot_eofs(eofs,lon,lat):
     """
@@ -138,7 +138,7 @@ def plot_eofs(eofs,lon,lat):
 
     # Use an equidistant cylyndrical map projection.
     levs = arange(-4.,4.5,0.5)
-    parallels = arange(-40., -10., 10.)
+    parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
     string = "EOF "
 
@@ -162,7 +162,7 @@ def plot_eofs(eofs,lon,lat):
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     cb = plt.colorbar(cs, cax=cbar_ax, orientation="vertical")
 
-    plt.savefig('eofs_v0.3.eps', format='eps')
+    plt.savefig('eofs_0.5d.v0.3.eps', format='eps')
 
 def plot_eigenvalues(eigens):
     '''
@@ -176,7 +176,7 @@ def plot_eigenvalues(eigens):
     plt.xlabel("PC")
     plt.ylabel('Explained variance')
     plt.title("Scree Plot")
-    plt.savefig("scree_v0.3.eps")
+    plt.savefig("scree_0.5d.v0.3.eps")
 
 if __name__ == "__main__":
     from eofs.standard import Eof
@@ -187,24 +187,24 @@ if __name__ == "__main__":
     if sys.argv[1] == '--reload':
         # Load the t_max data.
         print 'Loading data'
-        filename = 'AWAP_tmax_1951-2009_1deg.nc'
-        maskname = 'AWAP_Land-Sea-Mask_1deg.nc'
+        filename = 'AWAP_TX_1911-2011_0.5deg.nc'
+        maskname = 'AWAP_Land-Sea-Mask_0.5deg.nc'
         t_max, lon, lat, time = load_data(filename, maskname)
         # We are not interested in the seasonal cycle so this will be
         # removed with a +-7 (15 day) moving window average.
         print 'Deseasoning'
         t_max = deseason(t_max,time,n=7)
         # Save the masked and deseasoned data to file.
-        t_max.dump("masked_deseasoned_tmax")
-        lon.dump("lons")
-        lat.dump("lats")
-        time.dump("times")
+        t_max.dump("masked_deseasoned_tmax_0.5d")
+        lon.dump("lons_0.5d")
+        lat.dump("lats_0.5d")
+        time.dump("times_0.5d")
     elif sys.argv[1] == '--continue':
         print 'Loading masked and deseasoned data.'
-        t_max = np.load('masked_deseasoned_tmax')
-        lon = np.load("lons")
-        lat = np.load("lats")
-        time = np.load("times")
+        t_max = np.load('masked_deseasoned_tmax_0.5d')
+        lon = np.load("lons_0.5d")
+        lat = np.load("lats_0.5d")
+        time = np.load("times_0.5d")
     else:
         print "Specify --load or --continue"
         sys.exit()
