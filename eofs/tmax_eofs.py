@@ -36,7 +36,8 @@ def deseason(data, time, n=7):
             if not data.mask[0,y,x]:
                 # Find the rolling mean at x,y.
                 a_series = Series(data[:,y,x], index=dates)
-                roll_mean = rolling_mean(a_series, window=2*n+1).shift(-n)
+                base = a_series['1960-12':'1991-01']
+                roll_mean = rolling_mean(base, window=2*n+1, center=True)
                 # Select the base period. '61 to '90 is the standard BoM base period.
                 base = roll_mean['1961':'1990']
                 for month in range(1,13,1):
@@ -181,7 +182,7 @@ def plot_eigenvalues(eigens):
 if __name__ == "__main__":
     from eofs.standard import Eof
     import sys
-    import numpy as np
+    from numpy import dot, load
     import rotate
 
     if sys.argv[1] == '--reload':
@@ -201,13 +202,14 @@ if __name__ == "__main__":
         time.dump("times_0.5d")
     elif sys.argv[1] == '--continue':
         print 'Loading masked and deseasoned data.'
-        t_max = np.load('masked_deseasoned_tmax_0.5d')
-        lon = np.load("lons_0.5d")
-        lat = np.load("lats_0.5d")
-        time = np.load("times_0.5d")
+        t_max = load('masked_deseasoned_tmax_0.5d')
+        lon = load("lons_0.5d")
+        lat = load("lats_0.5d")
+        time = load("times_0.5d")
     else:
         print "Specify --load or --continue"
         sys.exit()
+
     # Set up the EOF solver.
     print 'Solving eofs, pcs and eigenvalues'
     solver = Eof(t_max)
@@ -223,7 +225,7 @@ if __name__ == "__main__":
         nmaps, ny, nx = eofs.shape
         channels = nx*ny
         eofs2d = eofs.reshape([nmaps, channels])
-        rot_eofs = np.dot(R, eofs2d)
+        rot_eofs = dot(R, eofs2d)
         eofs = rot_eofs.reshape([nmaps,ny,nx])
 
     # Plotting.
