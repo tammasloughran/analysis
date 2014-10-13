@@ -215,9 +215,12 @@ if __name__ == "__main__":
     solver = Eof(t_max)
     # Find the first four pc series scaled to unit variance.
     pcs = solver.pcs(npcs=4, pcscaling=1)
-    eigen = solver.varianceFraction()
+    explained_variance = solver.varianceFraction()
+    eigenvalues = solver.eigenvalues()
     # Find the first four eofs.
-    eofs = solver.eofsAsCovariance(neofs=4)
+    eofs = solver.eofs(neofs=4, eofscaling=1)
+    eofs_covariance = solver.eofsAsCovariance(neofs=4)
+    eofs_correlation = colver.eofsAsCorrelation(neofs=4)
 
     # Apply rotation
     if sys.argv[2] == '--rotate':
@@ -230,7 +233,7 @@ if __name__ == "__main__":
 
     # Plotting.
     print 'Plotting'
-    plot_eigenvalues(eigen)
+    plot_eigenvalues(explained_variance)
     plot_eofs(eofs,lon,lat)
     plot_pcs(pcs,time)
     print 'Done!'
