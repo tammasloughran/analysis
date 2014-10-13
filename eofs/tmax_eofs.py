@@ -1,10 +1,10 @@
-"""
+'''
 Calculate the eofs of tmax from AWAP data.
 This is a crappy test script.
-"""
+'''
 
 def deseason(data, time, n=7):
-    """
+    '''
     deseason(data, time, n) deseasonalizes a numpy matrix of data with a
     moving window that is +-n timesteps wide. At the moment it 
     converts slices of a numpy matrix into a pandas series and then
@@ -19,14 +19,14 @@ def deseason(data, time, n=7):
 
     Returns
     data - the deseasoned data matrix.
-    """
+    '''
     from pandas import date_range, Series, rolling_mean
     from numpy import array, isnan
     # Get the starting and end dates of the time axis.
     string = str(int(time[0]))
-    start_date = string[6:]+"/"+string[4:6]+"/"+string[0:4]
+    start_date = string[6:]+'/'+string[4:6]+'/'+string[0:4]
     string = str(time[-1])
-    end_date = string[6:]+"/"+string[4:6]+"/"+string[0:4]
+    end_date = string[6:]+'/'+string[4:6]+'/'+string[0:4]
     # Define a range of dates for the data.
     dates = date_range(start_date, end_date, freq='D')
     # Main deseasoning loop.
@@ -53,7 +53,7 @@ def deseason(data, time, n=7):
     return data
 
 def load_data(filename,maskname):
-    """
+    '''
     load_data(filename, maskname) loads t_max and dimension data from the 
     file in filename and applies a land sea mask.
 
@@ -66,7 +66,7 @@ def load_data(filename,maskname):
     lons - longitudes.
     lats - latitudes.
     nctime - times.
-    """
+    '''
     from netCDF4 import Dataset
     from numpy import arange, empty, ma
     # Load the data from file.
@@ -104,16 +104,16 @@ def load_data(filename,maskname):
     del mask2
     return temp2, lons, lats, nctime
 
-def plot_pcs(pcs,time):
-    """
-    plot_pcs(pcs,time) plots the 1st and 2nd principle component time series.
-    """
+def plot_pcs(pcs, time):
+    '''
+    plot_pcs(pcs, time) plots the 1st and 2nd principle component time series.
+    '''
     import matplotlib.pyplot as plt
     from pandas import date_range, Series
     string = str(int(time[0]))
-    start_date = string[6:]+"/"+string[4:6]+"/"+string[0:4]
+    start_date = string[6:]+'/'+string[4:6]+'/'+string[0:4]
     string = str(time[-1])
-    end_date = string[6:]+"/"+string[4:6]+"/"+string[0:4]
+    end_date = string[6:]+'/'+string[4:6]+'/'+string[0:4]
     # Define a range of dates for the data.
     dates = date_range(start_date, end_date, freq='D')
     pc1 = Series(pcs[:,0], index=dates)
@@ -123,25 +123,25 @@ def plot_pcs(pcs,time):
     plt.figure()
     pc1monthly.plot(style='b')
     pc2monthly.plot(style='g')
-    plt.title("PC1 (blue) & PC2 (green)")
-    plt.xlabel("Date")
-    plt.ylabel("Normalized Score")
-    plt.savefig('pcs_0.5d.v0.3.eps', format='eps')
+    plt.title('PC1 (blue) & PC2 (green)')
+    plt.xlabel('Date')
+    plt.ylabel('Normalized Score')
+    plt.savefig('pcs_0.4.eps', format='eps')
 
-def plot_eofs(eofs,lon,lat):
-    """
-    plot_eofs(eofs,lon,lat) plots the eof patterns and saves them
+def plot_eofs(eofs, lon, lat, name, scale):
+    '''
+    plot_eofs(eofs,lon,lat, name) plots the eof patterns and saves them
     in .eps format.
-    """
+    '''
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
     from numpy import arange, meshgrid
 
     # Use an equidistant cylyndrical map projection.
-    levs = arange(-4.,4.5,0.5)
+    #levs = arange(-1.,1.1,0.1)
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
-    string = "EOF "
+    string = 'EOF '
 
     plt.figure()
     fig, axes = plt.subplots(nrows=2, ncols=2)
@@ -152,7 +152,7 @@ def plot_eofs(eofs,lon,lat):
             llcrnrlon=112, urcrnrlon=156)
         x, y = map_axes(*meshgrid(lon, lat))
         cs = map_axes.contourf(x, y, eofs[count,:,:].squeeze(),
-            levels=levs, cmap=plt.cm.RdBu_r)
+            levs=scale, cmap=plt.cm.RdBu_r)
         map_axes.drawparallels(parallels, labels=[True,False,False,False])
         map_axes.drawmeridians(meridians, labels=[False,False,False,True])
         map_axes.drawcoastlines()
@@ -161,29 +161,31 @@ def plot_eofs(eofs,lon,lat):
 
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-    cb = plt.colorbar(cs, cax=cbar_ax, orientation="vertical")
+    cb = plt.colorbar(cs, cax=cbar_ax, orientation='vertical')
+    plotfilename = name+'v0.4.eps'
+    plt.savefig(plotfilename, format='eps')
 
-    plt.savefig('eofs_0.5d.v0.3.eps', format='eps')
-
-def plot_eigenvalues(eigens):
+def plot_eigenvalues(eigens, errors):
     '''
     plot_eigenvalues(eigens) makes a scree plot of the first 
-    20 eigenvalues stored in the variable eigen.
+    20 eigenvalues stored in the variable eigen. It also plots the 
+    error bars from the Nort test. PC/EOF pairs whos error pars do
+    not overlap are significant.
     '''
     import matplotlib.pyplot as plt
     plt.figure()
     neig = range(len(eigens))
-    plt.plot(range(1,20), eigens[0:19], "bs")
-    plt.xlabel("PC")
-    plt.ylabel('Explained variance')
-    plt.title("Scree Plot")
-    plt.savefig("scree_0.5d.v0.3.eps")
+    plt.errorbar(range(1,20), eigens[0:19], yerr=errors[0:19], fmt='bs')
+    plt.xlabel('PC')
+    plt.ylabel('Eigenvalue')
+    plt.title('Scree Plot')
+    plt.savefig('scree.v0.4.eps')
 
 if __name__ == "__main__":
     from eofs.standard import Eof
-    import sys
-    from numpy import dot, load
+    from numpy import dot, load, arange
     import rotate
+    import sys
 
     if sys.argv[1] == '--reload':
         # Load the t_max data.
@@ -196,44 +198,61 @@ if __name__ == "__main__":
         print 'Deseasoning'
         t_max = deseason(t_max,time,n=7)
         # Save the masked and deseasoned data to file.
-        t_max.dump("masked_deseasoned_tmax_0.5d")
-        lon.dump("lons_0.5d")
-        lat.dump("lats_0.5d")
-        time.dump("times_0.5d")
+        t_max.dump('masked_deseasoned_tmax_0.5d')
+        lon.dump('lons_0.5d')
+        lat.dump('lats_0.5d')
+        time.dump('times_0.5d')
     elif sys.argv[1] == '--continue':
         print 'Loading masked and deseasoned data.'
-        t_max = load('masked_deseasoned_tmax_0.5d')
-        lon = load("lons_0.5d")
-        lat = load("lats_0.5d")
-        time = load("times_0.5d")
+        t_max = load('masked_deseasoned_tmax')
+        lon = load('lons')
+        lat = load('lats')
+        time = load('times')
     else:
-        print "Specify --load or --continue"
+        print 'Specify --load or --continue'
         sys.exit()
 
     # Set up the EOF solver.
-    print 'Solving eofs, pcs and eigenvalues'
+    print 'Setting up solver.'
     solver = Eof(t_max)
-    # Find the first four pc series scaled to unit variance.
-    pcs = solver.pcs(npcs=4, pcscaling=1)
+    # PCs.
+    print 'Calculating PCs'
+    pcs = solver.pcs(npcs=4)
+    # Explained variance.
+    print 'Calculating explained variance'
     explained_variance = solver.varianceFraction()
-    eigenvalues = solver.eigenvalues()
-    # Find the first four eofs.
-    eofs = solver.eofs(neofs=4, eofscaling=1)
+    # North test errors.
+    print 'Calculating North test errors'
+    errors = solver.northTest(vfscaled=True)
+    # Eigenvalues.
+    print 'Calculating eigenvalues'
+    eigens = solver.eigenvalues()
+    # EOFs and EOFs expressed as covariance and correlation.
+    print 'Calculating EOFs...'
+    eofs = solver.eofs(neofs=4)
+    print 'as variance...'
     eofs_covariance = solver.eofsAsCovariance(neofs=4)
-    eofs_correlation = colver.eofsAsCorrelation(neofs=4)
+    print 'as correlation'
+    eofs_correlation = solver.eofsAsCorrelation(neofs=4)
 
-    # Apply rotation
-    if sys.argv[2] == '--rotate':
-        pcs, R = rotate.varimax(pcs)
-        nmaps, ny, nx = eofs.shape
-        channels = nx*ny
-        eofs2d = eofs.reshape([nmaps, channels])
+    # Apply rotation to PCs and EOFs.
+    print 'Rotating Pcs and EOFs'
+    pcs, R = rotate.varimax(pcs)
+    for pattern in [eofs, eofs_covariance, eofs_correlation]:
+        nmaps, ny, nx = pattern.shape
+        ngridpoints = nx*ny
+        eofs2d = pattern.reshape([nmaps, ngridpoints])
         rot_eofs = dot(R, eofs2d)
-        eofs = rot_eofs.reshape([nmaps,ny,nx])
+        pattern = rot_eofs.reshape([nmaps,ny,nx])
 
     # Plotting.
     print 'Plotting'
-    plot_eigenvalues(explained_variance)
-    plot_eofs(eofs,lon,lat)
-    plot_pcs(pcs,time)
+    plot_eigenvalues(explained_variance, errors)
+    scale = arange(-0.09,0.1,0.01) 
+    plot_eofs(eofs, lon, lat, 'EOFs', scale)
+    scale = arange(-2.,2.1,0.2)
+    plot_eofs(eofs_covariance, lon, lat, 'EOFs_Covariance', scale)
+    scale = arange(-0.6,0.65,0.05)
+    plot_eofs(eofs_correlation, lon, lat, 'EOFs_Correlation', scale)
+    plot_pcs(pcs, time)
     print 'Done!'
