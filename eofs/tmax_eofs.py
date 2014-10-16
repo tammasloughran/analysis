@@ -22,6 +22,8 @@ def deseason(data, time, n=7):
     '''
     from pandas import date_range, Series, rolling_mean
     from numpy import array, isnan
+    #import theil_sen
+    from scipy.stats.mstats import theilslopes
     # Get the starting and end dates of the time axis.
     string = str(int(time[0]))
     start_date = string[6:]+'/'+string[4:6]+'/'+string[0:4]
@@ -34,8 +36,14 @@ def deseason(data, time, n=7):
     for x in range(0,xdim,1):
         for y in range(0,ydim,1):
             if not data.mask[0,y,x]:
-                # Find the rolling mean at x,y.
-                a_series = Series(data[:,y,x], index=dates)
+                # Select point x,y.
+                a_series = data[:,y,x]
+                # Detrend.
+                #medslope, medintercept = theilslopes(a_series, arange(len(a_series)))
+                #trend = medslope*(arange(len(a_series)))+medintercept
+                #a_series -= trend
+                a_series = Series(a_series, index=dates)
+                # Find the rolling mean.
                 base = a_series['1960-12':'1991-01']
                 roll_mean = rolling_mean(base, window=2*n+1, center=True)
                 # Select the base period. '61 to '90 is the standard BoM base period.
