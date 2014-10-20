@@ -22,8 +22,8 @@ def deseason(data, time, n=7):
     '''
     from pandas import date_range, Series, rolling_mean
     from numpy import array, isnan
-    #import theil_sen
-    from scipy.stats.mstats import theilslopes
+    from scipy.signal import detrend
+    #from scipy.stats.mstats import theilslopes
     # Get the starting and end dates of the time axis.
     string = str(int(time[0]))
     start_date = string[6:]+'/'+string[4:6]+'/'+string[0:4]
@@ -38,10 +38,13 @@ def deseason(data, time, n=7):
             if not data.mask[0,y,x]:
                 # Select point x,y.
                 a_series = data[:,y,x]
-                # Detrend.
+                # Detrend. Theil slope estimator uses up lots of memory. 
+                # Only use theilslopes for extreme indices.
+                # Otherwise detrend is OLS regression.
                 #medslope, medintercept = theilslopes(a_series, arange(len(a_series)))
                 #trend = medslope*(arange(len(a_series)))+medintercept
                 #a_series -= trend
+                a_series = detrend(a_series, axis=0, type='linear')
                 a_series = Series(a_series, index=dates)
                 # Find the rolling mean.
                 base = a_series['1960-12':'1991-01']
@@ -83,9 +86,6 @@ def load_data(filename,maskname):
     lons = ncin.variables['lon'][:]
     lats = ncin.variables['lat'][:]
     nctime = ncin.variables['time'][:]
-    # The time axis in the nc file is all screwy so 
-    # I'll just use a fake time axis for now.
-    # nctime = arange(nctime.size)
     ncin.close()
     # Load the land sea mask.
     maskfile = Dataset(maskname, 'r')
@@ -106,10 +106,6 @@ def load_data(filename,maskname):
     del mask
     # Finally apply the mask.
     temp2 = ma.masked_array(temp, mask2)
-    temp = None
-    del temp
-    mask2 = None
-    del mask2
     return temp2, lons, lats, nctime
 
 def plot_pcs(pcs, time):
@@ -134,7 +130,7 @@ def plot_pcs(pcs, time):
     plt.title('PC1 (blue) & PC2 (green)')
     plt.xlabel('Date')
     plt.ylabel('Normalized Score')
-    plt.savefig('pcs_0.4.eps', format='eps')
+    plt.savefig('pcs_0.5.eps', format='eps')
 
 def plot_eofs(eofs, lon, lat, name, scale):
     '''
@@ -170,7 +166,7 @@ def plot_eofs(eofs, lon, lat, name, scale):
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     cb = plt.colorbar(cs, cax=cbar_ax, orientation='vertical')
-    plotfilename = name+'v0.4.eps'
+    plotfilename = name+'v0.5.eps'
     plt.savefig(plotfilename, format='eps')
 
 def plot_eigenvalues(eigens, errors):
@@ -187,7 +183,7 @@ def plot_eigenvalues(eigens, errors):
     plt.xlabel('PC')
     plt.ylabel('Eigenvalue')
     plt.title('Scree Plot')
-    plt.savefig('scree.v0.4.eps')
+    plt.savefig('scree.v0.5.eps')
 
 if __name__ == "__main__":
     from eofs.standard import Eof
@@ -244,7 +240,7 @@ if __name__ == "__main__":
     eofs_correlation = solver.eofsAsCorrelation(neofs=4)
 
     # Apply rotation to PCs and EOFs.
-    print 'Rotating Pcs and EOFs'
+    print 'Rotating PCs and EOFs'
     pcs, R = rotate.varimax(pcs)
     for pattern in [eofs, eofs_covariance, eofs_correlation]:
         nmaps, ny, nx = pattern.shape
