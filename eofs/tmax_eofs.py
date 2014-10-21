@@ -21,7 +21,7 @@ def deseason(data, time, n=7):
     data - the deseasoned data matrix.
     '''
     from pandas import date_range, Series, rolling_mean
-    from numpy import array, isnan
+    from numpy import array, isnan, zeros, ma
     from scipy.signal import detrend
     #from scipy.stats.mstats import theilslopes
     # Get the starting and end dates of the time axis.
@@ -33,18 +33,17 @@ def deseason(data, time, n=7):
     dates = date_range(start_date, end_date, freq='D')
     # Main deseasoning loop.
     tdim, ydim, xdim = data.shape
+    nothing = Series(zeros(tdim), index=dates)
+    nothing = nothing.resample('M', how='mean')
+    newdim = len(nothing)
+    del nothing
+    newdata = zeros([newdim, ydim, xdim])
+    newmask = data.mask[0:newdim,:,:]
     for x in range(0,xdim,1):
         for y in range(0,ydim,1):
             if not data.mask[0,y,x]:
                 # Select point x,y.
                 a_series = data[:,y,x]
-                # Detrend. Theil slope estimator uses up lots of memory. 
-                # Only use theilslopes for extreme indices.
-                # Otherwise detrend is OLS regression.
-                #medslope, medintercept = theilslopes(a_series, arange(len(a_series)))
-                #trend = medslope*(arange(len(a_series)))+medintercept
-                #a_series -= trend
-                a_series = detrend(a_series, axis=0, type='linear')
                 a_series = Series(a_series, index=dates)
                 # Find the rolling mean.
                 base = a_series['1960-12':'1991-01']
@@ -60,7 +59,25 @@ def deseason(data, time, n=7):
                             # Subtract the average from each respective day of year of the series.
                             a_series[((a_series.index.month==month)&(a_series.index.day==day))] -= average
                 # Return the series to the data matrix.
-                data[:,y,x] = array(a_series)
+                newdata[:,y,x] = array(a_series.resample('M',how='mean'))
+    newdata = ma.masked_array(newdata, newmask)
+    return newdata
+
+def theil_detrend(data):
+    '''
+    The Theil slope estimator uses up lots of memory so
+    only use it if the dataset is small. Otherwise use 
+    scipy.signal.detrend
+    '''
+    tdim, ydim, xdim = data.shape
+    for x in range(0,xdim,1):
+        for y in range(0,ydim,1):
+            if not data.mask[0,y,x]:
+                a_series = data[:,y,x]
+                medslope, medintercept = theilslopes(a_series, arange(len(a_series)))
+                trend = medslope*(arange(len(a_series)))+medintercept
+                a_series -= trend
+                data[:,y,x] = a_series
     return data
 
 def load_data(filename,maskname):
@@ -119,14 +136,14 @@ def plot_pcs(pcs, time):
     string = str(time[-1])
     end_date = string[6:]+'/'+string[4:6]+'/'+string[0:4]
     # Define a range of dates for the data.
-    dates = date_range(start_date, end_date, freq='D')
+    dates = date_range(start_date, end_date, freq='M')
     pc1 = Series(pcs[:,0], index=dates)
-    pc1monthly = pc1.resample('M', how='mean')
+    #pc1monthly = pc1.resample('M', how='mean')
     pc2 = Series(pcs[:,1], index=dates)
-    pc2monthly = pc2.resample('M', how='mean')
+    #pc2monthly = pc2.resample('M', how='mean')
     plt.figure()
-    pc1monthly.plot(style='b')
-    pc2monthly.plot(style='g')
+    pc1.plot(style='b')
+    pc2.plot(style='g')
     plt.title('PC1 (blue) & PC2 (green)')
     plt.xlabel('Date')
     plt.ylabel('Normalized Score')
@@ -190,6 +207,7 @@ if __name__ == "__main__":
     from numpy import dot, load, arange
     import rotate
     import sys
+    from scipy.signal import detrend
 
     if sys.argv[1] == '--reload':
         # Load the t_max data.
@@ -197,6 +215,7 @@ if __name__ == "__main__":
         filename = 'AWAP_TX_1911-2011_0.5deg.nc'
         maskname = 'AWAP_Land-Sea-Mask_0.5deg.nc'
         t_max, lon, lat, time = load_data(filename, maskname)
+        t_max = detrend(t_max, axis=0, type='linear')
         # We are not interested in the seasonal cycle so this will be
         # removed with a +-7 (15 day) moving window average.
         print 'Deseasoning'
@@ -208,10 +227,10 @@ if __name__ == "__main__":
         time.dump('times_0.5d')
     elif sys.argv[1] == '--continue':
         print 'Loading masked and deseasoned data.'
-        t_max = load('masked_deseasoned_tmax')
-        lon = load('lons')
-        lat = load('lats')
-        time = load('times')
+        t_max = load('masked_deseasoned_tmax_0.5d')
+        lon = load('lons_0.5d')
+        lat = load('lats_0.5d')
+        time = load('times_0.5d')
     else:
         print 'Specify --load or --continue'
         sys.exit()
