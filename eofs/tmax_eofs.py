@@ -149,7 +149,7 @@ def plot_pcs(pcs, time):
     plt.ylabel('Normalized Score')
     plt.savefig('pcs_0.5.eps', format='eps')
 
-def plot_eofs(eofs, lon, lat, name, scale):
+def plot_eofs(eofs, lon, lat, name):
     '''
     plot_eofs(eofs,lon,lat, name) plots the eof patterns and saves them
     in .eps format.
@@ -159,7 +159,7 @@ def plot_eofs(eofs, lon, lat, name, scale):
     from numpy import arange, meshgrid
 
     # Use an equidistant cylyndrical map projection.
-    #levs = arange(-1.,1.1,0.1)
+    levs = arange(-1.,1.1,0.1)
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
     string = 'EOF '
@@ -173,7 +173,7 @@ def plot_eofs(eofs, lon, lat, name, scale):
             llcrnrlon=112, urcrnrlon=156)
         x, y = map_axes(*meshgrid(lon, lat))
         cs = map_axes.contourf(x, y, eofs[count,:,:].squeeze(),
-            levs=scale, cmap=plt.cm.RdBu_r)
+            levs=levs, cmap=plt.cm.RdBu_r)
         map_axes.drawparallels(parallels, labels=[True,False,False,False])
         map_axes.drawmeridians(meridians, labels=[False,False,False,True])
         map_axes.drawcoastlines()
@@ -196,16 +196,41 @@ def plot_eigenvalues(eigens, errors):
     import matplotlib.pyplot as plt
     plt.figure()
     neig = range(len(eigens))
-    plt.errorbar(range(1,20), eigens[0:19], yerr=errors[0:19], fmt='bs')
+    plt.errorbar(range(1,20), eigens[0:19], yerr=errors[0:19], fmt='.')
     plt.xlabel('PC')
     plt.ylabel('Eigenvalue')
     plt.title('Scree Plot')
     plt.savefig('scree.v0.5.eps')
 
+def do_rotation(pcs, eofs, space):
+    import rotate
+    import numpy as np
+    if space == 'sample':
+        pcs, R = rotate.varimax(data)
+        nmaps, ny, nx = eofs.shape
+        ngridpoints = nx*ny
+        eofs2d = eofs.reshape([nmaps, ngridpoints])
+        rot_eofs = np.dot(R, eofs2d)
+        eofs = rot_eofs.reshape([nmaps,ny,nx])
+    elif space == 'state':
+        nmaps, ny, nx = eofs.shape
+        ngridpoints = nx*ny
+        eofs2d = eofs.reshape([nmaps, ngridpoints])
+        nonMissingIndex = np.where(np.isnan(eofs2d._data[0]) == False)[0]
+        dataNoMissing = eofs2d.data[:, nonMissingIndex]
+        rot_eofs_nomiss, R = rotate.varimax(dataNoMissing.T)
+        rotated_eofs = np.ones([nmaps, ngridpoints],dtype=eofs2d.data.dtype) * np.NaN
+        rotated_eofs = rotated_eofs.astype(eofs2d.dtype)
+        rotated_eofs[:, nonMissingIndex] = rot_eofs_nomiss.T
+        rotated_eofs = np.ma.masked_array(rotated_eofs, eofs.mask)
+        eofs = rotated_eofs.reshape([nmaps,ny,nx])
+        pcs = np.dot(pcs, R)
+    return pcs, eofs
+
 if __name__ == "__main__":
     from eofs.standard import Eof
-    from numpy import dot, load, arange
-    import rotate
+    from numpy import dot, load, arange, cos, sqrt, deg2rad, newaxis
+    import numpy as np
     import sys
     from scipy.signal import detrend
 
@@ -215,6 +240,7 @@ if __name__ == "__main__":
         filename = 'AWAP_TX_1911-2011_0.5deg.nc'
         maskname = 'AWAP_Land-Sea-Mask_0.5deg.nc'
         t_max, lon, lat, time = load_data(filename, maskname)
+        # Detrend
         t_max = detrend(t_max, axis=0, type='linear')
         # We are not interested in the seasonal cycle so this will be
         # removed with a +-7 (15 day) moving window average.
@@ -235,12 +261,17 @@ if __name__ == "__main__":
         print 'Specify --load or --continue'
         sys.exit()
 
+    # Calculate weightings.
+    coslat = cos(deg2rad(lat)).clip(0., 1.)
+    wgts = sqrt(coslat)[..., newaxis]
+
     # Set up the EOF solver.
     print 'Setting up solver.'
-    solver = Eof(t_max)
+    #solver = Eof(t_max)
+    solver = Eof(t_max, weights=wgts)
     # PCs.
     print 'Calculating PCs'
-    pcs = solver.pcs(npcs=4)
+    pcs = solver.pcs(pcscaling=1, npcs=4)
     # Explained variance.
     print 'Calculating explained variance'
     explained_variance = solver.varianceFraction()
@@ -252,30 +283,21 @@ if __name__ == "__main__":
     eigens = solver.eigenvalues()
     # EOFs and EOFs expressed as covariance and correlation.
     print 'Calculating EOFs...'
-    eofs = solver.eofs(neofs=4)
+    eofs = solver.eofs(eofscaling=2, neofs=4)
     print 'as variance...'
-    eofs_covariance = solver.eofsAsCovariance(neofs=4)
+    eofs_covariance = solver.eofsAsCovariance(pcscaling=1, neofs=4)
     print 'as correlation'
     eofs_correlation = solver.eofsAsCorrelation(neofs=4)
 
     # Apply rotation to PCs and EOFs.
     print 'Rotating PCs and EOFs'
-    pcs, R = rotate.varimax(pcs)
-    for pattern in [eofs, eofs_covariance, eofs_correlation]:
-        nmaps, ny, nx = pattern.shape
-        ngridpoints = nx*ny
-        eofs2d = pattern.reshape([nmaps, ngridpoints])
-        rot_eofs = dot(R, eofs2d)
-        pattern = rot_eofs.reshape([nmaps,ny,nx])
+    pcs, eofs = do_rotation(pcs, eofs, space='state')
 
     # Plotting.
     print 'Plotting'
     plot_eigenvalues(explained_variance, errors)
-    scale = arange(-0.09,0.1,0.01) 
-    plot_eofs(eofs, lon, lat, 'EOFs', scale)
-    scale = arange(-2.,2.1,0.2)
-    plot_eofs(eofs_covariance, lon, lat, 'EOFs_Covariance', scale)
-    scale = arange(-0.6,0.65,0.05)
-    plot_eofs(eofs_correlation, lon, lat, 'EOFs_Correlation', scale)
+    plot_eofs(eofs, lon, lat, 'EOFs')
+    plot_eofs(eofs_covariance, lon, lat, 'EOFs_Covariance')
+    plot_eofs(eofs_correlation, lon, lat, 'EOFs_Correlation')
     plot_pcs(pcs, time)
     print 'Done!'
