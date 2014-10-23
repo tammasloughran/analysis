@@ -159,7 +159,7 @@ def plot_eofs(eofs, lon, lat, name):
     from numpy import arange, meshgrid
 
     # Use an equidistant cylyndrical map projection.
-    levs = arange(-1.,1.1,0.1)
+    levels = arange(-1.,1.1,0.1)
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
     string = 'EOF '
@@ -173,7 +173,7 @@ def plot_eofs(eofs, lon, lat, name):
             llcrnrlon=112, urcrnrlon=156)
         x, y = map_axes(*meshgrid(lon, lat))
         cs = map_axes.contourf(x, y, eofs[count,:,:].squeeze(),
-            levs=levs, cmap=plt.cm.RdBu_r)
+            levs=levels, cmap=plt.cm.RdBu_r)
         map_axes.drawparallels(parallels, labels=[True,False,False,False])
         map_axes.drawmeridians(meridians, labels=[False,False,False,True])
         map_axes.drawcoastlines()
@@ -203,10 +203,17 @@ def plot_eigenvalues(eigens, errors):
     plt.savefig('scree.v0.5.eps')
 
 def do_rotation(pcs, eofs, space):
+    '''
+    do_rotation reshapes the eofs for rotation and then applies the 
+    rotation and reshapes back into the original shape.
+    Rotation can be done on the PCs in sample space or on the EOFs in
+    state space. In state space the masked values in the EOFs are removed
+    before rotation and returned afterwards.
+    '''
     import rotate
     import numpy as np
     if space == 'sample':
-        pcs, R = rotate.varimax(data)
+        pcs, R = rotate.varimax(pcs)
         nmaps, ny, nx = eofs.shape
         ngridpoints = nx*ny
         eofs2d = eofs.reshape([nmaps, ngridpoints])
@@ -216,7 +223,7 @@ def do_rotation(pcs, eofs, space):
         nmaps, ny, nx = eofs.shape
         ngridpoints = nx*ny
         eofs2d = eofs.reshape([nmaps, ngridpoints])
-        nonMissingIndex = np.where(np.isnan(eofs2d._data[0]) == False)[0]
+        nonMissingIndex = np.where(np.isnan(eofs2d.data[0]) == False)[0]
         dataNoMissing = eofs2d.data[:, nonMissingIndex]
         rot_eofs_nomiss, R = rotate.varimax(dataNoMissing.T)
         rotated_eofs = np.ones([nmaps, ngridpoints],dtype=eofs2d.data.dtype) * np.NaN
@@ -291,7 +298,7 @@ if __name__ == "__main__":
 
     # Apply rotation to PCs and EOFs.
     print 'Rotating PCs and EOFs'
-    pcs, eofs = do_rotation(pcs, eofs, space='state')
+    pcs, eofs = do_rotation(pcs, eofs, space='sample')
 
     # Plotting.
     print 'Plotting'
