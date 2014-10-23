@@ -212,6 +212,7 @@ def do_rotation(pcs, eofs, space):
     '''
     import rotate
     import numpy as np
+    import pdb
     if space == 'sample':
         pcs, R = rotate.varimax(pcs)
         nmaps, ny, nx = eofs.shape
@@ -220,17 +221,20 @@ def do_rotation(pcs, eofs, space):
         rot_eofs = np.dot(R, eofs2d)
         eofs = rot_eofs.reshape([nmaps,ny,nx])
     elif space == 'state':
+        #pdb.set_trace()
         nmaps, ny, nx = eofs.shape
         ngridpoints = nx*ny
         eofs2d = eofs.reshape([nmaps, ngridpoints])
-        nonMissingIndex = np.where(np.isnan(eofs2d.data[0]) == False)[0]
-        dataNoMissing = eofs2d.data[:, nonMissingIndex]
-        rot_eofs_nomiss, R = rotate.varimax(dataNoMissing.T)
-        rotated_eofs = np.ones([nmaps, ngridpoints],dtype=eofs2d.data.dtype) * np.NaN
-        rotated_eofs = rotated_eofs.astype(eofs2d.dtype)
-        rotated_eofs[:, nonMissingIndex] = rot_eofs_nomiss.T
-        rotated_eofs = np.ma.masked_array(rotated_eofs, eofs.mask)
-        eofs = rotated_eofs.reshape([nmaps,ny,nx])
+        eofs2d = np.nan_to_num(eofs2d.data)
+        #nonMissingIndex = np.where(np.isnan(eofs2d.data[0]) == False)[0]
+        #dataNoMissing = eofs2d.data[:, nonMissingIndex]
+        rotated_eofs, R = rotate.varimax(eofs2d.T, normalize=False)
+        #rotated_eofs = np.ones([nmaps, ngridpoints],dtype=eofs2d.data.dtype) * np.NaN
+        #rotated_eofs = rotated_eofs.astype(eofs2d.dtype)
+        #rotated_eofs[:, nonMissingIndex] = rot_eofs_nomiss.T
+        rotated_eofs = rotated_eofs.reshape([nmaps,ny,nx])
+        eofs = np.ma.masked_array(eofs, eofs.mask)
+        #eofs = rotated_eofs.reshape([nmaps,ny,nx])
         pcs = np.dot(pcs, R)
     return pcs, eofs
 
@@ -298,7 +302,7 @@ if __name__ == "__main__":
 
     # Apply rotation to PCs and EOFs.
     print 'Rotating PCs and EOFs'
-    pcs, eofs = do_rotation(pcs, eofs, space='sample')
+    pcs, eofs = do_rotation(pcs, eofs, space='state')
 
     # Plotting.
     print 'Plotting'
