@@ -157,13 +157,14 @@ def plot_eofs(eofs, lon, lat, name):
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
     from numpy import arange, meshgrid
+    import pdb
 
     # Use an equidistant cylyndrical map projection.
     levels = arange(-1.,1.1,0.1)
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
     string = 'EOF '
-
+    pdb.set_trace()
     plt.figure()
     fig, axes = plt.subplots(nrows=2, ncols=2)
     count = 0
@@ -234,12 +235,26 @@ def do_rotation(pcs, eofs, space):
         pcs = dot(pcs, R)
     return pcs, eofs
 
+def load_index(fname):
+    import numpy as np
+    import pandas as pd
+
+    # Load the data into a pandas time series.
+    ninodata = np.genfromtxt(fname, delimiter=',')
+    ninodata = ninodata.reshape(ninodata.shape[0]*ninodata.shape[1])
+    ninodates = pd.date_range('1869-12','2013-12', freq='M').shift(15, freq=pd.datetools.day)
+    nino34 = pd.Series(ninodata, index=ninodates)
+    ninostd = nino34.std()
+    ninonorm = nino34/ninostd
+    return ninonorm
+
 if __name__ == "__main__":
     from eofs.standard import Eof
     from numpy import dot, load, arange, cos, sqrt, deg2rad, newaxis
     import numpy as np
     import sys
     from scipy.signal import detrend
+    import scipy.stats as stats
 
     if sys.argv[1] == '--reload':
         # Load the t_max data.
@@ -299,6 +314,12 @@ if __name__ == "__main__":
     # Apply rotation to PCs and EOFs.
     print 'Rotating PCs and EOFs'
     pcs, eofs = do_rotation(pcs, eofs, space='sample')
+
+    # load nino index and correlate to pc
+    nino34 = load_index('NINO_3.4_monthly_index.csv')
+    ninoslice = nino34['1911-01':'2011-12']
+    rho, p = stats.spearmanr(ninoslice,pcs[:,0])
+    print 'Correlation is: ', rho
 
     # Plotting.
     print 'Plotting'
