@@ -57,16 +57,16 @@ def deseason(data, time, n=7):
 
 
 def do_rotation(pcs, eofs, space='State'):
-    '''Prepare data and perforem varimax rotation.
+    '''Prepare data and perform varimax rotation.
     
-    do_rotation reshape the eofs for rotation and then applies the 
-    rotation and reshapes back into the original shape.
+    do_rotation reshapes the EOFs for rotation, then applies the 
+    rotation and reshapes back into the original form.
     Rotation can be done on the PCs in sample space or on the EOFs in
     state space. In state space the masked values in the EOFs are removed
     before rotation and returned afterwards.
 
     Arguments
-    pcs -- matrix of PCs allong the first axis.
+    pcs -- matrix of PCs allong the second axis.
     eofs -- matrix of EOFs allong the first axis.
     space -- type of varimax rotaion. Either 'state' or 'sample'.
 
@@ -387,9 +387,17 @@ if __name__ == "__main__":
 
     # load nino index and correlate to pc
     nino34 = load_index('NINO_3.4_monthly_index.csv')
+    dmi = load_index('DMI_monthly_index.csv')
     ninoslice = nino34['1911-01':'2011-12']
-    rho, p = stats.spearmanr(ninoslice, pcs[:,0])
-    print 'Correlation is: ', rho
+    dmislice = dmi['1911-01':'2011-12']
+    print 'Correlations are'
+    ninopc1rho, p1 = stats.spearmanr(ninoslice, pcs[:,0])
+    dmipc1rho, p2 = stats.spearmanr(dmislice,pcs[:,0])
+    ninopc2rho, p3 = stats.spearmanr(ninoslice, pcs[:,1])
+    dmipc2rho, p4 = stats.spearmanr(dmislice,pcs[:,1])
+    print '     nino3.4         dmi'
+    print 'PC1:', ninopc1rho, dmipc1rho
+    print 'PC2:', ninopc2rho, dmipc2rho
 
     # Plotting.
     print 'Plotting'
