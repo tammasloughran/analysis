@@ -351,6 +351,7 @@ if __name__ == "__main__":
     import sys
     from scipy.signal import detrend
     import scipy.stats as stats
+    from pandas import concat
 
     if sys.argv[1] == '--reload':
         # Load the t_max data.
@@ -419,16 +420,33 @@ if __name__ == "__main__":
     soi = load_index2('SOI_UCAR_stdzd_1886_2013.txt', standardize=True)
     sam1 = load_index2('SAM_index_monthly_visbeck.txt', standardize=True)
     sam2 = load_index2('SAM_1957_2013.txt', standardize=True)
+    sam = concat([sam1['1911-01':'1956-12'],sam2['1957-01':'2011-12']])
     ninoslice = nino34['1911-01':'2011-12']
     dmislice = dmi['1911-01':'2011-12']
+    soislice = soi['1911-01':'2011-12']
     print 'Correlations are'
-    ninopc1rho, p1 = stats.spearmanr(ninoslice, pcs[:,0])
-    dmipc1rho, p2 = stats.spearmanr(dmislice,pcs[:,0])
-    ninopc2rho, p3 = stats.spearmanr(ninoslice, pcs[:,1])
-    dmipc2rho, p4 = stats.spearmanr(dmislice,pcs[:,1])
-    print '     nino3.4         dmi'
-    print 'PC1:', ninopc1rho, dmipc1rho
-    print 'PC2:', ninopc2rho, dmipc2rho
+    ninopc1rho, p = stats.spearmanr(ninoslice, pcs[:,0])
+    dmipc1rho, p = stats.spearmanr(dmislice,pcs[:,0])
+    soipc1rho, p = stats.spearmanr(soislice,pcs[:,0])
+    sampc1rho, p = stats.spearmanr(sam,pcs[:,0])
+    ninopc2rho, p = stats.spearmanr(ninoslice, pcs[:,1])
+    dmipc2rho, p = stats.spearmanr(dmislice,pcs[:,1])
+    soipc2rho, p = stats.spearmanr(soislice,pcs[:,1])
+    sampc2rho, p = stats.spearmanr(sam,pcs[:,1])
+    ninopc3rho, p = stats.spearmanr(ninoslice, pcs[:,2])
+    dmipc3rho, p = stats.spearmanr(dmislice,pcs[:,2])
+    soipc3rho, p = stats.spearmanr(soislice,pcs[:,2])
+    sampc3rho, p = stats.spearmanr(sam,pcs[:,2])
+    ninopc4rho, p = stats.spearmanr(ninoslice, pcs[:,3])
+    dmipc4rho, p = stats.spearmanr(dmislice,pcs[:,3])
+    soipc4rho, p = stats.spearmanr(soislice,pcs[:,3])
+    sampc4rho, p = stats.spearmanr(sam,pcs[:,3])
+    print '     nino3.4         dmi            soi              sam'
+    print 'PC1:', ninopc1rho, dmipc1rho, soipc1rho, sampc1rho
+    print 'PC2:', ninopc2rho, dmipc2rho, soipc2rho, sampc2rho
+    print 'PC3:', ninopc3rho, dmipc3rho, soipc3rho, sampc3rho
+    print 'PC4:', ninopc4rho, dmipc4rho, soipc4rho, sampc4rho
+
 
     # Plotting.
     print 'Plotting'
