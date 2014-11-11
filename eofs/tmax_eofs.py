@@ -32,7 +32,7 @@ def deseason(data, time, n=7):
         for y in range(0, ydim, 1):
             if not data.mask[0, y, x]:
                 # Select point x,y.
-                a_series = data[:, y, x]
+                a_series = data.data[:, y, x]
                 a_series = Series(a_series, index=dates)
                 # Find the rolling mean.
                 base = a_series['1960-12':'1991-01']
@@ -52,7 +52,7 @@ def deseason(data, time, n=7):
                             a_series[((a_series.index.month==month)&\
                                       (a_series.index.day==day))] -= average
                 # Return the series to the data matrix.
-                data[:, y, x] = a_series
+                data.data[:, y, x] = a_series
     return data
 
 
@@ -280,7 +280,9 @@ def plot_pcs(pcs, time):
     from pandas import date_range, Series
     dates = get_dates(time, frequency='M')
     pc1 = Series(pcs[:,0], index=dates)
+    pc1 = pc1.resample('A', how='mean')
     pc2 = Series(pcs[:,1], index=dates)
+    pc2 = pc2.resample('A', how='mean')
     plt.figure()
     fig, axes = plt.subplots(nrows=2, sharex=True, squeeze=True)
     pc1.plot(ax=axes[0], style='k', title='PC 1', lw=0.5)
@@ -313,9 +315,10 @@ def resample(data, time):
     newmask = data.mask[0:newdim, :, :]
     for x in range(0, xdim, 1):
         for y in range(0, ydim, 1):
-            a_series = data[:, y, x]
-            a_series = Series(a_series, index=dates)
-            resampledata[:, y, x] = array(a_series.resample('M', how='mean'))
+            if not data.mask[0, x, y]:
+                a_series = data[:, y, x]
+                a_series = Series(a_series, index=dates)
+                resampledata[:, y, x] = array(a_series.resample('M', how='mean'))
     resampledata = ma.masked_array(resampledata, newmask)
     return resampledata
 
@@ -331,12 +334,13 @@ def theil_detrend(data):
     Arguments
     data -- the data to be detrended.
     '''
+    from scipy.stats.mstats import theilslopes
     tdim, ydim, xdim = data.shape
     for x in range(0, xdim, 1):
         for y in range(0, ydim, 1):
             if not data.mask[0, y, x]:
                 a_series = data[:, y, x]
-                medslope, medintercept = theilslopes(a_series, \
+                medslope, medintercept, a, b = theilslopes(a_series, \
                         arange(len(a_series)))
                 trend = medslope*(arange(len(a_series))) + medintercept
                 a_series -= trend
@@ -347,7 +351,6 @@ def theil_detrend(data):
 if __name__ == "__main__":
     from eofs.standard import Eof
     from numpy import dot, load, arange, cos, sqrt, deg2rad, newaxis
-    import numpy as np
     import sys
     from scipy.signal import detrend
     import scipy.stats as stats
@@ -360,7 +363,7 @@ if __name__ == "__main__":
         maskname = 'AWAP_Land-Sea-Mask_0.5deg.nc'
         t_max, lon, lat, time = load_data(filename, maskname)
         # Detrend
-        t_max = detrend(t_max, axis=0, type='linear')
+        t_max.data[...] = detrend(t_max.data, axis=0, type='linear')
         # We are not interested in the seasonal cycle so this will be
         # removed with a +-7 (15 day) moving window average.
         print 'Deseasoning'
@@ -412,6 +415,7 @@ if __name__ == "__main__":
 
     # Apply rotation to PCs and EOFs.
     print 'Rotating PCs and EOFs'
+    eofs2 = eofs
     pcs, eofs = do_rotation(pcs, eofs, space='state')
 
     # Load index and correlate to pc
@@ -451,7 +455,8 @@ if __name__ == "__main__":
     # Plotting.
     print 'Plotting'
     plot_eigenvalues(explained_variance, errors)
-    plot_eofs(eofs, lon, lat, 'EOFs')
+    plot_eofs(eofs, lon, lat, 'Rotated_EOFs')
+    plot_eofs(eofs2, lon, lat, 'EOFs')
     plot_eofs(eofs_covariance, lon, lat, 'EOFs_Covariance')
     plot_eofs(eofs_correlation, lon, lat, 'EOFs_Correlation')
     plot_pcs(pcs, time)
