@@ -158,28 +158,56 @@ def load_data(filename, maskname):
     return temp2, lons, lats, nctime
 
 
-def load_index(fname):
-    '''Load nino 3.4 index. 
+def load_index(fname, standardize=True):
+    '''Load an index from a CSV file. 
     
-    The nino3.4 data is normalised by its standard deviation after
+    The nino3.4 data is normalised by its mean and standard deviation after
     it is loaded.
 
     Arguments
     fname -- name of csv file containing monthly nino3.4 data
 
     Returns
-    ninonorm -- normalised nino3.4 data.
+    series -- pandas time series of index.
     '''
     from numpy import genfromtxt
     from pandas import date_range, Series
-    ninodata = genfromtxt(fname, delimiter=',')
-    ninodata = ninodata.reshape(ninodata.shape[0]*ninodata.shape[1])
-    ninodates = date_range('1869-12', \
+    data = genfromtxt(fname, delimiter=',')
+    series = data.reshape(data.shape[0]*data.shape[1])
+    dates = date_range('1869-12', \
             '2013-12', freq='M').shift(15, freq='D')
-    nino34 = Series(ninodata,index=ninodates)
-    ninostd = nino34.std()
-    ninonorm = nino34/ninostd
-    return ninonorm
+    series = Series(series, index=dates)
+    if standardize == True:
+        mu = series.mean()
+        sigma = series.std()
+        series = (series - mu)/sigma
+    return series
+
+
+def load_index2(fname, standardize=True):
+    '''Load an index with timestamps from a text file.
+
+    Arguments
+    fname -- name of whitespace delimited file.
+
+    Returns
+    series -- pandas time series of index.
+    '''
+    from numpy import genfromtxt, nan
+    from pandas import date_range, Series
+    data = genfromtxt(fname)
+    years = data[:,0].astype(int)
+    index = data[:,1:]
+    dates = date_range(str(years[0]), str(years[-1]+1), freq='M')
+    series = index.reshape(index.shape[0]*index.shape[1])
+    series = Series(series, index=dates)
+    series = series.replace(-99.9, nan)
+    series = series.replace(-999, nan)
+    if standardize == True:
+        mu = series.mean()
+        sigma = series.std()
+        series = (series - mu)/sigma
+    return series
 
 
 def plot_eigenvalues(eigens, errors):
@@ -335,9 +363,9 @@ if __name__ == "__main__":
         # We are not interested in the seasonal cycle so this will be
         # removed with a +-7 (15 day) moving window average.
         print 'Deseasoning'
-        t_max = deseason(t_max, time,n=7)
+        t_max = deseason(t_max, time, n=7)
         # Resample the data to monthly means.
-        t_max = resample(t_max)
+        t_max = resample(t_max, time)
         # Save the masked and deseasoned data to file.
         t_max.dump('masked_deseasoned_tmax_0.5d')
         lon.dump('lons_0.5d')
@@ -359,11 +387,11 @@ if __name__ == "__main__":
 
     # Set up the EOF solver.
     print 'Setting up solver.'
-    #solver = Eof(t_max)
+    retain = 4
     solver = Eof(t_max, weights=wgts)
     # PCs.
     print 'Calculating PCs'
-    pcs = solver.pcs(pcscaling=1, npcs=4)
+    pcs = solver.pcs(pcscaling=1, npcs=retain)
     # Explained variance.
     print 'Calculating explained variance'
     explained_variance = solver.varianceFraction()
@@ -375,19 +403,22 @@ if __name__ == "__main__":
     eigens = solver.eigenvalues()
     # EOFs and EOFs expressed as covariance and correlation.
     print 'Calculating EOFs...'
-    eofs = solver.eofs(eofscaling=2, neofs=4)
+    eofs = solver.eofs(eofscaling=2, neofs=retain)
     print 'as variance...'
-    eofs_covariance = solver.eofsAsCovariance(pcscaling=1, neofs=4)
+    eofs_covariance = solver.eofsAsCovariance(pcscaling=1, neofs=retain)
     print 'as correlation'
-    eofs_correlation = solver.eofsAsCorrelation(neofs=4)
+    eofs_correlation = solver.eofsAsCorrelation(neofs=retain)
 
     # Apply rotation to PCs and EOFs.
     print 'Rotating PCs and EOFs'
-    pcs, eofs = do_rotation(pcs, eofs, space='sample')
+    pcs, eofs = do_rotation(pcs, eofs, space='state')
 
-    # load nino index and correlate to pc
-    nino34 = load_index('NINO_3.4_monthly_index.csv')
-    dmi = load_index('DMI_monthly_index.csv')
+    # Load index and correlate to pc
+    nino34 = load_index('NINO_3.4_monthly_index.csv', standardize=True)
+    dmi = load_index('DMI_monthly_index.csv', standardize=True)
+    soi = load_index2('SOI_UCAR_stdzd_1886_2013.txt', standardize=True)
+    sam1 = load_index2('SAM_index_monthly_visbeck.txt', standardize=True)
+    sam2 = load_index2('SAM_1957_2013.txt', standardize=True)
     ninoslice = nino34['1911-01':'2011-12']
     dmislice = dmi['1911-01':'2011-12']
     print 'Correlations are'
