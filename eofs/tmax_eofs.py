@@ -315,7 +315,7 @@ def resample(data, time):
     newmask = data.mask[0:newdim, :, :]
     for x in range(0, xdim, 1):
         for y in range(0, ydim, 1):
-            if not data.mask[0, x, y]:
+            if not data.mask[0, y, x]:
                 a_series = data[:, y, x]
                 a_series = Series(a_series, index=dates)
                 resampledata[:, y, x] = array(a_series.resample('M', how='mean'))
