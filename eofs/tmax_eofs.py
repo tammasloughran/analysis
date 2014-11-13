@@ -89,7 +89,7 @@ def do_rotation(pcs, eofs, space='State'):
         eofs2d = eofs.reshape([nmaps, ngridpoints])
         nonMissingIndex = where(isnan(eofs2d.data[0]) == False)[0]
         dataNoMissing = eofs2d.data[:, nonMissingIndex]
-        rot_eofs_nomiss, R = rotate.varimax(dataNoMissing.T, normalize=True)
+        rot_eofs_nomiss, R = rotate.varimax(dataNoMissing.T, normalize=False)
         rotated_eofs = ones([nmaps, ngridpoints]) * NaN
         rotated_eofs = rotated_eofs.astype(eofs2d.dtype)
         rotated_eofs[:, nonMissingIndex] = rot_eofs_nomiss.T
@@ -419,32 +419,44 @@ if __name__ == "__main__":
     pcs, eofs = do_rotation(pcs, eofs, space='state')
 
     # Load index and correlate to pc
-    nino34 = load_index('NINO_3.4_monthly_index.csv', standardize=True)
-    dmi = load_index('DMI_monthly_index.csv', standardize=True)
-    soi = load_index2('SOI_UCAR_stdzd_1886_2013.txt', standardize=True)
-    sam1 = load_index2('SAM_index_monthly_visbeck.txt', standardize=True)
-    sam2 = load_index2('SAM_1957_2013.txt', standardize=True)
+    nino34 = load_index('NINO_3.4_monthly_index.csv', standardize=False)
+    dmi = load_index('DMI_monthly_index.csv', standardize=False)
+    soi = load_index2('SOI_UCAR_stdzd_1886_2013.txt', standardize=False)
+    sam1 = load_index2('SAM_index_monthly_visbeck.txt', standardize=False)
+    sam2 = load_index2('SAM_1957_2013.txt', standardize=False)
     sam = concat([sam1['1911-01':'1956-12'],sam2['1957-01':'2011-12']])
-    ninoslice = nino34['1911-01':'2011-12']
-    dmislice = dmi['1911-01':'2011-12']
-    soislice = soi['1911-01':'2011-12']
+    sam = sam.resample('A', how='mean')
+    ninoslice = nino34['1911-01':'2011-12'].resample('A', how='mean')
+    dmislice = dmi['1911-01':'2011-12'].resample('A', how='mean')
+    soislice = soi['1911-01':'2011-12'].resample('A', how='mean')
+    from pandas import Series
+    dates = get_dates(time, frequency='M')
+    pc1 = Series(pcs[:,0], index=dates)
+    pc1 = pc1.resample('A', how='mean')
+    pc2 = Series(pcs[:,1], index=dates)
+    pc2 = pc2.resample('A', how='mean')
+    pc3 = Series(pcs[:,2], index=dates)
+    pc3 = pc3.resample('A', how='mean')
+    pc4 = Series(pcs[:,3], index=dates)
+    pc4 = pc4.resample('A', how='mean')
+
     print 'Correlations are'
-    ninopc1rho, p = stats.spearmanr(ninoslice, pcs[:,0])
-    dmipc1rho, p = stats.spearmanr(dmislice,pcs[:,0])
-    soipc1rho, p = stats.spearmanr(soislice,pcs[:,0])
-    sampc1rho, p = stats.spearmanr(sam,pcs[:,0])
-    ninopc2rho, p = stats.spearmanr(ninoslice, pcs[:,1])
-    dmipc2rho, p = stats.spearmanr(dmislice,pcs[:,1])
-    soipc2rho, p = stats.spearmanr(soislice,pcs[:,1])
-    sampc2rho, p = stats.spearmanr(sam,pcs[:,1])
-    ninopc3rho, p = stats.spearmanr(ninoslice, pcs[:,2])
-    dmipc3rho, p = stats.spearmanr(dmislice,pcs[:,2])
-    soipc3rho, p = stats.spearmanr(soislice,pcs[:,2])
-    sampc3rho, p = stats.spearmanr(sam,pcs[:,2])
-    ninopc4rho, p = stats.spearmanr(ninoslice, pcs[:,3])
-    dmipc4rho, p = stats.spearmanr(dmislice,pcs[:,3])
-    soipc4rho, p = stats.spearmanr(soislice,pcs[:,3])
-    sampc4rho, p = stats.spearmanr(sam,pcs[:,3])
+    ninopc1rho, p = stats.spearmanr(ninoslice, pc1)
+    dmipc1rho, p = stats.spearmanr(dmislice,pc1)
+    soipc1rho, p = stats.spearmanr(soislice,pc1)
+    sampc1rho, p = stats.spearmanr(sam,pc1)
+    ninopc2rho, p = stats.spearmanr(ninoslice, pc2)
+    dmipc2rho, p = stats.spearmanr(dmislice,pc2)
+    soipc2rho, p = stats.spearmanr(soislice,pc2)
+    sampc2rho, p = stats.spearmanr(sam,pc2)
+    ninopc3rho, p = stats.spearmanr(ninoslice, pc3)
+    dmipc3rho, p = stats.spearmanr(dmislice,pc3)
+    soipc3rho, p = stats.spearmanr(soislice,pc3)
+    sampc3rho, p = stats.spearmanr(sam,pc3)
+    ninopc4rho, p = stats.spearmanr(ninoslice, pc4)
+    dmipc4rho, p = stats.spearmanr(dmislice,pc4)
+    soipc4rho, p = stats.spearmanr(soislice,pc4)
+    sampc4rho, p = stats.spearmanr(sam,pc4)
     print '     nino3.4         dmi            soi              sam'
     print 'PC1:', ninopc1rho, dmipc1rho, soipc1rho, sampc1rho
     print 'PC2:', ninopc2rho, dmipc2rho, soipc2rho, sampc2rho
