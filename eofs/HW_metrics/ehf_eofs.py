@@ -6,48 +6,6 @@ heat wave characteristics. They are HWF (frequency), HWD (duration), HWA
 (amplitude), HWM (magnitude), HWN (number) and HWT (timing).
 '''
 
-def do_rotation(pcs, eofs, space='State'):
-    '''Prepare data and perform varimax rotation.
-    
-    do_rotation reshapes the EOFs for rotation, then applies the 
-    rotation and reshapes back into the original form.
-    Rotation can be done on the PCs in sample space or on the EOFs in
-    state space. In state space the masked values in the EOFs are removed
-    before rotation and returned afterwards.
-
-    Arguments
-    pcs -- matrix of PCs allong the second axis.
-    eofs -- matrix of EOFs allong the first axis.
-    space -- type of varimax rotaion. Either 'state' or 'sample'.
-
-    Returns
-    pcs -- rotated PCs.
-    eofs -- rotated EOFs.
-    '''
-    from numpy import dot, ma, where, ones, isnan, NaN
-    import rotate
-    if space == 'sample':
-        pcs, R = rotate.varimax(pcs)
-        nmaps, ny, nx = eofs.shape
-        ngridpoints = nx*ny
-        eofs2d = eofs.reshape([nmaps, ngridpoints])
-        rot_eofs = dot(R, eofs2d)
-        eofs = rot_eofs.reshape([nmaps, ny, nx])
-    elif space == 'state':
-        nmaps, ny, nx = eofs.shape
-        ngridpoints = nx * ny
-        eofs2d = eofs.reshape([nmaps, ngridpoints])
-        nonMissingIndex = where(isnan(eofs2d.data[0]) == False)[0]
-        dataNoMissing = eofs2d.data[:, nonMissingIndex]
-        rot_eofs_nomiss, R = rotate.varimax(dataNoMissing.T, normalize=False)
-        rotated_eofs = ones([nmaps, ngridpoints]) * NaN
-        rotated_eofs = rotated_eofs.astype(eofs2d.dtype)
-        rotated_eofs[:, nonMissingIndex] = rot_eofs_nomiss.T
-        rotated_eofs = rotated_eofs.reshape([nmaps, ny, nx])
-        eofs = ma.masked_array(rotated_eofs, eofs.mask)
-        pcs = dot(pcs, R)
-    return pcs, eofs
-
 def get_dates(time, frequency='M'):
     '''Create a date_range object from time axis array.
 
@@ -181,6 +139,7 @@ def plot_pcs(pcs, time):
 if __name__ == "__main__":
     from numpy import arange, cos, sqrt, deg2rad, newaxis, dot
     from eofs.standard import Eof
+    import rotate
     start_year = 1911
     end_year = 2012
     # Load the heat wave metrics.
@@ -204,7 +163,7 @@ if __name__ == "__main__":
     eofs_correlation = solver.eofsAsCorrelation(neofs=retain)
     # Apply rotation to PCs and EOFs.
     eofs2 = eofs
-    pcs, eofs = do_rotation(pcs, eofs, space='state')
+    pcs, eofs = rotate.do_rotation(pcs, eofs, space='state')
     # Plotting.
     plot_eigenvalues(explained_variance, errors)
     plot_eofs(eofs, lon, lat, 'Rotated_EOFs')

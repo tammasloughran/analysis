@@ -1,14 +1,54 @@
 """
 This module provides functions for performing varmiax rotations on
-principle components or factor analasis.
+emperical orthogaonal functions or principle components.
 """
 
+def do_rotation(pcs, eofs, space='State'):
+    '''Prepare data and perform varimax rotation.
+    
+    do_rotation reshapes the EOFs for rotation, then applies the 
+    rotation and reshapes back into the original form.
+    Rotation can be done on the PCs in sample space or on the EOFs in
+    state space. In state space the masked values in the EOFs are removed
+    before rotation and returned afterwards.
+
+    Arguments
+    pcs -- matrix of PCs allong the second axis.
+    eofs -- matrix of EOFs allong the first axis.
+    space -- type of varimax rotaion. Either 'state' or 'sample'.
+
+    Returns
+    pcs -- rotated PCs.
+    eofs -- rotated EOFs.
+    '''
+    from numpy import dot, ma, where, ones, isnan, NaN
+    if space == 'sample':
+        pcs, R = varimax(pcs)
+        nmaps, ny, nx = eofs.shape
+        ngridpoints = nx*ny
+        eofs2d = eofs.reshape([nmaps, ngridpoints])
+        rot_eofs = dot(R, eofs2d)
+        eofs = rot_eofs.reshape([nmaps, ny, nx])
+    elif space == 'state':
+        nmaps, ny, nx = eofs.shape
+        ngridpoints = nx * ny
+        eofs2d = eofs.reshape([nmaps, ngridpoints])
+        nonMissingIndex = where(isnan(eofs2d.data[0]) == False)[0]
+        dataNoMissing = eofs2d.data[:, nonMissingIndex]
+        rot_eofs_nomiss, R = varimax(dataNoMissing.T, normalize=False)
+        rotated_eofs = ones([nmaps, ngridpoints]) * NaN
+        rotated_eofs = rotated_eofs.astype(eofs2d.dtype)
+        rotated_eofs[:, nonMissingIndex] = rot_eofs_nomiss.T
+        rotated_eofs = rotated_eofs.reshape([nmaps, ny, nx])
+        eofs = ma.masked_array(rotated_eofs, eofs.mask)
+        pcs = dot(pcs, R)
+    return pcs, eofs
+
 def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
-    """
-    varimax(X) performs a varimax rotation on the input matrix
-    and returns the rotated matrix. The method used uses a
-    singular value decomposition (SVD) of the varimax criterion. The
-    rotation matrix is found itteratively.
+    """Performs a varimax rotation on the input matrix.
+    
+    The method used uses a singular value decomposition (SVD) of 
+    the varimax criterion. The rotation matrix is found itteratively.
 
     Arguments
     X     - A pxk input matrix that will be rotated.
