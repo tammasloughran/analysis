@@ -20,7 +20,7 @@ def get_dates(time, frequency='M'):
         start_date = string[6:] + '/' + string[4:6] + '/' + string[0:4]
         string = str(time[-1])
         end_date = string[6:] + '/' + string[4:6] + '/' + string[0:4]
-    elif frequency == 'A'
+    elif frequency == 'A':
         start_date = str(time[0])
         end_date = str(time[-1]+1)
     dates = date_range(start_date, end_date, freq=frequency)
