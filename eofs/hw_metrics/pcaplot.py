@@ -43,7 +43,7 @@ def plot_eigenvalues(eigens, errors):
     plt.xlabel('PC')
     plt.ylabel('Eigenvalue')
     plt.title('Scree Plot')
-    plt.savefig('scree.v0.6.eps')
+    plt.savefig('scree.eps')
 
 
 def plot_eofs(eofs, lon, lat, name):
@@ -81,7 +81,7 @@ def plot_eofs(eofs, lon, lat, name):
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
     cb = plt.colorbar(cs, cax=cbar_ax, orientation='vertical')
-    plotfilename = name + 'v0.6.eps'
+    plotfilename = name + 'v0.eps'
     plt.savefig(plotfilename, format='eps')
 
 
@@ -107,5 +107,5 @@ def plot_pcs(pcs, time, yearmean=False):
     fig.text(0.06, 0.5, 'Normalized Score', ha='center', 
             va='center', rotation='vertical')
     plt.xlabel('Date')
-    plt.savefig('pcs_0.6.eps',format='eps')
+    plt.savefig('pcs.eps',format='eps')
 
