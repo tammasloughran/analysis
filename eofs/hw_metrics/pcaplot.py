@@ -43,7 +43,9 @@ def plot_eigenvalues(eigens, errors):
     plt.xlabel('PC')
     plt.ylabel('Eigenvalue')
     plt.title('Scree Plot')
-    plt.savefig('scree.eps')
+    rev = svnversion()
+    plotfilename = 'scree_r'+rev+'.eps'
+    plt.savefig(plotfilename, format='eps')
 
 
 def plot_eofs(eofs, lon, lat, name):
@@ -81,7 +83,8 @@ def plot_eofs(eofs, lon, lat, name):
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
     cb = plt.colorbar(cs, cax=cbar_ax, orientation='vertical')
-    plotfilename = name + 'v0.eps'
+    rev = svnversion()
+    plotfilename = name+'_r'+rev+'.eps'
     plt.savefig(plotfilename, format='eps')
 
 
@@ -107,5 +110,15 @@ def plot_pcs(pcs, time, yearmean=False):
     fig.text(0.06, 0.5, 'Normalized Score', ha='center', 
             va='center', rotation='vertical')
     plt.xlabel('Date')
-    plt.savefig('pcs.eps',format='eps')
+    rev = svnversion()
+    plotfilename = 'pcs_r'+rev+'.eps'
+    plt.savefig(plotfilename,format='eps')
+
+def svnversion():
+    '''Return the current svn revision'''
+    import subprocess
+    p = subprocess.Popen("svnversion", shell=True, \
+       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    return stdout[:-1]
 
