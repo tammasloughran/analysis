@@ -30,7 +30,7 @@ def plot_eigenvalues(eigens, errors):
     '''Make a scree plot of the first 20 eigenvalues.
     
     It also plots the error bars from the Nort test. 
-    PC/EOF pairs whos error pars do not overlap are significant.
+    PC/EOF pairs whose error pars do not overlap are significant.
 
     Arguments
     eigens -- array of eigenvalues.
@@ -61,7 +61,7 @@ def plot_eofs(eofs, lon, lat, name):
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
     # Use an equidistant cylyndrical map projection.
-    levs = arange(-6, 6.5, 0.5)
+    levs = arange(-20, 22, 2)
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
     string = 'EOF '
