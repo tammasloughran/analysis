@@ -22,6 +22,7 @@ def load_heat_waves(filename):
     hwt -- timing
     '''
     from netCDF4 import Dataset
+    from numpy import ma, empty
     ncin = Dataset(filename, 'r')
     hwf = ncin.variables['HWF_EHF'][:]
     hwn = ncin.variables['HWN_EHF'][:]
@@ -32,6 +33,28 @@ def load_heat_waves(filename):
     lat = ncin.variables['lat'][:]
     lon = ncin.variables['lon'][:]
     times = ncin.variables['Times'][:]
+    masknc = Dataset('../mask/varmask.nc','r')
+    mask = masknc.variables['mask'][:]
+    mask2 = empty(hwf.shape)
+    for n in range(hwf.shape[0]):
+        mask2[n, :, :] = mask
+    mask1 = hwf.mask
+    hwf = ma.array(hwf, mask=mask2)
+    hwn = ma.array(hwn, mask=mask2)
+    hwd = ma.array(hwd, mask=mask2)
+    hwa = ma.array(hwa, mask=mask2)
+    hwm = ma.array(hwm, mask=mask2)
+    hwt = ma.array(hwt, mask=mask2)
+    for itime in range(times.size):
+        for ilon in range(lon.size):
+            for ilat in range(lat.size):
+                if not mask1[itime,ilat,ilon]:
+                    if hwa.mask[itime,ilat,ilon]:
+                        hwa.mask[itime,ilat,ilon] = False
+                        hwa[itime,ilat,ilon] = 0
+                    if hwm.mask[itime,ilat,ilon]:
+                        hwm.mask[itime,ilat,ilon] = False
+                        hwm[itime,ilat,ilon] = 0
     return hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times
 
 if __name__ == "__main__":
@@ -39,6 +62,7 @@ if __name__ == "__main__":
     from eofs.standard import Eof
     import rotate
     import pcaplot
+    from netCDF4 import Dataset
     start_year = 1911
     end_year = 2014
     # Load the heat wave metrics.
@@ -50,7 +74,7 @@ if __name__ == "__main__":
     wgts = sqrt(coslat)[..., newaxis]
     # Set up solver
     retain = 4
-    solver = Eof(hwf, weights=wgts)
+    solver = Eof(hwa, weights=wgts)
     pcs = solver.pcs(pcscaling=1, npcs=retain)
     explained_variance = solver.varianceFraction()
     errors = solver.northTest(vfscaled=True)
