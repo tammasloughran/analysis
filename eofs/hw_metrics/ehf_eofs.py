@@ -1,7 +1,7 @@
-'''Calculate the EOFs of EHF heatwave metrics.
+'''Calculate the EOFs ond PCs of EHF heatwave metrics.
 
 EHF heat wave metrics have been calculated from AWAP Tmax and Tmin data using a
-90th percentile with respect to the entire analysis period. Metrics are annual
+90th percentile with respect to the base period 1961-1990. Metrics are annual
 heat wave characteristics. They are HWF (frequency), HWD (duration), HWA 
 (amplitude), HWM (magnitude), HWN (number) and HWT (timing).
 '''
