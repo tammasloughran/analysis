@@ -66,30 +66,35 @@ if __name__ == "__main__":
     start_year = 1911
     end_year = 2014
     # Load the heat wave metrics.
-    fname = ("/srv/ccrc/data35/z5032520/AWAP/yearly/ehfhw/CCRC_NARCliM_1911-"
-             "2014_EHFheatwaves_summer_AWAP0.5deg.nc")
+    fname = ('/srv/ccrc/data35/z5032520/AWAP/yearly/ehfhw/CCRC_NARCliM_1911-'
+             '2014_EHFheatwaves_summer_AWAP0.5deg.nc')
     hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times = load_heat_waves(fname)
     # Calculate weightings.
     coslat = cos(deg2rad(lat)).clip(0.,1.)
     wgts = sqrt(coslat)[..., newaxis]
-    # Set up solver
-    retain = 4
-    solver = Eof(hwa, weights=wgts)
-    pcs = solver.pcs(pcscaling=1, npcs=retain)
-    explained_variance = solver.varianceFraction()
-    errors = solver.northTest(vfscaled=True)
-    eigens = solver.eigenvalues()
-    eofs = solver.eofs(eofscaling=2, neofs=retain)
-    eofs_covariance = solver.eofsAsCovariance(pcscaling=1, neofs=retain)
-    eofs_correlation = solver.eofsAsCorrelation(neofs=retain)
-    # Apply rotation to PCs and EOFs.
-    eofs2 = eofs
-    pcs, eofs = rotate.do_rotation(pcs, eofs, space='state')
-    # Plotting.
-    years = arange(start_year,end_year+1)
-    pcaplot.plot_eigenvalues(explained_variance, errors)
-    pcaplot.plot_eofs(eofs, lon, lat, 'Rotated_EOFs')
-    pcaplot.plot_eofs(eofs2, lon, lat, 'EOFs')
-    pcaplot.plot_eofs(eofs_covariance, lon, lat, 'EOFs_Covariance')
-    pcaplot.plot_eofs(eofs_correlation, lon, lat, 'EOFs_Correlation')
-    pcaplot.plot_pcs(pcs, years)
+    metric_name = ["HWF","HWN","HWD","HWA","HWM","HWT"]
+    metric_no = 0
+    for metric in [hwf, hwn, hwd, hwa, hwm, hwt]:
+        # Set up solver
+        retain = 4
+        solver = Eof(metric, weights=wgts)
+        pcs = solver.pcs(pcscaling=1, npcs=retain)
+        explained_variance = solver.varianceFraction()
+        errors = solver.northTest(vfscaled=True)
+        eigens = solver.eigenvalues()
+        eofs = solver.eofs(eofscaling=2, neofs=retain)
+        eofs_covariance = solver.eofsAsCovariance(pcscaling=1, neofs=retain)
+        eofs_correlation = solver.eofsAsCorrelation(neofs=retain)
+        # Apply rotation to PCs and EOFs.
+        eofs2 = eofs
+        pcs, eofs = rotate.do_rotation(pcs, eofs, space='state')
+        # Plotting.
+        years = arange(start_year,end_year+1)
+        mname = metric_name[metric_no]
+        pcaplot.plot_eigenvalues(explained_variance, errors, mname)
+        pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(mname))
+        pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(mname))
+        pcaplot.plot_eofs(eofs_covariance, lon, lat, "%s_EOFs_Covariance"%(mname))
+        pcaplot.plot_eofs(eofs_correlation, lon, lat, "%s_EOFs_Correlation"%(mname))
+        pcaplot.plot_pcs(pcs, years, mname)
+        metric_no += 1

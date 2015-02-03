@@ -26,7 +26,7 @@ def get_dates(time, frequency='M'):
     dates = date_range(start_date, end_date, freq=frequency)
     return dates
 
-def plot_eigenvalues(eigens, errors):
+def plot_eigenvalues(eigens, errors, name):
     '''Make a scree plot of the first 20 eigenvalues.
     
     It also plots the error bars from the Nort test. 
@@ -44,7 +44,7 @@ def plot_eigenvalues(eigens, errors):
     plt.ylabel('Eigenvalue')
     plt.title('Scree Plot')
     rev = svnversion()
-    plotfilename = 'scree_r'+rev+'.eps'
+    plotfilename = name+'_scree_r'+rev+'.eps'
     plt.savefig(plotfilename, format='eps')
 
 
@@ -61,10 +61,15 @@ def plot_eofs(eofs, lon, lat, name):
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
     # Use an equidistant cylyndrical map projection.
-    levs = arange(-20, 22, 2)
+    maxval = eofs[0,:,:].max()
+    absminval = abs(eofs[0,:,:].min())
+    if absminval>maxval:
+        maxval = absminval
+    step = (maxval*2.)/20.
+    levs = arange(-maxval, maxval+step, step)
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
-    string = 'EOF '
+    string = "EOF "
     plt.figure()
     fig, axes = plt.subplots(nrows=2, ncols=2)
     count = 0
@@ -84,11 +89,11 @@ def plot_eofs(eofs, lon, lat, name):
     cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
     cb = plt.colorbar(cs, cax=cbar_ax, orientation='vertical')
     rev = svnversion()
-    plotfilename = name+'_r'+rev+'.eps'
+    plotfilename = name+"_r"+rev+".eps"
     plt.savefig(plotfilename, format='eps')
 
 
-def plot_pcs(pcs, time, yearmean=False):
+def plot_pcs(pcs, time, name, yearmean=False):
     '''Plot the 1st and 2nd principle component time series.
 
     Arguments
@@ -111,7 +116,7 @@ def plot_pcs(pcs, time, yearmean=False):
             va='center', rotation='vertical')
     plt.xlabel('Date')
     rev = svnversion()
-    plotfilename = 'pcs_r'+rev+'.eps'
+    plotfilename = name+'_pcs_r'+rev+'.eps'
     plt.savefig(plotfilename,format='eps')
 
 def svnversion():
