@@ -6,69 +6,42 @@ heat wave characteristics. They are HWF (frequency), HWD (duration), HWA
 (amplitude), HWM (magnitude), HWN (number) and HWT (timing).
 '''
 
-def load_heat_waves(filename):
-    '''Load heat wave metrics from a netcdf file.
-
-    Arguments 
-    filename -- name of file containing heat wave metrics.
-    maskname -- name of file containing AWAP land-sea mask.
-
-    Returns
-    hwf -- frequency
-    hwn -- number
-    hwd -- duration
-    hwa -- amplitude
-    hwm -- magnitude
-    hwt -- timing
-    '''
-    from netCDF4 import Dataset
-    from numpy import ma, empty
-    ncin = Dataset(filename, 'r')
-    hwf = ncin.variables['HWF_EHF'][:]
-    hwn = ncin.variables['HWN_EHF'][:]
-    hwd = ncin.variables['HWD_EHF'][:]
-    hwa = ncin.variables['HWA_EHF'][:]
-    hwm = ncin.variables['HWM_EHF'][:]
-    hwt = ncin.variables['HWT_EHF'][:]
-    lat = ncin.variables['lat'][:]
-    lon = ncin.variables['lon'][:]
-    times = ncin.variables['Times'][:]
-    masknc = Dataset('../mask/varmask.nc','r')
-    mask = masknc.variables['mask'][:]
-    mask2 = empty(hwf.shape)
-    for n in range(hwf.shape[0]):
-        mask2[n, :, :] = mask
-    mask1 = hwf.mask
-    hwf = ma.array(hwf, mask=mask2)
-    hwn = ma.array(hwn, mask=mask2)
-    hwd = ma.array(hwd, mask=mask2)
-    hwa = ma.array(hwa, mask=mask2)
-    hwm = ma.array(hwm, mask=mask2)
-    hwt = ma.array(hwt, mask=mask2)
-    for itime in range(times.size):
-        for ilon in range(lon.size):
-            for ilat in range(lat.size):
-                if not mask1[itime,ilat,ilon]:
-                    if hwa.mask[itime,ilat,ilon]:
-                        hwa.mask[itime,ilat,ilon] = False
-                        hwa[itime,ilat,ilon] = 0
-                    if hwm.mask[itime,ilat,ilon]:
-                        hwm.mask[itime,ilat,ilon] = False
-                        hwm[itime,ilat,ilon] = 0
-    return hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     from numpy import arange, cos, sqrt, deg2rad, newaxis, dot
+    from pandas import concat
     from eofs.standard import Eof
     import rotate
     import pcaplot
     from netCDF4 import Dataset
-    start_year = 1911
-    end_year = 2014
+    import load_data
+    import scipy.stats as stats
+
     # Load the heat wave metrics.
     fname = ('/srv/ccrc/data35/z5032520/AWAP/yearly/ehfhw/CCRC_NARCliM_1911-'
              '2014_EHFheatwaves_summer_AWAP0.5deg.nc')
-    hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times = load_heat_waves(fname)
+    hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times\
+            = load_data.load_heat_waves(fname)
+    start_year = 1911
+    end_year = 2014
+    # Load variability indices.
+    nino34 = load_data.load_index('../../indices/NINO_3.4_monthly_index.csv',
+                                    standardize=False)
+    dmi = load_data.load_index('../../indices/DMI_monthly_index.csv', 
+                                    standardize=False)
+    soi = load_data.load_index2('../../indices/SOI_UCAR_stdzd_1886_2013.txt', 
+                                    standardize=False)
+    sam1 = load_data.load_index2('../../indices/SAM_index_monthly_visbeck.txt', 
+                                    standardize=False)
+    sam2 = load_data.load_index2('../../indices/SAM_1957_2013.txt', 
+                                    standardize=False)
+    sam = concat([sam1['1911-01':'1956-12'],sam2['1957-01':'2011-12']])
+    # Take (A)nnual (mean) (S)tarting in (JUL)y. i.e. 'AS-JUL'
+    sam = sam.resample('AS-JUL', how='mean')
+    ninoslice = nino34['1911-01':'2011-12'].resample('AS-JUL', how='mean')
+    dmislice = dmi['1911-01':'2011-12'].resample('AS-JUL', how='mean')
+    soislice = soi['1911-01':'2011-12'].resample('AS-JUL', how='mean')
+
+    # Perform PCA on all metrics.
     # Calculate weightings.
     coslat = cos(deg2rad(lat)).clip(0.,1.)
     wgts = sqrt(coslat)[..., newaxis]
@@ -91,10 +64,39 @@ if __name__ == "__main__":
         # Plotting.
         years = arange(start_year,end_year+1)
         mname = metric_name[metric_no]
-        pcaplot.plot_eigenvalues(explained_variance, errors, mname)
-        pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(mname))
-        pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(mname))
-        pcaplot.plot_eofs(eofs_covariance, lon, lat, "%s_EOFs_Covariance"%(mname))
-        pcaplot.plot_eofs(eofs_correlation, lon, lat, "%s_EOFs_Correlation"%(mname))
-        pcaplot.plot_pcs(pcs, years, mname)
+        #pcaplot.plot_eigenvalues(explained_variance, errors, mname)
+        #pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(mname))
+        #pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(mname))
+        #pcaplot.plot_eofs(eofs_covariance, lon, lat, 
+        #        "%s_EOFs_Covariance"%(mname))
+        #pcaplot.plot_eofs(eofs_correlation, lon, lat, 
+        #        "%s_EOFs_Correlation"%(mname))
+        #pcaplot.plot_pcs(pcs, years, mname)
         metric_no += 1
+        # Correlations
+        import pdb
+        pdb.set_trace()
+        ninopc1rho, p = stats.spearmanr(ninoslice, pcs[0])
+        dmipc1rho, p = stats.spearmanr(dmislice,pcs[1])
+        soipc1rho, p = stats.spearmanr(soislice,pcs[2])
+        sampc1rho, p = stats.spearmanr(sam,pcs[3])
+        ninopc2rho, p = stats.spearmanr(ninoslice, pcs[0])
+        dmipc2rho, p = stats.spearmanr(dmislice,pcs[1])
+        soipc2rho, p = stats.spearmanr(soislice,pc[2])
+        sampc2rho, p = stats.spearmanr(sam,pc[3])
+        ninopc3rho, p = stats.spearmanr(ninoslice, pcs[0])
+        dmipc3rho, p = stats.spearmanr(dmislice,pcs[1])
+        soipc3rho, p = stats.spearmanr(soislice,pcs[2])
+        sampc3rho, p = stats.spearmanr(sam,pcs[3])
+        ninopc4rho, p = stats.spearmanr(ninoslice, pcs[0])
+        dmipc4rho, p = stats.spearmanr(dmislice,pcs[1])
+        soipc4rho, p = stats.spearmanr(soislice,pcs[2])
+        sampc4rho, p = stats.spearmanr(sam,pcs[3])
+        #table = open("%s_correlations"%(metric_name))
+        #table.write()
+        print '     nino3.4         dmi            soi              sam'
+        print 'PC1:  %f.2  %f.2  %f.2  %f.2' %(ninopc1rho, dmipc1rho, soipc1rho, sampc1rho)
+        print 'PC2:  %f.2  %f.2  %f.2  %f.2' %(ninopc2rho, dmipc2rho, soipc2rho, sampc2rho)
+        print 'PC3:  %f.2  %f.2  %f.2  %f.2' %(ninopc3rho, dmipc3rho, soipc3rho, sampc3rho)
+        print 'PC4:  %f.2  %f.2  %f.2  %f.2' %(ninopc4rho, dmipc4rho, soipc4rho, sampc4rho)
+
