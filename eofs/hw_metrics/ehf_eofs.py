@@ -80,11 +80,11 @@ if __name__ == '__main__':
 
         # Correlations
         outfile = open("%s_correlations"%(metric_name[metric_no]),'w')
-        outfile.write("      Nino3.4      SOI         DMI          SAM\n")
+        outfile.write("      Nino3.4       SOI          DMI           SAM\n")
         for pc in [0,1,2,3]:
             outfile.write("PC%0.f: "%(pc+1))
             for mode in [ninoslice, soislice, dmislice, sam]:
                 rho, p = stats.spearmanr(mode, pcs[:-2,pc])
-                outfile.write("%+.2f (%.2f) "%(rho, p))
+                outfile.write("%+.2f (%.3f) "%(rho, p))
             outfile.write("\n")
         metric_no += 1
