@@ -1,11 +1,11 @@
-'''Plot EOFs, PCs and eigenvalue scree plots.
+"""Plot EOFs, PCs and eigenvalue scree plots.
 
 These functions are intended to plot EOFs, PCs and eigenvalues caluclated
 from the eofs python package.
-'''
+"""
 
 def get_dates(time, frequency='M'):
-    '''Create a date_range object from time axis array.
+    """Create a date_range object from time axis array.
 
     Arguments
     time -- the array containing the time axis.
@@ -13,7 +13,7 @@ def get_dates(time, frequency='M'):
 
     Returns
     dates -- a date_range object.
-    '''
+    """
     from pandas import date_range
     if frequency == 'M':
         string = str(int(time[0]))
@@ -27,7 +27,7 @@ def get_dates(time, frequency='M'):
     return dates
 
 def plot_eigenvalues(eigens, errors, name):
-    '''Make a scree plot of the first 20 eigenvalues.
+    """Make a scree plot of the first 20 eigenvalues.
     
     It also plots the error bars from the Nort test. 
     PC/EOF pairs whose error pars do not overlap are significant.
@@ -35,94 +35,117 @@ def plot_eigenvalues(eigens, errors, name):
     Arguments
     eigens -- array of eigenvalues.
     errors -- the corresponding array of errors from a North test.
-    '''
+    """
     import matplotlib.pyplot as plt
     plt.figure()
     neig = range(len(eigens))
     plt.errorbar(range(1,20), eigens[0:19], yerr=errors[0:19], fmt='.')
-    plt.xlabel('PC')
-    plt.ylabel('Eigenvalue')
-    plt.title('Scree Plot')
+    plt.xlabel("PC")
+    plt.ylabel("Eigenvalue")
+    plt.title("Scree Plot")
     rev = svnversion()
-    plotfilename = name+'_scree_r'+rev+'.eps'
+    plotfilename = name+"_scree_r"+rev+".eps"
     plt.savefig(plotfilename, format='eps')
 
 
 def plot_eofs(eofs, lon, lat, name):
-    '''Plots the eof patterns and saves them in .eps format.
+    """Plots the eof patterns and saves them in .eps format.
 
     Arguments
     eofs -- matrix of EOFs.
     lon -- array of longitudes from the netcdf file.
     lat -- array of latitudes from the netcdf rile.
     name -- output plot file name.
-    '''
+    """
     from numpy import arange, meshgrid
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
-    # Use an equidistant cylyndrical map projection.
+    # Define the scale of the plot.
     maxval = eofs[0,:,:].max()
     absminval = abs(eofs[0,:,:].min())
     if absminval>maxval:
         maxval = absminval
     step = (maxval*2.)/20.
     levs = arange(-maxval, maxval+step, step)
+    # Define the parallels and meridians
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
-    string = "EOF "
+    # make the figure
     plt.figure()
     fig, axes = plt.subplots(nrows=2, ncols=2)
+    string = "EOF "
     count = 0
     for ax in axes.flat:
+        # Use an equidistant cylyndrical map projection.
         map_axes = Basemap(ax=ax, projection='cyl',
             llcrnrlat=-44, urcrnrlat=-10,
             llcrnrlon=112, urcrnrlon=156)
+        # Create the basemap grid 
         x, y = map_axes(*meshgrid(lon, lat))
+        # Plot
         cs = map_axes.contourf(x, y, eofs[count, :, :].squeeze(),
             levels=levs, cmap=plt.cm.RdBu_r)
         map_axes.drawparallels(parallels, labels=[True,False,False,False])
         map_axes.drawmeridians(meridians, labels=[False,False,False,True])
         map_axes.drawcoastlines()
+        # Labels
         ax.set_title(string + str(count+1))
         count = count + 1
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
     cb = plt.colorbar(cs, cax=cbar_ax, orientation='vertical')
+    # Save
     rev = svnversion()
     plotfilename = name+"_r"+rev+".eps"
     plt.savefig(plotfilename, format='eps')
 
 
-def plot_pcs(pcs, time, name, yearmean=False):
-    '''Plot the 1st and 2nd principle component time series.
+def plot_pcs(pcs, mode, time, name, yearmean=False):
+    """Plot the 1st and 2nd principle component time series.
 
     Arguments
     pcs -- matrix of PCs.
     time -- array of time axis.
-    '''
+    """
     import matplotlib.pyplot as plt
     from pandas import date_range, Series
+    # Create pandas timestamps for PCs.
     dates = get_dates(time, frequency='A')
     pc1 = Series(pcs[:,0], index=dates)
     pc2 = Series(pcs[:,1], index=dates)
+    # If PCs are not yearly data resample to yearly.
     if yearmean:
         pc1 = pc1.resample('A', how='mean')
         pc2 = pc2.resample('A', how='mean')
+    # Make the figure.
     plt.figure()
     fig, axes = plt.subplots(nrows=2, sharex=True, squeeze=True)
-    pc1.plot(ax=axes[0], style='k', title='PC 1', lw=0.5)
-    pc2.plot(ax=axes[1], style='k', title='PC 2', lw=0.5)
-    fig.text(0.06, 0.5, 'Normalized Score', ha='center', 
+    pc1.plot(ax=axes[0], style='k', title="PC 1", lw=0.5)
+    axr = axes[0].twinx()
+    mode.plot(ax=axr, style='b--', lw=0.6)
+    # The right axis needs to be realigned to match the left.
+    miny, maxy = axes[0].get_ylim() 
+    axr.set_ylim(miny, maxy)
+    # Repeat for the second PC.
+    pc2.plot(ax=axes[1], style='k', title="PC 2", lw=0.5)
+    axr = axes[1].twinx()
+    mode.plot(ax=axr, style='b--', lw=0.6)
+    miny, maxy = axes[1].get_ylim()
+    axr.set_ylim(miny, maxy)
+    # Add labels.
+    fig.text(0.06, 0.5, "Normalized Score", ha='center', 
             va='center', rotation='vertical')
-    plt.xlabel('Date')
+    plt.xlabel("Date")
+    # Get the repository version and save in eps format.
     rev = svnversion()
-    plotfilename = name+'_pcs_r'+rev+'.eps'
+    plotfilename = name+"_pcs_r"+rev+".eps"
     plt.savefig(plotfilename,format='eps')
 
 def svnversion():
-    '''Return the current svn revision'''
+    """Return the current svn revision.
+    """
     import subprocess
-    p = subprocess.Popen("svnversion", shell=True, \
+    p = subprocess.Popen('svnversion', shell=True, \
        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     return stdout[:-1]
