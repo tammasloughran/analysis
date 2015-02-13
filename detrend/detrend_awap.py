@@ -40,22 +40,30 @@ def copync(outfile, copyfile, exclude=''):
             copyvar[:] = var[:]
     return outnc
 
-from scipy.signal import detrend
-# Load data
-tmaxfile = ('/srv/ccrc/data35/z5032520/AWAP/daily/tmax/'
-           'AWAP_TX_1911-2014_0.5deg.nc')
-tminfile = ('/srv/ccrc/data35/z5032520/AWAP/daily/tmin/'
-           'AWAP_TN_1911-2014_0.5deg.nc')
-tmaxnc, tmax = loadnc(tmaxfile, 'tmax')
-tmax_detrended = detrend(tmax)
-outfilename = 'tmax_detrended.nc'
-tmaxoutnc = copync(outfilename, tmaxnc, exclude='tmax')
-tmaxoutvar = tmaxoutnc.variables['tmax']
-tmaxoutvar[:] = tmax_detrended[:]
-tminnc, tmin = loadnc(tminfile, 'tmin')
-tmin_detrended = detrend(tmin)
-outfilename = 'tmin_detrended.nc'
-tminoutnc = copync(outfilename, tminnc, exclude='tmin')
-tminoutvar = tminoutnc.variables['tmin']
-tminoutvar[:] = tmin_detrended[:]
-
+if __name__ == '__main__':
+    from scipy.signal import detrend
+    # Specify file names.
+    tmaxfile = ('/srv/ccrc/data35/z5032520/AWAP/daily/tmax/'
+               'AWAP_TX_1911-2014_0.5deg.nc')
+    tminfile = ('/srv/ccrc/data35/z5032520/AWAP/daily/tmin/'
+               'AWAP_TN_1911-2014_0.5deg.nc')
+    ## Tmax ##
+    # Load
+    tmaxnc, tmax = loadnc(tmaxfile, 'tmax')
+    # Detrend
+    tmax_detrended = detrend(tmax, axis=0)
+    # Save
+    outfilename = 'tmax_detrended.nc'
+    tmaxoutnc = copync(outfilename, tmaxnc, exclude='tmax')
+    tmaxoutvar = tmaxoutnc.variables['tmax']
+    tmaxoutvar[:] = tmax_detrended[:]
+    ## Tmin ##
+    # Load
+    tminnc, tmin = loadnc(tminfile, 'tmin')
+    # Detrend
+    tmin_detrended = detrend(tmin, axis=0)
+    # Save
+    outfilename = 'tmin_detrended.nc'
+    tminoutnc = copync(outfilename, tminnc, exclude='tmin')
+    tminoutvar = tminoutnc.variables['tmin']
+    tminoutvar[:] = tmin_detrended[:]
