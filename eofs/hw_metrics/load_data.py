@@ -52,37 +52,37 @@ def load_heat_waves(filename):
                         hwm[itime,ilat,ilon] = 0
     return hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times
 
-def load_index(fname, standardize=True):
-    """Load an index from a CSV file. 
+def load_index(fname, standardize=False):
+    """Load an index from a file in a single column. 
     
-    The nino3.4 data is normalised by its mean and standard deviation after
-    it is loaded.
-
     Arguments
-    fname -- name of csv file containing monthly nino3.4 data
+    fname -- name of csv file containing monthly nino3.4 data.
+    standardize -- if True the series is standardized.
 
     Returns
     series -- pandas time series of index.
     """
-    from numpy import genfromtxt
+    from numpy import genfromtxt, nan
     from pandas import date_range, Series
-    data = genfromtxt(fname, delimiter=',')
-    series = data.reshape(data.shape[0]*data.shape[1])
-    dates = date_range('1869-12', \
-            '2013-12', freq='M').shift(15, freq='D')
-    series = Series(series, index=dates)
+    data = genfromtxt(fname)
+    years = data[:,0].astype(int)
+    dates = date_range(str(years[0]), str(years[-1]+1), freq='M')
+    series = Series(data[:,-1], index=dates)
+    series = series.replace(-99.9, nan)
+    series = series.replace(-999, nan)
     if standardize == True:
         mu = series.mean()
         sigma = series.std()
         series = (series - mu)/sigma
     return series
 
-
-def load_index2(fname, standardize=True):
-    """Load an index with timestamps from a text file.
+def load_index2(fname, standardize=False):
+    """Load an index with timestamps from a text file with multiple
+    columns by month.
 
     Arguments
     fname -- name of whitespace delimited file.
+    standardize -- if Ture the series is standardized.
 
     Returns
     series -- pandas time series of index.
