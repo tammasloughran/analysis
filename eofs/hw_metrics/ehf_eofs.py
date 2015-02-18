@@ -35,24 +35,24 @@ if __name__ == '__main__':
                                     standardize=False)
     sam2 = load_data.load_index2('../../indices/SAM_1957_2013.txt', 
                                     standardize=False)
-    sam = concat([sam1['1911-01':'1956-12'],sam2['1957-01':'2012-12']])
+    sam = concat([sam1['1911-07':'1956-12'],sam2['1957-01':'2013-06']])
 
-    # Take spring (9,10,11) (A)nnual (mean) (S)tarting in (JUL)y. i.e. 'AS-JUL'i
+    # Take spring (9,10,11)/summer (11,12,1,2,3) (A)nnual (mean) (S)tarting in (JUL)y. i.e. 'AS-JUL'i
     mnth = sam.index.month
     # SAM
-    sam = sam[(mnth==9)|(mnth==10)|(mnth==11)]
+    sam = sam[(mnth==11)|(mnth==12)|(mnth==1)|(mnth==2)|(mnth==3)]
     sam = sam.resample('AS-JUL', how='mean')
     # Nino3.4
-    ninoslice = nino34['1911-01':'2012-12']
-    ninoslice = ninoslice[(mnth==9)|(mnth==10)|(mnth==11)]
+    ninoslice = nino34['1911-07':'2013-06']
+    ninoslice = ninoslice[(mnth==11)|(mnth==12)|(mnth==1)|(mnth==2)|(mnth==3)]
     ninoslice = ninoslice.resample('AS-JUL', how='mean')
     # DMI
-    dmislice = dmi['1911-01':'2012-12']
-    dmislice = dmislice[(mnth==9)|(mnth==10)|(mnth==11)]
+    dmislice = dmi['1911-07':'2013-06']
+    dmislice = dmislice[(mnth==11)|(mnth==12)|(mnth==1)|(mnth==2)|(mnth==3)]
     dmislice = dmislice.resample('AS-JUL', how='mean')
     # SOI
-    soislice = soi['1911-01':'2012-12']
-    soislice = soislice[(mnth==9)|(mnth==10)|(mnth==11)]
+    soislice = soi['1911-07':'2013-06']
+    soislice = soislice[(mnth==11)|(mnth==12)|(mnth==1)|(mnth==2)|(mnth==3)]
     soislice = soislice.resample('AS-JUL', how='mean')
 
     # Perform PCA on all metrics.
