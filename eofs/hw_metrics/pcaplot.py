@@ -99,6 +99,33 @@ def plot_eofs(eofs, lon, lat, name):
     plotfilename = name+"_r"+rev+".eps"
     plt.savefig(plotfilename, format='eps')
 
+def plot_lags(rhos, ps, name):
+    """Plot the laged correlations betweena a pc and index.
+
+    Arguments
+    rhos -- correlations for each PC against each month. PCs on second axis.
+    ps -- same as rhos but p-values.
+    """
+    import matplotlib.pyplot as plt
+    from numpy import nan, arange
+    plt.figure()
+    mrange = arange(1,13,1)
+    months = ["Jan","Feb","Mar","Apr","May","Jun",
+              "Jul","Aug","Sep","Oct","Nov","Dec"]
+    for pc in range(0,4,1):
+        plt.plot(mrange, rhos[:,pc], label="PC%s"%(pc+1))
+        #Plot dots for significance. p<=0.05
+        plt.plot(mrange[ps[:,pc]<=0.05], rhos[ps[:,pc]<=0.05,pc], 'ko')
+    plt.xticks(mrange, months, size='small')
+    plt.title(name+" Lag Correlations")
+    plt.xlabel("Month")
+    plt.ylabel(r'$\rho$')
+    plt.ylim((-0.8,0.8))
+    plt.plot([0,12],[0,0],'k')
+    plt.legend()
+    rev = svnversion()
+    plotfilename = name+"_lagrho_r"+rev+".eps"
+    plt.savefig(plotfilename,format='eps')
 
 def plot_pcs(pcs, mode, time, name, yearmean=False):
     """Plot the 1st and 2nd principle component time series.
@@ -149,4 +176,3 @@ def svnversion():
        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     return stdout[:-1]
-
