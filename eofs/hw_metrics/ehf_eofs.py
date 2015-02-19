@@ -7,7 +7,7 @@ heat wave characteristics. They are HWF (frequency), HWD (duration), HWA
 """
 
 if __name__ == '__main__':
-    from numpy import arange, cos, sqrt, deg2rad, newaxis, dot
+    from numpy import arange, cos, sqrt, deg2rad, newaxis, dot, zeros
     from pandas import concat
     from eofs.standard import Eof
     import rotate
@@ -15,7 +15,7 @@ if __name__ == '__main__':
     from netCDF4 import Dataset
     import load_data
     import scipy.stats as stats
-
+    import pdb
     # Load the heat wave metrics.
     directory = ('/srv/ccrc/data35/z5032520/')
     fname = (directory+'AWAP/yearly/ehfhw/CCRC_NARCliM_1911-'
@@ -36,18 +36,21 @@ if __name__ == '__main__':
     sam1 = load_data.load_index2(directory+fname)
     fname = 'indices/SAM/SAM_monthly_1957_2014_BAS.txt'
     sam2 = load_data.load_index2(directory+fname)
-    sam = concat([sam1['%s-07'%(start_year):'1956-12'],
-                  sam2['1957-01':'%s-06'%(end_year)]])
+    sam = concat([sam1, sam2])
 
     # Take spring (9,10,11)/summer (11,12,1,2,3) (A)nnual (mean) (S)tarting in
     # (JUL)y. i.e. 'AS-JUL'i
-    axis = sam.index.month
-    months = (axis==11)|(axis==12)|(axis==1)|(axis==2)|(axis==3)
     # SAM
-    samslice = sam[months]
-    samslice = sam.resample('AS-JUL', how='mean')
+    samslice = concat([sam1['%s-07'%(start_year):'1956-12'],
+                       sam2['1957-01':'%s-06'%(end_year)]])
+    axis = samslice.index.month
+    months = (axis==11)|(axis==12)|(axis==1)|(axis==2)|(axis==3)
+    samslice = samslice[months]
+    samslice = samslice.resample('AS-JUL', how='mean')
     # Nino3.4
     ninoslice = nino34['%s-07'%(start_year):'%s-06'%(end_year)]
+    axis = ninoslice.index.month
+    months = (axis==11)|(axis==12)|(axis==1)|(axis==2)|(axis==3)
     ninoslice = ninoslice[months]
     ninoslice = ninoslice.resample('AS-JUL', how='mean')
     # DMI
@@ -91,9 +94,11 @@ if __name__ == '__main__':
                 "%s_EOFs_Correlation"%(metric_name))
         pcaplot.plot_pcs(pcs, ninoslice, years, metric_name)
 
-        # Correlations
+        # Correlations for Summer/Winter
         outfile = open("%s_correlations"%(metric_name),'w')
         outfile.write("      Nino3.4       SOI          DMI           SAM\n")
+        rho_lag = zeros((12, 4))
+        p_lag = zeros((12, 4))
         for pc in [0,1,2,3]:
             outfile.write("PC%0.f: "%(pc+1))
             for mode in [ninoslice, soislice, dmislice, samslice]:
@@ -101,3 +106,16 @@ if __name__ == '__main__':
                 outfile.write("%+.2f (%.3f) "%(rho, p))
             outfile.write("\n")
         outfile.close()
+
+        # Lag Correlations
+        mds = ["Nino3.4","SOI","DMI","SAM"]
+        mdsn = 0
+        for mode in [nino34, soi, dmi, sam]:
+            mode = mode['%s-04'%(start_year):'%s-03'%(end_year)]
+            for lag in range(1,13,1):
+                mode_lag = mode[axis==lag]
+                for pc in [0,1,2,3]:
+                    rho_lag[lag-1,pc], p_lag[lag-1,pc] = \
+                        stats.spearmanr(mode_lag, pcs[:-1,pc])
+            pcaplot.plot_lags(rho_lag, p_lag, metric_name+"_%s"%(mds[mdsn]))
+            mdsn+=1
