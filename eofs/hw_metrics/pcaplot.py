@@ -4,6 +4,25 @@ These functions are intended to plot EOFs, PCs and eigenvalues caluclated
 from the eofs python package.
 """
 
+def eofscatter(eofs):
+    """Creates an interractive 3D plot of the first 3 EOFs in state space.
+    
+    Arguments:
+    eofs -- the eofs to be plotted.
+    """
+    from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(eofs[0,:,:], eofs[1,:,:], eofs[2,:,:], marker='.')
+    ax.plot([-1,1],[0,0],[0,0])
+    ax.plot([0,0],[-1,1],[0,0])
+    ax.plot([0,0],[0,0],[-1,1])
+    ax.set_xlabel('EOF1')
+    ax.set_ylabel('EOF2')
+    ax.set_zlabel('EOF3')
+    plt.show()
+
 def get_dates(time, frequency='M'):
     """Create a date_range object from time axis array.
 
@@ -109,20 +128,20 @@ def plot_lags(rhos, ps, name):
     import matplotlib.pyplot as plt
     from numpy import nan, arange
     plt.figure()
-    mrange = arange(1,13,1)
-    months = ["Jan","Feb","Mar","Apr","May","Jun",
-              "Jul","Aug","Sep","Oct","Nov","Dec"]
+    mrange = arange(0,-25,-1)
+    months = ["Jan","Dec","Nov","Oct","Sep","Aug","Jul","Jun","May","Apr","Mar","Feb"]
+    months += months+["Jan"]
     for pc in range(0,4,1):
         plt.plot(mrange, rhos[:,pc], label="PC%s"%(pc+1))
         #Plot dots for significance. p<=0.05
         plt.plot(mrange[ps[:,pc]<=0.05], rhos[ps[:,pc]<=0.05,pc], 'ko')
-    plt.xticks(mrange, months, size='small')
+    plt.xticks(mrange, months, size='small', rotation=25)
     plt.title(name+" Lag Correlations")
-    plt.xlabel("Month")
+    plt.xlabel("Lag Month")
     plt.ylabel(r'$\rho$')
     plt.ylim((-0.8,0.8))
-    plt.plot([0,12],[0,0],'k')
-    plt.legend()
+    plt.plot([-25,0],[0,0],'k')
+    plt.legend(loc=2)
     rev = svnversion()
     plotfilename = name+"_lagrho_r"+rev+".eps"
     plt.savefig(plotfilename,format='eps')

@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # Calculate weightings.
     coslat = cos(deg2rad(lat)).clip(0.,1.)
     wgts = sqrt(coslat)[..., newaxis]
-    metric_dict = {"HWF":hwf,"HWN":hwn,"HWD":hwd,"HWA":hwa,"HWM":hwm,"HWT":hwt}
+    metric_dict = {"HWN":hwn,"HWF":hwf,"HWD":hwd,"HWA":hwa,"HWM":hwm,"HWT":hwt}
     for metric_name in metric_dict.keys():
         # Set up solver
         retain = 4
@@ -83,6 +83,9 @@ if __name__ == '__main__':
         eofs2 = eofs
         pcs, eofs = rotate.do_rotation(pcs, eofs, space='state')
 
+        #pcaplot.eofscatter(eofs2)
+        #pcaplot.eofscatter(eofs)
+
         # Plotting.
         years = arange(start_year,end_year+1)
         pcaplot.plot_eigenvalues(explained_variance, errors, metric_name)
@@ -97,8 +100,6 @@ if __name__ == '__main__':
         # Correlations for Summer/Winter
         outfile = open("%s_correlations"%(metric_name),'w')
         outfile.write("      Nino3.4       SOI          DMI           SAM\n")
-        rho_lag = zeros((12, 4))
-        p_lag = zeros((12, 4))
         for pc in [0,1,2,3]:
             outfile.write("PC%0.f: "%(pc+1))
             for mode in [ninoslice, soislice, dmislice, samslice]:
@@ -108,14 +109,20 @@ if __name__ == '__main__':
         outfile.close()
 
         # Lag Correlations
+        rho_lag = zeros((25, 4))
+        p_lag = zeros((25, 4))
         mds = ["Nino3.4","SOI","DMI","SAM"]
         mdsn = 0
         for mode in [nino34, soi, dmi, sam]:
-            mode = mode['%s-04'%(start_year):'%s-03'%(end_year)]
-            for lag in range(1,13,1):
-                mode_lag = mode[axis==lag]
+            mode = mode['%s-01'%(start_year-2):'%s-12'%(end_year)]
+            for lag in range(0,25,1):
+                mode_lag = mode.shift(lag)
+                axis = mode_lag.index.month
+                mode_lag = mode_lag[(axis==12)|(axis==1)|(axis==2)]
+                mode_lag = mode_lag.resample('AS-JUL', how='mean')
+                mode_lag = mode_lag['%s-01'%(start_year):'%s-12'%(end_year-1)]
                 for pc in [0,1,2,3]:
-                    rho_lag[lag-1,pc], p_lag[lag-1,pc] = \
+                    rho_lag[lag,pc], p_lag[lag,pc] = \
                         stats.spearmanr(mode_lag, pcs[:-1,pc])
             pcaplot.plot_lags(rho_lag, p_lag, metric_name+"_%s"%(mds[mdsn]))
             mdsn+=1

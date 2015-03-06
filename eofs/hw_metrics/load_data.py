@@ -28,7 +28,8 @@ def load_heat_waves(filename):
     lat = ncin.variables['lat'][:]
     lon = ncin.variables['lon'][:]
     times = ncin.variables['Times'][:]
-    masknc = Dataset('../mask/varmask.nc','r')
+    maskfile = ('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
+    masknc = Dataset(maskfile,'r')
     mask = masknc.variables['mask'][:]
     mask2 = empty(hwf.shape)
     for n in range(hwf.shape[0]):
