@@ -29,7 +29,6 @@ years = np.array([dates[i].year for i in range(dates.size)])
 for cyear in range(1961,1991,1):
     ncdata = Dataset(twentyc_dir+'aus_prmsl.%s.nc'%(cyear))
     pr_cyear = ncdata.variables['prmsl'][:]
-    ndays = pr_cyear.shape[0]
     pr_base[years==cyear,:,:] = pr_cyear
 
 # Calculate climatology over base period 
