@@ -79,13 +79,15 @@ def plot_eofs(eofs, lon, lat, name):
     from numpy import arange, meshgrid
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
+    import math
     # Define the scale of the plot.
     maxval = eofs[0,:,:].max()
     absminval = abs(eofs[0,:,:].min())
     if absminval>maxval:
         maxval = absminval
-    step = (maxval*2.)/20.
-    levs = arange(-maxval, maxval+step, step)
+    maxval = math.ceil(maxval)
+    step = round((maxval)/13., 2)
+    levs = arange(-(14.*step), (14.*step)+step, step)
     # Define the parallels and meridians
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
