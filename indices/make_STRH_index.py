@@ -4,7 +4,6 @@ from netCDF4 import Dataset
 import glob
 import datetime as dt
 import numpy as np
-import pdb
 
 # Load grid data
 twentyc_dir = '/media/Jupiter/reanalysis/20crv2/prmsl/'
@@ -60,7 +59,7 @@ box_lats_upper = ridge_lat + 8.
 box_lats_lower = ridge_lat - 8.
 box_lons = [150., 166.]
 
-# Load and calculate summer anomalies.
+# Load and calculate STRH.
 STRH = np.zeros([102,12])
 reference = dt.datetime(1800,1,1,0,0)
 for cyear in range(1911,2013,1):
