@@ -47,9 +47,13 @@ def calc_percentile(tave, nyears, nwindow=15, modified=True, thres_file=None):
             pct_calc = np.ones((365,)+tave.shape[1:], 
                     np.float64)*const.missingval
             for d in xrange(365):
-                pct_calc[d,...] = np.percentile(tave[windowrange==True,...],
-                        90,
-                        axis=0)
+                tave_window = tave[windowrange==True,...]
+                for station in range(tave.shape[1]):
+                    tave_no_nan = tave_window[:,station]
+                    tave_no_nan = tave_no_nan[np.isnan(tave_no_nan)==False]
+                    pct_calc[d,station] = np.percentile(tave_no_nan,
+                            90,
+                            axis=0)
         	windowrange = np.roll(windowrange, 1)
         else:
             # A percentile file is provided and it contains a 
@@ -170,9 +174,9 @@ def compute_EHF(
         years_y = years[years==this_year]
         EHIaccl = np.zeros(tave_y.shape,dtype=np.float64)
 
-        for t in xrange(32, ndays_y):
-            EHIaccl[t,...] = np.mean(tave_y[t-2:t+1,...], axis=0) \
-                    -np.mean(tave_y[t-32:t-2,...], axis=0) 
+        for t in xrange(0, ndays_y):
+            EHIaccl[t,...] = np.mean(tave_y[t+30:t+33,:,:], axis=0) \
+                    -np.mean(tave_y[t:t+30,:,:], axis=0) 
 
         ###### CALCULATING Significance (EHIsig) ########
         EHIsig = np.zeros(tave_y.shape, dtype=np.float64)

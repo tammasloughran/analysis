@@ -45,10 +45,25 @@ def load_acornsat(fnamelist):
         data[station_no] = dataframe
     return data
 
+syear = 1911
+eyear = 2014
+
+
+# Define the file names.
 os.chdir('/srv/ccrc/data35/z5032520/ACORNSAT/')
 file_list = sorted(glob.glob('acorn.sat.maxT.??????.daily.txt'))
+thres_file = 'EHF_heatwaves_ACORNSAT_1961_1990_summer.nc'
+#thres_file=None
+
+# Load the files.
 tmax = load_acornsat(file_list)
+
+# Select the analysis period
 dates = tmax.index
+tmax = tmax[(dates.year>=syear)&(dates.year<=eyear)]
+dates = tmax.index
+
+# Find the latitude and longitudes for each station
 latslons = np.genfromtxt('BoM_STN_latlon.txt')
 station_ids = tmax.columns.values
 lats = np.zeros(len(station_ids))
@@ -57,19 +72,27 @@ for i, station in enumerate(station_ids):
     station = float(station)
     lats[i] = latslons[np.where(latslons[:,0]==station)[0],1]
     lons[i] = latslons[np.where(latslons[:,0]==station)[0],2]
-tmax = np.array(tmax)
-file_list = sorted(glob.glob('acorn.sat.minT.??????.daily.txt'))
-tmin = np.array(load_acornsat(file_list))
 
+# Convert to a regular numpy array for compute_EHF
+tmax = np.array(tmax)
+
+# Repeat for tmin
+file_list = sorted(glob.glob('acorn.sat.minT.??????.daily.txt'))
+tmin = load_acornsat(file_list)
+dates = tmin.index
+tmin = tmin[(dates.year>=syear)&(dates.year<=eyear)]
+dates = tmin.index
+tmin = np.array(tmin)
+
+# Caclulate heatwave stats
 HWA, HWM, HWF, HWN, HWD, HWT, pct = comp.compute_EHF(tmax,
         tmin,
         dates=dates,
         modified=True,
-        thres_file=None,
+        thres_file=thres_file,
         season='summer')
 
-syear = 1910
-eyear = 2014
+# Save to a netCDF file.
 years = range(syear,eyear+1,1)
 season = 'summer'
 out_file_name = 'EHF_heatwaves_ACORNSAT_%s_%s_%s.nc' %(syear, eyear, season)
@@ -87,8 +110,8 @@ setattr(otime, "units", "year")
 setattr(otime, "standard_name", "time")
 
 oday = outfile.createVariable("day", 'i', dimensions=('day'))
-setattr(otime, "long_name", "Day of Year")
-setattr(otime, "units", "days since 0000-01-01")
+setattr(oday, "long_name", "Day of Year")
+setattr(oday, "units", "days since 0000-01-01")
 
 olat = outfile.createVariable("lat",'f', dimensions=('station'))
 setattr(olat, "long_name", "Latitude")
@@ -99,6 +122,9 @@ olon = outfile.createVariable("lon",'f',dimensions=('station'))
 setattr(olon, "long_name", "Longitude")
 setattr(olon, "units", "degrees_east")
 setattr(olon, "standard_name", "longitude")
+
+ostation = outfile.createVariable("station", 'f', dimensions=('station'))
+setattr(ostation, "long_name", "Station ID")
 
 oHWA = outfile.createVariable("HWA", 'f', dimensions=(['time','station']))
 setattr(oHWA, "long_name"," Heat Wave Amplitude")
@@ -133,7 +159,7 @@ elif season == 'yearly':
     setattr(oHWT, "description","First heat wave day of the year from 1st of Jul")
 setattr(oHWT, "units", "day")
 
-opct = outfile.createVariable("90thpercentile", 'f', dimensions=(['day','station']))
+opct = outfile.createVariable("PRCTILE90", 'f', dimensions=(['day','station']))
 setattr(opct, "long_name", "90th Percentile")
 setattr(opct, "units", "C")
 setattr(opct, "description", "90th percentile used as threshold")
@@ -147,6 +173,7 @@ otime[:] = years
 oday[:] = range(1,366,1)
 olat[:] = lats 
 olon[:] = lons
+ostation[:] = station_ids
 oHWA[:] = HWA
 oHWM[:] = HWM
 oHWF[:] = HWF
