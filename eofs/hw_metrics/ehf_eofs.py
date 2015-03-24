@@ -5,17 +5,18 @@ EHF heat wave metrics have been calculated from AWAP Tmax and Tmin data using a
 heat wave characteristics. They are HWF (frequency), HWD (duration), HWA 
 (amplitude), HWM (magnitude), HWN (number) and HWT (timing).
 """
+import __init__
+from numpy import arange, cos, sqrt, deg2rad, newaxis, dot, zeros
+from pandas import concat
+from netCDF4 import Dataset
+import scipy.stats as stats
+from eofs.standard import Eof
+from tools import rotate
+from tools import pcaplot
+from tools import load_data
+
 
 if __name__ == '__main__':
-    from numpy import arange, cos, sqrt, deg2rad, newaxis, dot, zeros
-    from pandas import concat
-    from eofs.standard import Eof
-    import rotate
-    import pcaplot
-    from netCDF4 import Dataset
-    import load_data
-    import scipy.stats as stats
-    import pdb
     # Load the heat wave metrics.
     directory = ('/srv/ccrc/data35/z5032520/')
     fname = (directory+'AWAP/yearly/ehfhw/CCRC_NARCliM_1911-'
