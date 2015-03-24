@@ -65,7 +65,7 @@ def calc_percentile(tave, nyears, nwindow=15, modified=True, thres_file=None):
 
 def compute_EHF(
         tmax, tmin, dates=None, modified=True, nwindow=15,
-        thres_file=None, season='yearly'):
+        thres_file=None, season='yearly',bsyear=None,beyear=None):
     """Function to calculate Excess Heat Factor (EHF) heatwaves from tmax
     and tmin. It removes the leapdays and makes all calculations as if lead
     days didn't exist. It requires that the dates include complete years 
@@ -104,6 +104,9 @@ def compute_EHF(
     (Perkins and Alexander, 2012 JCLIM; Perkins et al.,2012 GRL)
     """
 
+    if (bsyear==None) or (beyear==None):
+              sys.exit("""ERROR: you didn't provide base period years to 
+                      compute_EHF function, please revise""")
 
     months_all = np.asarray([dates[i].month for i in xrange(len(dates))])    
     days_all = np.asarray([dates[i].day for i in xrange(len(dates))])
@@ -126,17 +129,26 @@ def compute_EHF(
     months = np.asarray([dates[i].month for i in xrange(len(dates))])  
     days = np.asarray([dates[i].day for i in xrange(len(dates))])
 
+    # years is modified below to change the start of the year (e.g. 
+    #financial year) but it shouldnt be changed for the calculation of 
+    #the percentiles, which consider natural years.
+    base_years=years.copy()
+
     # Taking starting and ending years
     syear = np.min(years)
     eyear = np.max(years)
     nyears = eyear-syear+1
 
-    # Start year: financial year so that summers belong to the same year 
-    # (not split in DEC/JAN)
-    years[months<7] -= 1
-    shift_pct = np.argmax(years==syear) # Because the percentile is 
-    # calculated using natural years (1st day corresponds to 1st Jan), 
-    # so it must be shifted when comparing with temp.
+    if season=='summer' or season=='yearly':
+        #Start year: financial year so that summers belong to the same year
+        # (not split in DEC/JAN)
+        years[months<7]-=1
+        shift_pct=np.argmax(years==syear) #Because the percentile is 
+        # calculated using natural years (1st day corresponds to 1st 
+        # Jan), so it must be shifted when comparing with temp. 
+    if season=='Global_SH_summer' or season=='Global_NH_summer':
+        years[months<5]-=1
+        shift_pct=np.argmax(years==syear)
 
     # Calculate average temperature 
     if tmax.shape!=tmin.shape:
@@ -147,7 +159,11 @@ def compute_EHF(
     tave = (tmax+tmin)/2.
 
     # Calculate the percentiles
-    pct = calc_percentile(tave, nyears, nwindow, modified, thres_file)
+    nbyears=beyear-bsyear+1
+    #print tave[(base_years>=bsyear) & (base_years<=beyear),:,:].shape
+    #print nbyears,nwindow
+    pct = calc_percentile(tave[(base_years>=bsyear)&(base_years<=beyear),...],
+            nbyears,nwindow,modified,thres_file)
 
     ## DEFINING ARRAYS HOLDING METRICS
     HWA_EHF_yearly = np.zeros((nyears,)+tave.shape[1:],np.float64)
@@ -168,25 +184,37 @@ def compute_EHF(
         print "Processing year: %s" %(this_year)
 
         # Selecting variables for the running year
-        tave_y = tave[years==this_year,...].copy()
-        ndays_y = tave_y.shape[0]
-        months_y = months[years==this_year]
-        years_y = years[years==this_year]
-        EHIaccl = np.zeros(tave_y.shape,dtype=np.float64)
+        years_prevmonth=years.copy()
+        years_prevmonth[years_prevmonth!=this_year]=-99
+        years_prevmonth[np.argmax(years==this_year)-32:np.argmax(years==this_year)]=this_year
+        tave_y_prevmonth=tave[years_prevmonth==this_year,...].copy()
+        tave_y=tave_y_prevmonth[32:,...]
+        ndays_y=tave_y.shape[0]
+        months_y=months[years==this_year]
+        years_y=years[years==this_year]
+        EHIaccl=np.zeros(tave_y.shape,dtype=np.float64)
 
-        for t in xrange(0, ndays_y):
-            EHIaccl[t,...] = np.mean(tave_y[t+30:t+33,:,:], axis=0) \
-                    -np.mean(tave_y[t:t+30,:,:], axis=0) 
+        for t in xrange(ndays_y):
+            # tave_y_prevmonth includes both the running year and the previous 
+            # month if changes in the code are introduced to make the year 
+            # start in January, the code might crash because it might not find 
+            # the previous month, because input data starts in January.
+            t_prevm=t+32
+            EHIaccl[t,...]=np.mean(tave_y_prevmonth[t_prevm-2:t_prevm+1,...],axis=0) \
+                        - np.mean(tave_y_prevmonth[t_prevm-32:t_prevm-2,...],axis=0)
 
         ###### CALCULATING Significance (EHIsig) ########
         EHIsig = np.zeros(tave_y.shape, dtype=np.float64)
+
         if modified==False:
-            for t in xrange(3, ndays_y):
-                EHIsig[t,...] = np.mean(tave_y[t-2:t+1,...], axis=0)-pct
+            for t in xrange(ndays_y):
+                t_prevm=t+32
+                EHIsig[t,...]=np.mean(tave_y_prevmonth[t_prevm-2:t_prevm+1,...],axis=0)-pct
         else:
-            for t in xrange(3, ndays_y):
-                EHIsig[t,...] = np.mean(tave_y[t-2:t+1,...],axis=0) \
-                        -pct[(t+shift_pct)%365,...]
+            for t in xrange(ndays_y):
+                t_prevm=t+32
+                EHIsig[t,...]=np.mean(tave_y_prevmonth[t_prevm-2:t_prevm+1,...],axis=0) \
+                        - pct[(t+shift_pct) % 365,...]
 
         ##### CALCULATING EHF AND EHF_EXCEED ########
         EHF = np.maximum(1, EHIaccl)*EHIsig
@@ -201,6 +229,14 @@ def compute_EHF(
             years_y[(months_y>=4) & (months_y<=10)] =- 99
             shift_start_year = (dt.datetime(syear, 11, 01) \
                     -dt.datetime(syear, 07, 01)).days
+        elif season=='Global_SH_summer':
+            EHF_exceed[(months_y>=3) & (months_y<=11),...]=False
+            years_y[(months_y>=3) & (months_y<=11)]=-99
+            shift_start_year=(dt.datetime(syear,12,01)-dt.datetime(syear,05,01)).days
+        elif season=='Global_NH_summer':
+            EHF_exceed[(months_y<=5) | (months_y>=9),...]=False
+            years_y[(months_y<=5) | (months_y>=9)]=-99
+            shift_start_year=(dt.datetime(syear,6,01)-dt.datetime(syear,05,01)).days
         elif season=='yearly':
             shift_start_year = 0
 
