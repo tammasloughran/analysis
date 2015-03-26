@@ -5,6 +5,8 @@ from eofs.standard import Eof
 from tools import rotate
 from tools import pcaplot
 import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
+from mpl_toolkits.mplot3d import Axes3D
 
 if __name__ == '__main__':
     # Load the data
@@ -36,9 +38,42 @@ if __name__ == '__main__':
     # Rotate. No need to reshape. 
     eofs2 = eofs
     pcs2 = pcs
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(eofs[0,...], eofs[1,...], eofs[2,...], marker='.')
+    ax.plot([-1,1],[0,0],[0,0])
+    ax.plot([0,0],[-1,1],[0,0])
+    ax.plot([0,0],[0,0],[-1,1])
+    ax.set_xlabel('EOF1')
+    ax.set_ylabel('EOF2')
+    ax.set_zlabel('EOF3')
+    plt.title("Simple HWN EOFs")
+    plt.show()
     eofs, R = rotate.varimax(eofs.T, normalize=False)
     pcs = np.dot(pcs, R)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(eofs.T[0,...], eofs.T[1,...], eofs.T[2,...], marker='.')
+    ax.plot([-1,1],[0,0],[0,0])
+    ax.plot([0,0],[-1,1],[0,0])
+    ax.plot([0,0],[0,0],[-1,1])
+    ax.set_xlabel('EOF1')
+    ax.set_ylabel('EOF2')
+    ax.set_zlabel('EOF3')
+    plt.title("Rotated HWN EOFs")
+    plt.show()
 
     # Make picures
-    plt.scatter(lon,lat,s=eofs[:,0]*70)
-    plt.show()
+    mapping = Basemap(projection='cyl',llcrnrlat=-44,
+            urcrnrlat=-10,llcrnrlon=112, urcrnrlon=156)
+    sign = np.sign(eofs2.T[:,0])
+    mapping.scatter(lon,lat,s=abs(eofs2.T[:,0])*100,c=sign,cmap='bwr')
+    mapping.drawcoastlines()
+    plt.title("HWN simple EOF1")
+    plt.savefig("HWN_simple_EOF1.eps",format='eps')
+    fig = plt.figure()
+    plt.plot(range(1911,2015), pcs2[:,0])
+    plt.title("HWN simple PC1")
+    plt.xlabel("Year")
+    plt.ylabel("Normalized Score")
+    plt.savefig("HWN_simple_PC1.eps",format='eps')
