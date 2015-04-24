@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 if __name__ == '__main__':
     # Load the data
-    directory = '/srv/ccrc/data35/z5032520/ACORNSAT/'
+    directory = '/srv/ccrc/data35/z5032520/ACORNSAT/yearly/EHF/'
     filename = 'EHF_heatwaves_ACORNSAT_1911_2014_summer.nc'
     ncin = Dataset(directory+filename, 'r')
     hwf = ncin.variables['HWF'][:]
@@ -21,6 +21,19 @@ if __name__ == '__main__':
     hwt = ncin.variables['HWT'][:]
     lat = ncin.variables['lat'][:]
     lon = ncin.variables['lon'][:]
+    stationids = ncin.variables['stationid'][:]
+
+    # Quality control
+    good_stations = np.load('../../dataproc/qqtest.npy')
+    hwf = hwf[:,good_stations]
+    hwn = hwn[:,good_stations]
+    hwd = hwd[:,good_stations]
+    hwm = hwm[:,good_stations]
+    hwa = hwa[:,good_stations]
+    hwt = hwt[:,good_stations]
+    lat = lat[good_stations]
+    lon = lon[good_stations]
+    stationids = stationids[good_stations]
 
     # Perform PCA
     retain = 4
