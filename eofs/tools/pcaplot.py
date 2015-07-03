@@ -61,13 +61,13 @@ def plot_eigenvalues(eigens, errors, name):
     plt.errorbar(range(1,20), eigens[0:19], yerr=errors[0:19], fmt='.')
     plt.xlabel("PC")
     plt.ylabel("Eigenvalue")
-    plt.title("Scree Plot")
+    plt.title(name+" Scree Plot")
     rev = svnversion()
     plotfilename = name+"_scree_r"+rev+".eps"
     plt.savefig(plotfilename, format='eps')
 
 
-def plot_eofs(eofs, lon, lat, name):
+def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
     """Plots the eof patterns and saves them in .eps format.
 
     Arguments
@@ -75,27 +75,42 @@ def plot_eofs(eofs, lon, lat, name):
     lon -- array of longitudes from the netcdf file.
     lat -- array of latitudes from the netcdf rile.
     name -- output plot file name.
+    single_eof -- plot the single_eofth EOF in eofs on its own. (Default None)
+    rot -- sting indicating rotation.
     """
     from numpy import arange, meshgrid
     import matplotlib.pyplot as plt
+    import matplotlib
     from mpl_toolkits.basemap import Basemap
     import math
-    # Define the scale of the plot.
+    # Define the scale of the plot based on minima and maxima.
     maxval = eofs[0,:,:].max()
     absminval = abs(eofs[0,:,:].min())
     if absminval>maxval:
         maxval = absminval
     maxval = math.ceil(maxval)
-    step = round((maxval)/13., 2)
-    levs = arange(-(14.*step), (14.*step)+step, step)
+    if maxval<5:
+        #If the maximum is very small round steps to nearest decimal point.
+        step = round((maxval)/4.,1)
+    else:
+        step = math.ceil((maxval)/4.)
+    levs = arange(-(5.*step), (5.*step)+step, step)
     # Define the parallels and meridians
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.,)
     # make the figure
+    matplotlib.rcParams['contour.negative_linestyle'] = 'solid'
     plt.figure()
-    fig, axes = plt.subplots(nrows=2, ncols=2)
+    if single_eof!=None:
+        fig, axes = plt.subplots(nrows=1, ncols=1)
+        count = single_eof
+        subfig = ''
+    else:
+        fig, axes = plt.subplots(nrows=2, ncols=2)
+        count = 0
+        subfig = 'a) '
     string = "EOF "
-    count = 0
+    replace = ['b) ','c) ','d) ', '']
     for ax in axes.flat:
         # Use an equidistant cylyndrical map projection.
         map_axes = Basemap(ax=ax, projection='cyl',
@@ -104,17 +119,22 @@ def plot_eofs(eofs, lon, lat, name):
         # Create the basemap grid 
         x, y = map_axes(*meshgrid(lon, lat))
         # Plot
+        contours = map_axes.contour(x, y, eofs[count, :, :].squeeze(),
+                linewidths=0.4, colors='k',levels=levs)
         cs = map_axes.contourf(x, y, eofs[count, :, :].squeeze(),
-            levels=levs, cmap=plt.cm.RdBu_r)
+                levels=levs, cmap=plt.cm.RdBu_r)
         map_axes.drawparallels(parallels, labels=[True,False,False,False])
         map_axes.drawmeridians(meridians, labels=[False,False,False,True])
         map_axes.drawcoastlines()
         # Labels
-        ax.set_title(string + str(count+1))
+        ax.set_title(subfig + string + str(count+1))
+        subfig = replace[count]
         count = count + 1
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
     cb = plt.colorbar(cs, cax=cbar_ax, orientation='vertical')
+    fig.text(0.5,0.975, head, horizontalalignment='center',
+                   verticalalignment='top')
     # Save
     rev = svnversion()
     plotfilename = name+"_r"+rev+".eps"
@@ -148,7 +168,7 @@ def plot_lags(rhos, ps, name):
     plotfilename = name+"_lagrho_r"+rev+".eps"
     plt.savefig(plotfilename,format='eps')
 
-def plot_pcs(pcs, mode, time, name, yearmean=False):
+def plot_pcs(pcs, mode, time, name, yearmean=False, head=''):
     """Plot the 1st and 2nd principle component time series.
 
     Arguments
@@ -168,14 +188,14 @@ def plot_pcs(pcs, mode, time, name, yearmean=False):
     # Make the figure.
     plt.figure()
     fig, axes = plt.subplots(nrows=2, sharex=True, squeeze=True)
-    pc1.plot(ax=axes[0], style='k', title="PC 1", lw=0.5)
+    pc1.plot(ax=axes[0], style='k', title=head+"PC 1", lw=0.5)
     axr = axes[0].twinx()
     mode.plot(ax=axr, style='b--', lw=0.6)
     # The right axis needs to be realigned to match the left.
     miny, maxy = axes[0].get_ylim() 
     axr.set_ylim(miny, maxy)
     # Repeat for the second PC.
-    pc2.plot(ax=axes[1], style='k', title="PC 2", lw=0.5)
+    pc2.plot(ax=axes[1], style='k', title=head+"PC 2", lw=0.5)
     axr = axes[1].twinx()
     mode.plot(ax=axr, style='b--', lw=0.6)
     miny, maxy = axes[1].get_ylim()

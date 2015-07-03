@@ -23,8 +23,8 @@ if __name__ == '__main__':
              '2014_EHFheatwaves_summer_AWAP0.5deg_detrended.nc')
     hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times\
             = load_data.load_heat_waves(fname)
-    start_year = 1931
-    end_year = 1970
+    start_year = 1911
+    end_year = 2012
     year_range = arange(1911, 2014+1, 1)
     period = np.where((year_range>=start_year)&(year_range<=end_year))
     hwf = hwf[period[0],...]
@@ -104,13 +104,13 @@ if __name__ == '__main__':
         # Plotting.
         years = arange(start_year,end_year+1)
         pcaplot.plot_eigenvalues(explained_variance, errors, metric_name)
-        pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(metric_name))
-        pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(metric_name))
-        pcaplot.plot_eofs(eofs_covariance, lon, lat, 
-                "%s_EOFs_Covariance"%(metric_name))
-        pcaplot.plot_eofs(eofs_correlation, lon, lat, 
-                "%s_EOFs_Correlation"%(metric_name))
-        pcaplot.plot_pcs(pcs, ninoslice, year_range[period], metric_name)
+        pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(metric_name), head='VARIMAX EOFs')
+        pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(metric_name), head='Simple EOFs')
+        #pcaplot.plot_eofs(eofs_covariance, lon, lat, 
+        #        "%s_EOFs_Covariance"%(metric_name))
+        #pcaplot.plot_eofs(eofs_correlation, lon, lat, 
+        #        "%s_EOFs_Correlation"%(metric_name))
+        pcaplot.plot_pcs(pcs, ninoslice, year_range[period], metric_name, head='VARIMAX ')
 
         # Correlations for Summer/Winter
         outfile = open("%s_correlations"%(metric_name),'w')
