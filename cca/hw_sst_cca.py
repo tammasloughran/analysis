@@ -1,10 +1,9 @@
 import numpy as np
 import datetime as dt
-import matplotlib.pyplot as plt
 import load_data
+import cca_plot
 from netCDF4 import Dataset
 from pyclimate.bpcca import BPCCA
-from mpl_toolkits.basemap import Basemap
 from scipy.signal import detrend
 
 # Load variables
@@ -54,35 +53,21 @@ ssta_detrended = np.ma.array(detrend(ssta, axis=0), mask=ssta.mask)
 hwf_detrended = np.ma.array(detrend(hwf, axis=0), mask=hwf.mask)
 
 # Perform CCA
-
-CCA = BPCCA(ssta_detrended, hwf_detrended[:-2,:,:])
+CCA = BPCCA(hwf_detrended[:-2,:,:], ssta_detrended, (4,4))
 L = CCA.leftPatterns()
 R = CCA.rightPatterns()
 r = CCA.correlation()
 a = CCA.rightExpCoeffs()
 b = CCA.leftExpCoeffs()
-print (r)
 
-# Plot
-# Left paterns
-map_axes = Basemap(projection='cyl',
-        llcrnrlat=sst_lats[-1], urcrnrlat=sst_lats[0],
-        llcrnrlon=sst_lons[0], urcrnrlon=sst_lons[-1])
-x, y = map_axes(*np.meshgrid(sst_lons, sst_lats))
-map_axes.contourf(x,y,L[:,:,0],cmap=plt.cm.RdBu_r)
-map_axes.drawcoastlines()
-cb = plt.colorbar()
-plt.show()
-# Right paterns
-map_axes = Basemap(projection='cyl',
-        llcrnrlat=hw_lats[-1], urcrnrlat=hw_lats[0],
-        llcrnrlon=hw_lons[0], urcrnrlon=hw_lons[-1])
-x, y = map_axes(*np.meshgrid(hw_lons, hw_lats))
-map_axes.contourf(x,y,R[:,:,0],cmap=plt.cm.RdBu_r)
-map_axes.drawcoastlines()
-cb = plt.colorbar()
-plt.show()
-# Coeffs
-plt.plot(a[:,0])
-plt.plot(b[:,0])
-plt.show()
+if __name__=='__main__':
+    # Print corelations
+    print (r)
+    # Plot
+    pattern = 0
+    # Left paterns
+    cca_plot.plot_cp(L[...,pattern], hw_lons, hw_lats)
+    # Right paterns
+    cca_plot.plot_cp(R[...,pattern], sst_lons, sst_lats)
+    # Plot coeficients
+    cca_plot.plot_coefs(a[:,pattern],b[:,pattern])
