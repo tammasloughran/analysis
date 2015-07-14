@@ -41,8 +41,8 @@ def load_heat_waves(filename):
     hwm = ma.array(hwm, mask=mask2)
     hwt = ma.array(hwt, mask=mask2)
     for itime in range(times.size):
-        for ilon in range(lon.size):
-            for ilat in range(lat.size):
+        for ilat in range(lat.size):
+            for ilon in range(lon.size):
                 if not mask1[itime,ilat,ilon]:
                     if hwa.mask[itime,ilat,ilon]:
                         hwa.mask[itime,ilat,ilon] = False
@@ -50,6 +50,8 @@ def load_heat_waves(filename):
                     if hwm.mask[itime,ilat,ilon]:
                         hwm.mask[itime,ilat,ilon] = False
                         hwm[itime,ilat,ilon] = 0
+    hwa = ma.array(hwa, mask=mask2)
+    hwm = ma.array(hwm, mask=mask2)
     return hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times
 
 def load_index(fname, standardize=False):

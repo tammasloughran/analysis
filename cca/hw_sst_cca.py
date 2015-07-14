@@ -30,6 +30,7 @@ sst_months = np.array([sst_dates[i].month
 period = np.where(sst_years>=1911)[0]
 sst_dates = sst_dates[period]
 sst_months = sst_months[period]
+sst_years = sst_years[period]
 sst_period = sst[period,...]
 
 # Select the desired months to average over
@@ -70,4 +71,4 @@ if __name__=='__main__':
     # Right paterns
     cca_plot.plot_cp(R[...,pattern], sst_lons, sst_lats)
     # Plot coeficients
-    cca_plot.plot_coefs(a[:,pattern],b[:,pattern])
+    cca_plot.plot_coefs(a[:,pattern], b[:,pattern], sst_years)
