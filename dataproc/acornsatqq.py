@@ -20,7 +20,7 @@ tmin_pass_test = (tmin_percent_exist >= 80.)
 # Do tmax and tmin agree on bad stations?
 agreement_test = (tmax_pass_test==tmin_pass_test).all()
 if agreement_test:
-    print "The following stations have < 80% of data vailable:"
+    print "The following stations have < 80% of data available:"
     print stationid[tmax_pass_test==False]
     np.save('qqtest.npy',tmax_pass_test)
     print "qqtest.npy file saved"

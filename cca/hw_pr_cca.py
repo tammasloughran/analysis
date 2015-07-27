@@ -20,27 +20,32 @@ years = range(1911,2013)
 # Detrend
 pr_detrended = detrend(pr, axis=0)
 pr_detrended = (pr_detrended - pr_detrended.mean(axis=0))/pr_detrended.std()
-hwa_detrended = np.ma.array(detrend(hwa, axis=0), mask=hwa.mask)
-hwa_detrended = np.ma.array((hwa_detrended - hwa_detrended.mean(axis=0))/hwa_detrended.std(), mask=hwa.mask)
+hwa_detrended = np.ma.array(detrend(hwf, axis=0), mask=hwa.mask)
+hwa_detrended = np.ma.array(
+        (hwa_detrended - hwa_detrended.mean(axis=0))/hwa_detrended.std(), 
+        mask=hwa.mask)
 
 # Perform CCA
 CCA = BPCCA(hwa_detrended[:-3,...], pr_detrended, (5,5))
 L = CCA.leftPatterns()
 R = CCA.rightPatterns()
-r = CCA.correlation()
 a = CCA.rightExpCoeffs()
 b = CCA.leftExpCoeffs()
 
 if __name__=='__main__':
-    lmask, rmask = CCA.MCTestMask(500,100,0.05)
+    lmask, rmask = CCA.MCTestMask(50,100,0.05)
     # Print corelations
-    print (r)
+    print CCA.correlation()
+    # Variance fraction
+    #print CCA.varianceFraction()
     # Plot
     pattern = 0
     # Left paterns
-    cca_plot.plot_cp(L[...,pattern], hw_lons, hw_lats, 'HWA', lmask[...,pattern])
+    cca_plot.plot_cp(L[...,pattern], hw_lons, hw_lats, 'HWA', 
+            lmask[...,pattern])
     # Right paterns
-    cca_plot.plot_cp(R[...,pattern], pr_lons, pr_lats, 'Pressure', rmask[...,pattern])
+    cca_plot.plot_cp(R[...,pattern], pr_lons, pr_lats, 'Pressure', 
+            rmask[...,pattern])
     # Plot coeficients
     cca_plot.plot_coefs(a[:,pattern], b[:,pattern], years,
             llabel='HWA', rlabel='Pressure')

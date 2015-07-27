@@ -39,11 +39,16 @@ def plot_cp(cp, lons, lats, name, mask=None):
             llcrnrlat=lats[-1], urcrnrlat=lats[0],
             llcrnrlon=lons[0], urcrnrlon=lons[-1])
     x, y = map_axes(*np.meshgrid(lons, lats))
+    if cp.shape == (68,88):
+        from netCDF4 import Dataset
+        msknc = Dataset('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
+        grey = msknc.variables['mask'][:]
+        #grey = np.ma.array(grey,mask=np.logical_not(grey))
+        map_axes.contourf(x, y, 0.5*grey, vmin=0, vmax=1, cmap='Greys')
     map_axes.contour(x, y, cp, levels, colors='k', linewidths=0.4)
     cs = map_axes.contourf(x, y, cp, levels, cmap=plt.cm.RdBu_r)
-    if mask.any():
-        plt.contourf(x, y, mask, 1, colors='none', 
-                hatches=[None,'.'], extend='lower')
+    plt.contourf(x, y, mask, 1, colors='none', 
+            hatches=[None,'.'], extend='lower')
     map_axes.drawcoastlines()
     parallels = np.arange(lats[-1], lats[0], 10.)
     meridians = np.arange(lons[0], lons[-1], 20.)

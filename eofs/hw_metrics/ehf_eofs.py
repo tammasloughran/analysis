@@ -6,11 +6,10 @@ heat wave characteristics. They are HWF (frequency), HWD (duration), HWA
 (amplitude), HWM (magnitude), HWN (number) and HWT (timing).
 """
 import __init__
-from numpy import arange, cos, sqrt, deg2rad, newaxis, dot, zeros
 import numpy as np
+import scipy.stats as stats
 from pandas import concat
 from netCDF4 import Dataset
-import scipy.stats as stats
 from eofs.standard import Eof
 from tools import rotate
 from tools import pcaplot
@@ -25,14 +24,14 @@ if __name__ == '__main__':
             = load_data.load_heat_waves(fname)
     start_year = 1911
     end_year = 2012
-    year_range = arange(1911, 2014+1, 1)
-    period = np.where((year_range>=start_year)&(year_range<=end_year))
-    hwf = hwf[period[0],...]
-    hwn = hwn[period[0],...]
-    hwd = hwd[period[0],...]
-    hwa = hwa[period[0],...]
-    hwm = hwm[period[0],...]
-    hwt = hwt[period[0],...]
+    year_range = np.arange(1911, 2014+1, 1)
+    period = np.where((year_range>=start_year)&(year_range<=end_year))[0]
+    hwf = hwf[period,...]
+    hwn = hwn[period,...]
+    hwd = hwd[period,...]
+    hwa = hwa[period,...]
+    hwm = hwm[period,...]
+    hwt = hwt[period,...]
 
     # Load variability indices.
     fname = 'indices/Nino3.4/Nino3.4_monthly_1870_2014_hadisst.dat'
@@ -79,8 +78,8 @@ if __name__ == '__main__':
 
     # Perform PCA on all metrics.
     # Calculate weightings.
-    coslat = cos(deg2rad(lat)).clip(0.,1.)
-    wgts = sqrt(coslat)[..., newaxis]
+    coslat = np.cos(np.deg2rad(lat)).clip(0.,1.)
+    wgts = np.sqrt(coslat)[..., np.newaxis]
     metric_dict = {"HWN":hwn,"HWF":hwf,"HWD":hwd,"HWA":hwa,"HWM":hwm,"HWT":hwt}
     for metric_name in metric_dict.keys():
         # Set up solver
@@ -102,7 +101,7 @@ if __name__ == '__main__':
         #pcaplot.eofscatter(eofs)
 
         # Plotting.
-        years = arange(start_year,end_year+1)
+        years = np.arange(start_year,end_year+1)
         pcaplot.plot_eigenvalues(explained_variance, errors, metric_name)
         pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(metric_name), head='VARIMAX EOFs')
         pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(metric_name), head='Simple EOFs')
@@ -124,8 +123,8 @@ if __name__ == '__main__':
         outfile.close()
 
         # Lag Correlations
-        rho_lag = zeros((25, 4))
-        p_lag = zeros((25, 4))
+        rho_lag = np.zeros((25, 4))
+        p_lag = np.zeros((25, 4))
         mds = ["Nino3.4","SOI","DMI","SAM","STRH"]
         mdsn = 0
         for mode in [nino34, soi, dmi, sam, strh]:
