@@ -118,6 +118,11 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
             llcrnrlon=112, urcrnrlon=156)
         # Create the basemap grid 
         x, y = map_axes(*meshgrid(lon, lat))
+        if eofs.shape[1:] == (68,88):
+            from netCDF4 import Dataset
+            msknc = Dataset('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
+            grey = msknc.variables['mask'][:]
+            map_axes.contourf(x, y, 0.5*grey, vmin=0, vmax=1, cmap='Greys')
         # Plot
         contours = map_axes.contour(x, y, eofs[count, :, :].squeeze(),
                 linewidths=0.4, colors='k',levels=levs)
@@ -133,7 +138,7 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
     cb = plt.colorbar(cs, cax=cbar_ax, orientation='vertical')
-    fig.text(0.5,0.975, head, horizontalalignment='center',
+    fig.text(0.5,0.975, head+' of '+name, horizontalalignment='center',
                    verticalalignment='top')
     # Save
     rev = svnversion()

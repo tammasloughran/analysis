@@ -26,14 +26,14 @@ months = np.array([dates[i].month for i in range(dates.size)])
 years = np.array([dates[i].year for i in range(dates.size)])
 
 # Get base period data (1961-1990)
-for cyear in range(1961,1991,1):
+for cyear in range(1961,1991):
     ncdata = Dataset(twentyc_dir+'aus_prmsl.%s.nc'%(cyear))
     pr_cyear = ncdata.variables['prmsl'][:]
     pr_base[years==cyear,:,:] = pr_cyear
 
 # Calculate climatology over base period 
 pr_clim = np.zeros((12,30,lat.size,lon.size))
-for cyear in range(1961,1991,1):
+for cyear in range(1961,1991):
     iyear = cyear-1961
     for cmonth in range(1,13,1):
         imonth = cmonth-1
@@ -45,7 +45,7 @@ pr_clim = pr_clim.mean(axis=1)
 pr_summer = np.zeros([101,lat.size,lon.size])
 pr_monthly = np.zeros([12,lat.size,lon.size])
 reference = dt.datetime(1800,1,1,0,0)
-for cyear in range(1911,2013,1):
+for cyear in range(1911,2013):
     iyear = cyear-1911
     # Load
     ncdata = Dataset(twentyc_dir+'aus_prmsl.%s.nc'%(cyear))
@@ -60,16 +60,16 @@ for cyear in range(1911,2013,1):
         pr_monthly[imonth,:,:] = pr_cyear[months==cmonth].mean(axis=0)
     # Anomalies
     pr_anom = pr_monthly - pr_clim
-    # Summer mean (NOV of previous year to MAR of the current year)
+    # Summer mean (NOV of current year to MAR of the next year)
+    # JAN-MAR pressure data for next year
+    pr_next = pr_anom[0:4,:,:]
     if cyear!=1911:
-        pr2 = pr_anom[0:3,:,:]
-        pr3 = np.append(pr1,pr2,axis=0)
-        pr_summer[iyear-1,:,:] = pr3.mean(axis=0)
-    # NOV-DEC Pressure data for next year
-    pr1 = pr_anom[10:12,:,:]
+        pr_current = pr_anom[10:13,:,:]
+        pr_season = np.append(pr_current,pr_next,axis=0)
+        pr_summer[iyear-1,:,:] = pr_season.mean(axis=0)
 
 # Output file
-outfile = Dataset("summer_mslp_1911-2013.nc",'w')
+outfile = Dataset("summer_mslp_1911-2011.nc",'w')
 # Dims
 outfile.createDimension("time", size=pr_summer.shape[0])
 outfile.createDimension("lat", size=pr_summer.shape[1])
@@ -92,7 +92,7 @@ setattr(omslp,"long_name","Summer Mean Sea Level Pressure Anomaly")
 setattr(omslp,"units","Pa")
 setattr(omslp,"standard_name","air_pressure_anomaly")
 setattr(omslp,"missing_value",-9.96921e+36)
-otime[:] = range(1911,2012,1)
+otime[:] = range(1911,2012)
 olat[:] = lat
 olon[:] = lon
 omslp[:] = pr_summer
