@@ -8,6 +8,7 @@ heat wave characteristics. They are HWF (frequency), HWD (duration), HWA
 import __init__
 import numpy as np
 import scipy.stats as stats
+from scipy.signal import detrend
 from pandas import concat
 from netCDF4 import Dataset
 from eofs.standard import Eof
@@ -77,17 +78,33 @@ if __name__ == '__main__':
     strhslice = strhslice.resample('AS-JUL', how='mean')
 
     # Perform PCA on all metrics.
+    def nsigpcs(varfrac, north):
+        upper = varfrac + north
+        lower = varfrac - north
+        upper = upper[1:]
+        lower = lower[:-1]
+        clear = upper<lower
+        return np.argmax(clear==False)
+
     # Calculate weightings.
     coslat = np.cos(np.deg2rad(lat)).clip(0.,1.)
     wgts = np.sqrt(coslat)[..., np.newaxis]
+    hwn = np.ma.array(detrend(hwn,axis=0),mask=hwn.mask)
+    hwf = np.ma.array(detrend(hwf,axis=0),mask=hwf.mask)
+    hwd = np.ma.array(detrend(hwd,axis=0),mask=hwd.mask)
+    hwa = np.ma.array(detrend(hwa,axis=0),mask=hwa.mask)
+    hwm = np.ma.array(detrend(hwm,axis=0),mask=hwm.mask)
+    hwt = np.ma.array(detrend(hwt,axis=0),mask=hwt.mask)
     metric_dict = {"HWN":hwn,"HWF":hwf,"HWD":hwd,"HWA":hwa,"HWM":hwm,"HWT":hwt}
     for metric_name in metric_dict.keys():
         # Set up solver
-        retain = 4
         solver = Eof(metric_dict[metric_name], weights=wgts)
-        pcs = solver.pcs(pcscaling=1, npcs=retain)
         explained_variance = solver.varianceFraction()
         errors = solver.northTest(vfscaled=True)
+        retain = nsigpcs(explained_variance, errors)
+        if retain<3:
+            retain=4
+        pcs = solver.pcs(pcscaling=1, npcs=retain)
         eigens = solver.eigenvalues()
         eofs = solver.eofs(eofscaling=2, neofs=retain)
         eofs_covariance = solver.eofsAsCovariance(pcscaling=1, neofs=retain)
@@ -114,7 +131,7 @@ if __name__ == '__main__':
         # Correlations for Summer/Winter
         outfile = open("%s_correlations"%(metric_name),'w')
         outfile.write("      Nino3.4       SOI          DMI           SAM           STRH\n")
-        for pc in [0,1,2,3]:
+        for pc in range(pcs.shape[1]):
             outfile.write("PC%0.f: "%(pc+1))
             for mode in [ninoslice, soislice, dmislice, samslice, strhslice]:
                 rho, p = stats.spearmanr(mode, pcs[:-1,pc])
@@ -135,7 +152,7 @@ if __name__ == '__main__':
                 mode_lag = mode_lag[(axis==12)|(axis==1)|(axis==2)]
                 mode_lag = mode_lag.resample('AS-JUL', how='mean')
                 mode_lag = mode_lag['%s-01'%(start_year):'%s-12'%(end_year-1)]
-                for pc in [0,1,2,3]:
+                for pc in range(pcs.shape[1]):
                     rho_lag[lag,pc], p_lag[lag,pc] = \
                         stats.spearmanr(mode_lag, pcs[:-1,pc])
             pcaplot.plot_lags(rho_lag, p_lag, metric_name+"_%s"%(mds[mdsn]))
