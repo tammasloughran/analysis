@@ -112,18 +112,22 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
     string = "EOF "
     replace = ['b) ','c) ','d) ', '']
     for ax in axes.flat:
+        try:
+            dummy = eofs[count, :, :]
+        except:
+            break
         # Use an equidistant cylyndrical map projection.
         map_axes = Basemap(ax=ax, projection='cyl',
             llcrnrlat=-44, urcrnrlat=-10,
             llcrnrlon=112, urcrnrlon=156)
         # Create the basemap grid 
         x, y = map_axes(*meshgrid(lon, lat))
+        # Plot
         if eofs.shape[1:] == (68,88):
             from netCDF4 import Dataset
             msknc = Dataset('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
             grey = msknc.variables['mask'][:]
             map_axes.contourf(x, y, 0.5*grey, vmin=0, vmax=1, cmap='Greys')
-        # Plot
         contours = map_axes.contour(x, y, eofs[count, :, :].squeeze(),
                 linewidths=0.4, colors='k',levels=levs)
         cs = map_axes.contourf(x, y, eofs[count, :, :].squeeze(),
