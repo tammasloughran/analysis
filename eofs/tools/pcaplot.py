@@ -22,6 +22,7 @@ def eofscatter(eofs):
     ax.set_ylabel('EOF2')
     ax.set_zlabel('EOF3')
     plt.show()
+    plt.close()
 
 def get_dates(time, frequency='M'):
     """Create a date_range object from time axis array.
@@ -65,6 +66,7 @@ def plot_eigenvalues(eigens, errors, name):
     rev = svnversion()
     plotfilename = name+"_scree_r"+rev+".eps"
     plt.savefig(plotfilename, format='eps')
+    plt.close()
 
 
 def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
@@ -83,6 +85,7 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
     import matplotlib
     from mpl_toolkits.basemap import Basemap
     import math
+    from netCDF4 import Dataset
     # Define the scale of the plot based on minima and maxima.
     maxval = eofs[0,:,:].max()
     absminval = abs(eofs[0,:,:].min())
@@ -124,10 +127,9 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
         x, y = map_axes(*meshgrid(lon, lat))
         # Plot
         if eofs.shape[1:] == (68,88):
-            from netCDF4 import Dataset
             msknc = Dataset('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
             grey = msknc.variables['mask'][:]
-            map_axes.contourf(x, y, 0.5*grey, vmin=0, vmax=1, cmap='Greys')
+            map_axes.contourf(x, y, grey, (0,0.5,1), colors=('1','0.5'))
         contours = map_axes.contour(x, y, eofs[count, :, :].squeeze(),
                 linewidths=0.4, colors='k',levels=levs)
         cs = map_axes.contourf(x, y, eofs[count, :, :].squeeze(),
@@ -148,6 +150,7 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
     rev = svnversion()
     plotfilename = name+"_r"+rev+".eps"
     plt.savefig(plotfilename, format='eps')
+    plt.close()
 
 def plot_lags(rhos, ps, name):
     """Plot the laged correlations betweena a pc and index.
@@ -176,6 +179,7 @@ def plot_lags(rhos, ps, name):
     rev = svnversion()
     plotfilename = name+"_lagrho_r"+rev+".eps"
     plt.savefig(plotfilename,format='eps')
+    plt.close()
 
 def plot_pcs(pcs, mode, time, name, yearmean=False, head=''):
     """Plot the 1st and 2nd principle component time series.
@@ -217,6 +221,7 @@ def plot_pcs(pcs, mode, time, name, yearmean=False, head=''):
     rev = svnversion()
     plotfilename = name+"_pcs_r"+rev+".eps"
     plt.savefig(plotfilename,format='eps')
+    plt.close()
 
 def svnversion():
     """Return the current svn revision.
