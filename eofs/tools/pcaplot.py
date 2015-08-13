@@ -3,6 +3,8 @@
 These functions are intended to plot EOFs, PCs and eigenvalues caluclated
 from the eofs python package.
 """
+import matplotlib.pyplot as plt
+
 
 def eofscatter(eofs):
     """Creates an interractive 3D plot of the first 3 EOFs in state space.
@@ -11,7 +13,6 @@ def eofscatter(eofs):
     eofs -- the eofs to be plotted.
     """
     from mpl_toolkits.mplot3d import Axes3D
-    import matplotlib.pyplot as plt
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(eofs[0,:,:], eofs[1,:,:], eofs[2,:,:], marker='.')
@@ -56,7 +57,6 @@ def plot_eigenvalues(eigens, errors, name):
     eigens -- array of eigenvalues.
     errors -- the corresponding array of errors from a North test.
     """
-    import matplotlib.pyplot as plt
     plt.figure()
     neig = range(len(eigens))
     plt.errorbar(range(1,20), eigens[0:19], yerr=errors[0:19], fmt='.')
@@ -81,7 +81,6 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
     rot -- sting indicating rotation.
     """
     from numpy import arange, meshgrid
-    import matplotlib.pyplot as plt
     import matplotlib
     from mpl_toolkits.basemap import Basemap
     import math
@@ -159,7 +158,6 @@ def plot_lags(rhos, ps, name):
     rhos -- correlations for each PC against each month. PCs on second axis.
     ps -- same as rhos but p-values.
     """
-    import matplotlib.pyplot as plt
     from numpy import nan, arange
     plt.figure()
     mrange = arange(0,-25,-1)
@@ -188,7 +186,6 @@ def plot_pcs(pcs, mode, time, name, yearmean=False, head=''):
     pcs -- matrix of PCs.
     time -- array of time axis.
     """
-    import matplotlib.pyplot as plt
     from pandas import date_range, Series
     # Create pandas timestamps for PCs.
     dates = get_dates(time, frequency='A')
@@ -221,6 +218,52 @@ def plot_pcs(pcs, mode, time, name, yearmean=False, head=''):
     rev = svnversion()
     plotfilename = name+"_pcs_r"+rev+".eps"
     plt.savefig(plotfilename,format='eps')
+    plt.close()
+
+def station_scatter(stations,lats,lons,string,reverse=True):
+    """Plot a field of station EOF.
+
+    Arguments
+    stations -- the station data eof to plot.
+    lats -- the latitudes of each station.
+    lons -- the longitudes of each station.
+    string -- the title of the plot.
+    reverse -- reverse the signs.
+    """
+    from mpl_toolkits.basemap import Basemap
+    import numpy as np
+    import pdb
+    plt.figure()
+    # Create map
+    mapping = Basemap(projection='cyl',llcrnrlat=-44,
+            urcrnrlat=-10,llcrnrlon=112, urcrnrlon=156)
+    mapping.drawcoastlines()
+    # Reverse sign if desired.
+    if reverse:
+        stations = stations*-1
+    # Separate positive and negative values since 
+    # I want different markers for each.
+    plus, circ = stations.copy(), stations.copy()
+    plus[plus<0] = 0
+    circ[circ>0] = 0
+    circ = abs(circ)
+    # Plot data
+    mapping.scatter(lons,lats,s=plus*(300/0.9),marker='+',c='r')
+    mapping.scatter(lons,lats,s=circ*(300/0.9),marker='o',
+            edgecolors='b',facecolors='none')
+    # Plot key
+    mapping.scatter([126,126,126],[-34,-35.75,-37.5],[300,200,100],
+            marker='+',c='r')
+    mapping.scatter([126,126,126],[-39.25,-41,-42.75],[100,200,300],
+            marker='o',edgecolors='b',facecolors='none')
+    plt.text(128,-34-0.38,'= 0.9')
+    plt.text(128,-35.75-0.38,'= 0.6')
+    plt.text(128,-37.5-0.38,'= 0.3')
+    plt.text(128,-39.25-0.38,'= -0.3')
+    plt.text(128,-41-0.38,'= -0.6')
+    plt.text(128,-42.75-0.38,'= -0.9')
+    plt.title(string)
+    plt.savefig(string+'.eps',format='eps')
     plt.close()
 
 def svnversion():
