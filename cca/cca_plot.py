@@ -25,6 +25,27 @@ def get_levels(data):
         step = math.ceil((maxval)/5.)
     return np.arange(-(5.*step), (5.*step)+step, step)
 
+def plot_eigenvalues(eigens, errors, name):
+    """Make a scree plot of the first 20 eigenvalues.
+    
+    It also plots the error bars from the Nort test. 
+    PC/EOF pairs whose error pars do not overlap are significant.
+
+    Arguments
+    eigens -- array of eigenvalues.
+    errors -- the corresponding array of errors from a North test.
+    """
+    plt.figure()
+    neig = range(len(eigens))
+    plt.errorbar(range(1,20), eigens[0:19], yerr=errors[0:19], fmt='.')
+    plt.xlabel("PC")
+    plt.ylabel("Eigenvalue")
+    plt.title(name+" Scree Plot")
+    rev = svnversion()
+    plotfilename = name+"_scree_r"+rev+".eps"
+    plt.savefig(plotfilename, format='eps')
+    plt.close()
+
 def plot_cp(cp, lons, lats, name, mask=None):
     """Plot a single cannonical pattern.
 
@@ -47,7 +68,8 @@ def plot_cp(cp, lons, lats, name, mask=None):
         map_axes.contourf(x, y, 0.5*grey, vmin=0, vmax=1, cmap='Greys')
     map_axes.contour(x, y, cp, levels, colors='k', linewidths=0.4)
     cs = map_axes.contourf(x, y, cp, levels, cmap=plt.cm.RdBu_r)
-    plt.contourf(x, y, mask, 1, colors='none', 
+    if mask!=None:
+        plt.contourf(x, y, mask, 1, colors='none', 
             hatches=[None,'.'], extend='lower')
     map_axes.drawcoastlines()
     parallels = np.arange(lats[-1], lats[0], 10.)
@@ -60,6 +82,7 @@ def plot_cp(cp, lons, lats, name, mask=None):
     cb = plt.colorbar(cs, orientation='horizontal')
     filename = 'cp_'+name+'_'+svnversion()+'.eps'
     plt.savefig(filename ,format='eps')
+    plt.close()
 
 def plot_coefs(left, right, years, llabel='HWF', rlabel='SST'):
     """Plot the left and right canonical coefficients.
@@ -82,6 +105,7 @@ def plot_coefs(left, right, years, llabel='HWF', rlabel='SST'):
     plt.title('Temporal Expansion Coefficients')
     filename = 'expcoef_'+llabel+'-'+rlabel+'_'+svnversion()+'.eps'
     plt.savefig(filename ,format='eps')
+    plt.close()
 
 def svnversion():
     """Return the current svn revision.
