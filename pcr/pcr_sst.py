@@ -91,7 +91,9 @@ def plot_pcr(slope, p, title, filename):
     cbar = plt.colorbar(orientation='horizontal')
     cbar.set_label('$^\circ$C')
     # Plot the significance mask
-    sigmask = p<0.05
+    import bh_fdr
+    sigmask, p_fdr = bh_fdr.bh_fdr(p, 0.05)
+    #sigmask = p<0.05
     m.contourf(x, y, sigmask, 1, colors='none',hatches=[None,'x'])
     m.drawcoastlines()
     m.drawmeridians(np.arange(sst_lons[0],sst_lons[-1]+10,50.), labels=[1,0,0,1])

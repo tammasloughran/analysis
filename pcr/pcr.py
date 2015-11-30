@@ -5,7 +5,7 @@ from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 
 # Summer pressure anomalies from 20CR
-prfile = ('/home/nfs/z5032520/heatwaves-svn/dataproc/summer_mslp_1911-2013.nc')
+prfile = ('/home/nfs/z5032520/analysis/dataproc/summer_mslp_1911-2011.nc')
 prnc = Dataset(prfile, 'r')
 pr = prnc.variables['mslp'][:]
 pr_lats = prnc.variables['lat'][:]
@@ -61,7 +61,9 @@ def plot_pcr(slope, p, title, filename):
     cbar = plt.colorbar(orientation='horizontal')
     cbar.set_label('Pa')
     # Plot the significance mask
-    sigmask = p<0.05
+    import bh_fdr
+    sigmask, p_fdr = bh_fdr.bh_fdr(p, 0.05)
+    #sigmask = p<0.05
     m.contourf(x, y, sigmask, 1, colors='none',hatches=[None,'.'])
     m.drawcoastlines()
     m.drawmeridians(np.arange(pr_lons[0],pr_lons[-1]+10,25.), labels=[1,0,0,1])
