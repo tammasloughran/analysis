@@ -75,6 +75,7 @@ def linregress_2D(x,y):
 
 def plot_pcr(slope, p, title, filename):
     import math
+    import bh_fdr
     # Create the map projection
     m = Basemap(projection='mill',
             llcrnrlon=sst_lons[0],llcrnrlat=sst_lats[-1],
@@ -91,13 +92,12 @@ def plot_pcr(slope, p, title, filename):
     cbar = plt.colorbar(orientation='horizontal')
     cbar.set_label('$^\circ$C')
     # Plot the significance mask
-    import bh_fdr
     sigmask, p_fdr = bh_fdr.bh_fdr(p, 0.05)
     #sigmask = p<0.05
     m.contourf(x, y, sigmask, 1, colors='none',hatches=[None,'x'])
     m.drawcoastlines()
-    m.drawmeridians(np.arange(sst_lons[0],sst_lons[-1]+10,50.), labels=[1,0,0,1])
-    m.drawparallels(np.arange(sst_lats[-1]-0.5,sst_lats[0],30.),labels=[1,0,0,1])
+    m.drawmeridians(np.arange(sst_lons[0],sst_lons[-1]+10,50.),labels=[1,0,0,1],linewidth=0)
+    m.drawparallels(np.arange(sst_lats[-1]-0.5,sst_lats[0],30.),labels=[1,0,0,1],linewidth=0)
     plt.title(title)
     plt.savefig(filename ,format='eps')
     plt.close()
