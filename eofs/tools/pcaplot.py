@@ -151,6 +151,88 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
     plt.savefig(plotfilename, format='eps')
     plt.close()
 
+def plot_three_eofs(eofs, lon, lat, name, single_eof=None, head=''):
+    from numpy import arange, meshgrid
+    import matplotlib
+    from mpl_toolkits.basemap import Basemap
+    import math
+    from netCDF4 import Dataset
+    import matplotlib as mpl
+    # Define the scale of the plot based on minima and maxima.
+    maxval = eofs[0,:,:].max()
+    absminval = abs(eofs[0,:,:].min())
+    if absminval>maxval:
+        maxval = absminval
+    maxval = math.ceil(maxval)
+    if maxval<5:
+        #If the maximum is very small round steps to nearest decimal point.
+        step = round((maxval)/4.,1)
+    else:
+        step = math.ceil((maxval)/4.)
+    levs = arange(-(5.*step), (5.*step)+step, step)
+    # Define the parallels and meridians
+    parallels = arange(-40., -9., 10.)
+    meridians = arange(120., 160., 10.)
+    # make the figure
+    matplotlib.rcParams['contour.negative_linestyle'] = 'solid'
+    plt.figure()
+    if single_eof!=None:
+        fig, axes = plt.subplots(nrows=1, ncols=1)
+        count = single_eof
+        subfig = ''
+    else:
+        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12,4.5))
+        count = 0
+        subfig = 'a) '
+    string = "EOF "
+    replace = ['b) ','c) ','d) ', '']
+    for ax in axes.flat:
+        try:
+            dummy = eofs[count, :, :]
+        except:
+            break
+        # Use an equidistant cylyndrical map projection.
+        map_axes = Basemap(ax=ax, projection='cyl',
+            llcrnrlat=-44, urcrnrlat=-10,
+            llcrnrlon=112, urcrnrlon=156)
+        # Create the basemap grid 
+        x, y = map_axes(*meshgrid(lon, lat))
+        # Plot
+        if eofs.shape[1:] == (68,88):
+            msknc = Dataset('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
+            grey = msknc.variables['mask'][:]
+            map_axes.contourf(x, y, grey, (0,0.5,1), colors=('1','0.5'))
+        contours = map_axes.contour(x, y, eofs[count, :, :].squeeze(),
+                linewidths=0.4, colors='k',levels=levs)
+        cs = map_axes.contourf(x, y, eofs[count, :, :].squeeze(),
+                levels=levs, cmap=plt.cm.RdBu_r)
+        map_axes.drawparallels(parallels, labels=[True,False,False,False],fontsize=8)
+        map_axes.drawmeridians(meridians, labels=[False,False,False,True],fontsize=8)
+        map_axes.drawcoastlines()
+        # Labels
+        ax.set_title(string + str(count+1))
+        subfig = replace[count]
+        count = count + 1
+    #fig.subplots_adjust(right=0.8)
+    #cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
+    cbar_ax, kw = mpl.colorbar.make_axes([ax for ax in axes.flat], orientation='horizontal')
+    cb = plt.colorbar(cs, cax=cbar_ax, orientation='horizontal')
+    if name=='HWF': units='days'
+    if name=='HWN': units='events'
+    if name=='HWD': units='days'
+    if name=='HWA': units='$^\circ C^2$'
+    if name=='HWM': units='$^\circ C^2$'
+    if name=='HWT': units=''
+    cb.set_label(units)
+    #fig.text(0.5,0.975, name+' '+head, horizontalalignment='center',
+    #               verticalalignment='top')
+    # Save
+    #plt.tight_layout()
+    rev = svnversion()
+    plotfilename = name+'block'+"_r"+rev+".eps"
+    plt.savefig(plotfilename, format='eps')
+    plt.close()
+
 def plot_lags(rhos, ps, name):
     """Plot the laged correlations betweena a pc and index.
 

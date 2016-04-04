@@ -12,7 +12,7 @@ import numpy as np
 # Start code
 # Define data and dates
 twentyc_dir = '/media/Jupiter/reanalysis/20crv2/prmsl/'
-file_list = glob.glob(twentyc_dir+'aus_prmsl.????.nc')
+file_list = glob.glob(twentyc_dir+'prmsl.????.nc')
 ncget = Dataset(file_list[0])
 lat = ncget.variables['lat'][:]
 lon = ncget.variables['lon'][:]
@@ -27,7 +27,7 @@ years = np.array([dates[i].year for i in range(dates.size)])
 
 # Get base period data (1961-1990)
 for cyear in range(1961,1991):
-    ncdata = Dataset(twentyc_dir+'aus_prmsl.%s.nc'%(cyear))
+    ncdata = Dataset(twentyc_dir+'prmsl.%s.nc'%(cyear))
     pr_cyear = ncdata.variables['prmsl'][:]
     pr_base[years==cyear,:,:] = pr_cyear
 
@@ -43,12 +43,13 @@ pr_clim = pr_clim.mean(axis=1)
 
 # Load and calculate summer anomalies.
 pr_summer = np.zeros([101,lat.size,lon.size])
+pr_summer_a = np.zeros([101,lat.size,lon.size])
 pr_monthly = np.zeros([12,lat.size,lon.size])
 reference = dt.datetime(1800,1,1,0,0)
 for cyear in range(1911,2013):
     iyear = cyear-1911
     # Load
-    ncdata = Dataset(twentyc_dir+'aus_prmsl.%s.nc'%(cyear))
+    ncdata = Dataset(twentyc_dir+'prmsl.%s.nc'%(cyear))
     time = ncdata.variables['time'][:]
     deltas = np.array([dt.timedelta(hours=time[i]) for i in range(time.size)])
     dates = reference + deltas
@@ -62,11 +63,15 @@ for cyear in range(1911,2013):
     pr_anom = pr_monthly - pr_clim
     # Summer mean (NOV of current year to MAR of the next year)
     # JAN-MAR pressure data for next year
-    pr_next = pr_anom[0:4,:,:]
     if cyear!=1911:
-        pr_current = pr_anom[10:13,:,:]
+        pr_next_a = pr_anom[10:12,:,:]
+        pr_season_a = np.append(pr_current_a,pr_next_a,axis=0)
+        pr_summer_a[iyear-1,:,:] = pr_season_a.mean(axis=0)
+        pr_next = pr_monthly[10:12,:,:]
         pr_season = np.append(pr_current,pr_next,axis=0)
         pr_summer[iyear-1,:,:] = pr_season.mean(axis=0)
+    pr_current_a = pr_anom[0:4,:,:]
+    pr_current = pr_monthly[0:4,:,:]
 
 # Output file
 outfile = Dataset("summer_mslp_1911-2011.nc",'w')
@@ -88,6 +93,11 @@ setattr(olon,"long_name","Longitude")
 setattr(olon,"units","degrees_east")
 setattr(olon,"standard_name","longitude")
 omslp = outfile.createVariable("mslp",'f',dimensions=('time','lat','lon'))
+setattr(omslp,"long_name","Summer Mean Sea Level Pressure")
+setattr(omslp,"units","Pa")
+setattr(omslp,"standard_name","mean_sea_level_pressure")
+setattr(omslp,"missing_value",-9.96921e+36)
+omslpa = outfile.createVariable("mslpa",'f',dimensions=('time','lat','lon'))
 setattr(omslp,"long_name","Summer Mean Sea Level Pressure Anomaly")
 setattr(omslp,"units","Pa")
 setattr(omslp,"standard_name","air_pressure_anomaly")
@@ -96,4 +106,5 @@ otime[:] = range(1911,2012)
 olat[:] = lat
 olon[:] = lon
 omslp[:] = pr_summer
+omslpa[:] = pr_summer_a
 outfile.close()

@@ -1,48 +1,92 @@
 """
 This module provides functions for performing varmiax rotations on
-emperical orthogaonal functions or principle components.
+emperical orthogaonal functions. Tammas F. Loughran
 """
 
-def do_rotation(pcs, eofs, space='State'):
-    '''Prepare data and perform varimax rotation.
+def do_rotation(pcs, eofs):
+    '''Prepare data and perform varimax rotation on EOF loadings.
+
+    The returned rotated PC scores are only meaningful if the simple EOFs 
+    provided are loadings that have been scaled by multiplying each one by 
+    the square root of it's respective eigenvalue.
     
-    do_rotation reshapes the EOFs for rotation, then applies the 
-    rotation and reshapes back into the original form.
-    Rotation can be done on the PCs in sample space or on the EOFs in
-    state space. In state space the masked values in the EOFs are removed
-    before rotation and returned afterwards.
+    The EOFs may have missing values. These are removed prior to rotation and
+    returned after.
 
     Arguments
     pcs -- matrix of PCs allong the second axis.
     eofs -- matrix of EOFs allong the first axis.
-    space -- type of varimax rotaion. Either 'state' or 'sample'.
 
     Returns
     pcs -- rotated PCs.
     eofs -- rotated EOFs.
     '''
     from numpy import dot, ma, where, ones, isnan, NaN
-    if space == 'sample':
-        pcs, R = varimax(pcs)
-        nmaps, ny, nx = eofs.shape
-        ngridpoints = nx*ny
-        eofs2d = eofs.reshape([nmaps, ngridpoints])
-        rot_eofs = dot(R, eofs2d)
-        eofs = rot_eofs.reshape([nmaps, ny, nx])
-    elif space == 'state':
+    import numpy as np
+    # Reshape
+    if len(eofs.shape)>2:
         nmaps, ny, nx = eofs.shape
         ngridpoints = nx * ny
         eofs2d = eofs.reshape([nmaps, ngridpoints])
-        nonMissingIndex = where(isnan(eofs2d.data[0]) == False)[0]
-        dataNoMissing = eofs2d.data[:, nonMissingIndex]
-        rot_eofs_nomiss, R = varimax(dataNoMissing.T, normalize=False)
-        rotated_eofs = ones([nmaps, ngridpoints]) * NaN
-        rotated_eofs = rotated_eofs.astype(eofs2d.dtype)
-        rotated_eofs[:, nonMissingIndex] = rot_eofs_nomiss.T
+    else:
+        eofs2d = eofs
+    # Remove missing
+    nonMissingIndex = where(isnan(eofs2d.data[0]) == False)[0]
+    eofs2d = eofs2d.data[:, nonMissingIndex]
+    # Rotate
+    rot_eofs_nomiss, R = varimax(eofs2d.T, normalize=False)
+    # Restore missing
+    rotated_eofs = ones([nmaps, ngridpoints]) * NaN
+    rotated_eofs = rotated_eofs.astype(eofs2d.dtype)
+    rotated_eofs[:, nonMissingIndex] = rot_eofs_nomiss.T
+    # Reshape
+    if len(eofs.shape)>2:
         rotated_eofs = rotated_eofs.reshape([nmaps, ny, nx])
-        eofs = ma.masked_array(rotated_eofs, eofs.mask)
-        pcs = dot(pcs, R)
-    return pcs, eofs
+    # Restore
+    eofs = ma.masked_array(rotated_eofs, eofs.mask)
+    # Calculate rotated PCs
+    pcs = dot(pcs-np.mean(pcs,axis=0), R)
+    return pcs, eofs, R
+
+def expvar_from_eofs(eofs,totalvar):
+    """Calculate the explained variance of a set of eofs compared the
+    total explained variance.
+    """
+    import numpy as np
+    # Reshape
+    if len(eofs.shape)>2: 
+        nmaps, ny, nx = eofs.shape
+        ngridpoints = nx * ny
+        eofs2d = eofs.reshape([nmaps, ngridpoints])
+    else:
+        eofs2d = eofs
+    # Remove missing
+    nonMissingIndex = np.where(np.isnan(eofs2d.data[0]) == False)[0]
+    eofsNoMissing = eofs2d.data[:, nonMissingIndex]
+    # Calculate explained variance
+    expvar = np.sum(np.power(eofsNoMissing,2),axis=1)/totalvar
+    return expvar
+
+def project_eofs(eofs, field, totalvar):
+    """Project eof loadings with missing values onto a field.
+    Only use this if the rotation was performed on raw EOF loadings.
+    (i.e. the eigenvectors that have no scaling.)
+    """
+    import numpy as np
+    # Get dimensions
+    samples = field.shape[0]
+    nmaps, ny, nx = eofs.shape
+    ngridpoints = nx * ny
+    # Reshape to 2 dimensions and remove missing values.
+    eofs2d = eofs.reshape([nmaps, ngridpoints])
+    nonMissingIndex = np.where(np.isnan(eofs2d.data[0]) == False)[0]
+    eofsNoMissing = eofs2d.data[:, nonMissingIndex]
+    field2d = field.reshape([samples, ngridpoints])
+    fnonMissingIndex = np.where(np.isnan(field2d.data[0]) == False)[0]
+    fNoMissing = field2d.data[:, nonMissingIndex]
+    # Calculate PCs
+    pcs = np.dot(fNoMissing,eofsNoMissing.T)
+    return pcs
 
 def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
     """Performs a varimax rotation on the input matrix.
@@ -79,9 +123,7 @@ def varimax(X, normalize=True, gamma = 1.0, it = 200, tol = 1e-7):
     A = L'*C - (1/p)*L'*L*D
 
     Example
-    B = rotate.varimax(N)
-
-    Tammas F. Loughran
+    B, R = rotate.varimax(N)
     """
     from numpy import eye, dot, sum, diag, sqrt, newaxis
     from numpy.linalg import svd

@@ -17,40 +17,38 @@ def load_heat_waves(filename):
     hwt -- timing
     """
     from netCDF4 import Dataset
-    from numpy import ma, empty
+    import numpy as np
     ncin = Dataset(filename, 'r')
+    maskfile = ('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
+    mask1file = ('/srv/ccrc/data35/z5032520/AWAP/mask/AWAP_Land-Sea-Mask_0.5deg.nc')
+    varmasknc = Dataset(maskfile,'r')
+    lats = varmasknc.variables['lat'][:]
+    varmask = varmasknc.variables['mask'][:]
     hwf = ncin.variables['HWF_EHF'][:]
-    hwn = ncin.variables['HWN_EHF'][:]
-    hwd = ncin.variables['HWD_EHF'][:]
-    hwa = ncin.variables['HWA_EHF'][:]
-    hwm = ncin.variables['HWM_EHF'][:]
-    hwt = ncin.variables['HWT_EHF'][:]
+    lats2 = ncin.variables['lat'][:]
+    if (lats!=lats2).any(): varmask = np.flipud(varmask)
+    mask1nc = Dataset(mask1file,'r')
+    lats = mask1nc.variables['lat'][:]
+    mask = abs(mask1nc.variables['LSM'][:]-1)
+    if (lats!=lats2).any(): mask = np.flipud(mask)
+    mask2 = (mask+varmask)>0
+    mask1 = np.empty(hwf.shape)
+    for n in range(hwf.shape[0]):
+        mask1[n, :, :] = mask2
+    hwf = np.ma.array(ncin.variables['HWF_EHF'][:], mask=mask1)
+    hwn = np.ma.array(ncin.variables['HWN_EHF'][:], mask=mask1)
+    hwf[hwn.data==0] = 0
+    hwd = np.ma.array(ncin.variables['HWD_EHF'][:], mask=mask1)
+    hwd[hwn.data==0] = 0
+    hwa = np.ma.array(ncin.variables['HWA_EHF'][:], mask=mask1)
+    hwa[hwn.data==0] = 0
+    hwm = np.ma.array(ncin.variables['HWM_EHF'][:], mask=mask1)
+    hwm[hwn.data==0] = 0
+    hwt = np.ma.array(ncin.variables['HWT_EHF'][:], mask=mask1)
+    hwt[hwn.data==0] = 0
     lat = ncin.variables['lat'][:]
     lon = ncin.variables['lon'][:]
-    times = ncin.variables['Times'][:]
-    maskfile = ('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
-    masknc = Dataset(maskfile,'r')
-    mask = masknc.variables['mask'][:]
-    mask2 = empty(hwf.shape)
-    for n in range(hwf.shape[0]):
-        mask2[n, :, :] = mask
-    mask1 = hwf.mask
-    hwf = ma.array(hwf, mask=mask2)
-    hwn = ma.array(hwn, mask=mask2)
-    hwd = ma.array(hwd, mask=mask2)
-    hwt = ma.array(hwt, mask=mask2)
-    for itime in range(times.size):
-        for ilon in range(lon.size):
-            for ilat in range(lat.size):
-                if not mask1[itime,ilat,ilon]:
-                    if hwa.mask[itime,ilat,ilon]:
-                        hwa.mask[itime,ilat,ilon] = False
-                        hwa[itime,ilat,ilon] = 0
-                    if hwm.mask[itime,ilat,ilon]:
-                        hwm.mask[itime,ilat,ilon] = False
-                        hwm[itime,ilat,ilon] = 0
-    hwa = ma.array(hwa, mask=mask2)
-    hwm = ma.array(hwm, mask=mask2)
+    times = ncin.variables['time'][:]
     return hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times
 
 def load_index(fname, standardize=False):

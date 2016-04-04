@@ -16,11 +16,26 @@ from tools import rotate
 from tools import pcaplot
 from tools import load_data
 
+def detrend_kendal(data):
+    from scipy.stats.mstats import theilslopes
+    import numpy as np
+    slope = np.ones(data.shape[1:])*np.nan
+    intercept = np.ones(data.shape[1:])*np.nan
+    import pdb
+    for y in xrange(0,data.shape[1],1):
+        for x in xrange(0,data.shape[2],1):
+            if not data.mask[:,y,x].any():
+                slope[y,x], intercept[y,x], _, _ = theilslopes(data.data[:,y,x])
+    trend = np.ones(data.shape)*np.nan
+    for t in xrange(0,data.shape[0],1):
+        trend[t,...] = slope*t # + intercept
+    detrended = data - trend
+    return detrended
+
 if __name__ == '__main__':
     # Load the heat wave metrics.
     directory = ('/srv/ccrc/data35/z5032520/')
-    fname = (directory+'AWAP/yearly/ehfhw/CCRC_NARCliM_1911-'
-             '2014_EHFheatwaves_summer_AWAP0.5deg_detrended.nc')
+    fname = (directory+'AWAP/yearly/ehfhw/EHF_heatwaves____yearly_summer.nc')
     hwf, hwn, hwd, hwa, hwm, hwt, lat, lon, times\
             = load_data.load_heat_waves(fname)
     start_year = 1911
@@ -47,7 +62,7 @@ if __name__ == '__main__':
     sam2 = load_data.load_index2(directory+fname)
     sam = concat([sam1, sam2])
     fname = 'indices/STRH/STRH_monthly_1911_2012_20CRv2.txt'
-    strh = load_data.load_index2(directory+fname)
+    strh = load_data.load_index2(directory+fname, standardize=True)
 
     # Take spring (9,10,11)/summer (11,12,1,2,3) (A)nnual (mean) (S)tarting in
     # (JUL)y. i.e. 'AS-JUL'i
@@ -89,30 +104,42 @@ if __name__ == '__main__':
     # Calculate weightings.
     coslat = np.cos(np.deg2rad(lat)).clip(0.,1.)
     wgts = np.sqrt(coslat)[..., np.newaxis]
-    hwn = np.ma.array(detrend(hwn,axis=0),mask=hwn.mask)
-    hwf = np.ma.array(detrend(hwf,axis=0),mask=hwf.mask)
-    hwd = np.ma.array(detrend(hwd,axis=0),mask=hwd.mask)
-    hwa = np.ma.array(detrend(hwa,axis=0),mask=hwa.mask)
-    hwm = np.ma.array(detrend(hwm,axis=0),mask=hwm.mask)
-    hwt = np.ma.array(detrend(hwt,axis=0),mask=hwt.mask)
+    hwn = detrend_kendal(hwn)
+    hwf = detrend_kendal(hwf)
+    hwd = detrend_kendal(hwd)
+    hwa = detrend_kendal(hwa)
+    hwm = detrend_kendal(hwm)
+    hwt = detrend_kendal(hwt)
     metric_dict = {"HWN":hwn,"HWF":hwf,"HWD":hwd,"HWA":hwa,"HWM":hwm,"HWT":hwt}
     for metric_name in metric_dict.keys():
         # Set up solver
         solver = Eof(metric_dict[metric_name], weights=wgts)
         explained_variance = solver.varianceFraction()
+        total_variance = solver.totalAnomalyVariance()
         errors = solver.northTest(vfscaled=True)
         retain = nsigpcs(explained_variance, errors)
         if retain<3:
             retain=4
-        pcs = solver.pcs(pcscaling=1, npcs=retain)
+        pcs = solver.pcs(pcscaling=0, npcs=retain)
         eigens = solver.eigenvalues()
         eofs = solver.eofs(eofscaling=2, neofs=retain)
         eofs_covariance = solver.eofsAsCovariance(pcscaling=1, neofs=retain)
         eofs_correlation = solver.eofsAsCorrelation(neofs=retain)
 
-        # Apply rotation to PCs and EOFs.
+        np.save(metric_name+'_simple_pcs', pcs)
+
+        # Apply rotation to EOFs.
         eofs2 = eofs
-        pcs, eofs = rotate.do_rotation(pcs, eofs, space='state')
+        pcs, eofs, R = rotate.do_rotation(pcs, eofs)
+
+        # Get explained variances of rotated EOFs
+        expvar = rotate.expvar_from_eofs(eofs,total_variance)
+        print expvar
+
+        # Scale the rotated PCs by dividing by the square root of the eigenvalues.
+        pcs = pcs/np.sqrt(expvar*total_variance)
+
+        np.save(metric_name+'_rotated_pcs', pcs)
 
         #pcaplot.eofscatter(eofs2)
         #pcaplot.eofscatter(eofs)
@@ -120,8 +147,9 @@ if __name__ == '__main__':
         # Plotting.
         years = np.arange(start_year,end_year+1)
         pcaplot.plot_eigenvalues(explained_variance, errors, metric_name)
-        pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(metric_name), head='VARIMAX EOFs')
-        pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(metric_name), head='Simple EOFs')
+        #pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(metric_name), head='VARIMAX EOFs')
+        #pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(metric_name), head='Simple EOFs')
+        pcaplot.plot_three_eofs(eofs, lon, lat, metric_name, head='Rotated EOFs')
         #pcaplot.plot_eofs(eofs_covariance, lon, lat, 
         #        "%s_EOFs_Covariance"%(metric_name))
         #pcaplot.plot_eofs(eofs_correlation, lon, lat, 

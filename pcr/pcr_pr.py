@@ -18,13 +18,14 @@ pr = pr[:,llat:ulat,llon:ulon]
 pr_lons = pr_lons[llon:ulon]
 pr_lats = pr_lats[llat:ulat]
 
+direct = '/home/nfs/z5032520/analysis/eofs/hw_metrics/'
 # Principle components from PCA of heatwaves
-hwn_pcs = np.load('HWN_rotated_pcs.npy')[:-1]
-hwf_pcs = np.load('HWF_rotated_pcs.npy')[:-1]
-hwd_pcs = np.load('HWD_rotated_pcs.npy')[:-1]
-hwa_pcs = np.load('HWA_rotated_pcs.npy')[:-1]
-hwm_pcs = np.load('HWM_rotated_pcs.npy')[:-1]
-hwt_pcs = np.load('HWT_rotated_pcs.npy')[:-1]
+hwn_pcs = np.load(direct+'HWN_rotated_pcs.npy')[:-1]
+hwf_pcs = np.load(direct+'HWF_rotated_pcs.npy')[:-1]
+hwd_pcs = np.load(direct+'HWD_rotated_pcs.npy')[:-1]
+hwa_pcs = np.load(direct+'HWA_rotated_pcs.npy')[:-1]
+hwm_pcs = np.load(direct+'HWM_rotated_pcs.npy')[:-1]
+hwt_pcs = np.load(direct+'HWT_rotated_pcs.npy')[:-1]
 
 # Make a 2D regression function
 def linregress_2D(x,y):
@@ -74,61 +75,61 @@ def plot_pcr(slope, p, title, filename):
     m.contourf(x, y, sigmask, 1, colors='none',hatches=[None,'.'])
     m.drawcoastlines()
     m.drawmeridians(np.arange(pr_lons[0],pr_lons[-1]+10,40.),labels=[1,0,0,1],linewidth=0,fontsize=10)
-    m.drawparallels(np.arange(pr_lats[-1],pr_lats[0],30.),labels=[1,0,0,1],linewidth=0,fontsize=10)
+    m.drawparallels(np.arange(-60,1,30.),labels=[1,0,0,1],linewidth=0,fontsize=10)
     plt.title(title)
-    plt.savefig(filename ,format='eps')
+    plt.savefig(filename)
     plt.close()
 
 # Perform regression and plot
 #PC1
 slope, intercept, correlation, p, error = linregress_2D(hwn_pcs[:,0], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN rPC1', 'regres_pr_HWNpc1.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN rPC1', 'regres_pr_HWNpc1')
 slope, intercept, correlation, p, error = linregress_2D(hwf_pcs[:,0], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWF rPC1', 'regres_pr_HWFpc1.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWF rPC1', 'regres_pr_HWFpc1')
 slope, intercept, correlation, p, error = linregress_2D(hwd_pcs[:,0], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD rPC1', 'regres_pr_HWDpc1.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD rPC1', 'regres_pr_HWDpc1')
 slope, intercept, correlation, p, error = linregress_2D(hwa_pcs[:,0], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWA rPC1', 'regres_pr_HWApc1.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWA rPC1', 'regres_pr_HWApc1')
 slope, intercept, correlation, p, error = linregress_2D(hwm_pcs[:,0], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM rPC1', 'regres_pr_HWMpc1.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM rPC1', 'regres_pr_HWMpc1')
 slope, intercept, correlation, p, error = linregress_2D(hwt_pcs[:,0], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT rPC1', 'regres_pr_HWTpc1.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT rPC1', 'regres_pr_HWTpc1')
 #PC2
 slope, intercept, correlation, p, error = linregress_2D(hwn_pcs[:,1], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN rPC2', 'regres_pr_HWNpc2.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN rPC2', 'regres_pr_HWNpc2')
 slope, intercept, correlation, p, error = linregress_2D(hwf_pcs[:,1], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWF rPC2', 'regres_pr_HWFpc2.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWF rPC2', 'regres_pr_HWFpc2')
 slope, intercept, correlation, p, error = linregress_2D(hwd_pcs[:,1], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD rPC2', 'regres_pr_HWDpc2.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD rPC2', 'regres_pr_HWDpc2')
 slope, intercept, correlation, p, error = linregress_2D(hwa_pcs[:,1], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWA rPC2', 'regres_pr_HWApc2.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWA rPC2', 'regres_pr_HWApc2')
 slope, intercept, correlation, p, error = linregress_2D(hwm_pcs[:,1], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM rPC2', 'regres_pr_HWMpc2.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM rPC2', 'regres_pr_HWMpc2')
 slope, intercept, correlation, p, error = linregress_2D(hwt_pcs[:,1], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT rPC2', 'regres_pr_HWTpc2.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT rPC2', 'regres_pr_HWTpc2')
 #PC3
 slope, intercept, correlation, p, error = linregress_2D(hwn_pcs[:,2], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN rPC3', 'regres_pr_HWNpc3.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN rPC3', 'regres_pr_HWNpc3')
 slope, intercept, correlation, p, error = linregress_2D(hwf_pcs[:,2], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWF rPC3', 'regres_pr_HWFpc3.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWF rPC3', 'regres_pr_HWFpc3')
 slope, intercept, correlation, p, error = linregress_2D(hwd_pcs[:,2], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD rPC3', 'regres_pr_HWDpc3.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD rPC3', 'regres_pr_HWDpc3')
 slope, intercept, correlation, p, error = linregress_2D(hwa_pcs[:,2], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWA rPC3', 'regres_pr_HWApc3.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWA rPC3', 'regres_pr_HWApc3')
 slope, intercept, correlation, p, error = linregress_2D(hwm_pcs[:,2], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM rPC3', 'regres_pr_HWMpc3.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM rPC3', 'regres_pr_HWMpc3')
 slope, intercept, correlation, p, error = linregress_2D(hwt_pcs[:,2], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT rPC3', 'regres_pr_HWTpc3.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT rPC3', 'regres_pr_HWTpc3')
 #PC4
-slope, intercept, correlation, p, error = linregress_2D(hwn_pcs[:,3], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN rPC4', 'regres_pr_HWNpc4.eps')
+#slope, intercept, correlation, p, error = linregress_2D(hwn_pcs[:,3], pr)
+#plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN rPC4', 'regres_pr_HWNpc4')
 slope, intercept, correlation, p, error = linregress_2D(hwf_pcs[:,3], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWF rPC4', 'regres_pr_HWFpc4.eps')
-slope, intercept, correlation, p, error = linregress_2D(hwd_pcs[:,3], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD rPC4', 'regres_pr_HWDpc4.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWF rPC4', 'regres_pr_HWFpc4')
+#slope, intercept, correlation, p, error = linregress_2D(hwd_pcs[:,3], pr)
+#plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD rPC4', 'regres_pr_HWDpc4')
 slope, intercept, correlation, p, error = linregress_2D(hwa_pcs[:,3], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWA rPC4', 'regres_pr_HWApc4.eps')
-slope, intercept, correlation, p, error = linregress_2D(hwm_pcs[:,3], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM rPC4', 'regres_pr_HWMpc4.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWA rPC4', 'regres_pr_HWApc4')
+#slope, intercept, correlation, p, error = linregress_2D(hwm_pcs[:,3], pr)
+#plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM rPC4', 'regres_pr_HWMpc4')
 slope, intercept, correlation, p, error = linregress_2D(hwt_pcs[:,3], pr)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT rPC4', 'regres_pr_HWTpc4.eps')
+plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT rPC4', 'regres_pr_HWTpc4')

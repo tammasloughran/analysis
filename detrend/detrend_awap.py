@@ -40,6 +40,21 @@ def copync(outfile, copyfile, exclude=''):
             copyvar[:] = var[:]
     return outnc
 
+def detrend_kendal(data):
+    from scipy.stats.mstats import theilslopes
+    import numpy as np
+    slope = np.ones(data.shape[1:])*np.nan
+    intercept = np.ones(data.shape[1:])*np.nan
+    for y in xrange(0,data.shape[1],1):
+        for x in xrange(0,data.shape[2],1):
+            slope[y,x], intercept[y,x] = theilslopes(data[:,y,x])
+    trend = np.ones(data.shape)*np.nan
+    for t in xrange(0,data.shape[0],1):
+        trend[t,...] = slope*t + intercept
+    detrended = data - trend
+    return detrended
+            
+
 if __name__ == '__main__':
     from scipy.signal import detrend
     # Specify file names.
@@ -51,7 +66,7 @@ if __name__ == '__main__':
     # Load
     tmaxnc, tmax = loadnc(tmaxfile, 'tmax')
     # Detrend
-    tmax_detrended = detrend(tmax, axis=0)
+    tmax_detrended = detrend_kendal(tmax, axis=0)
     # Save
     outfilename = 'tmax_detrended.nc'
     tmaxoutnc = copync(outfilename, tmaxnc, exclude='tmax')
@@ -61,7 +76,7 @@ if __name__ == '__main__':
     # Load
     tminnc, tmin = loadnc(tminfile, 'tmin')
     # Detrend
-    tmin_detrended = detrend(tmin, axis=0)
+    tmin_detrended = detrend_kendal(tmin, axis=0)
     # Save
     outfilename = 'tmin_detrended.nc'
     tminoutnc = copync(outfilename, tminnc, exclude='tmin')
