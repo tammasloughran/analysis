@@ -151,8 +151,9 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
     plt.savefig(plotfilename, format='eps')
     plt.close()
 
-def plot_three_eofs(eofs, lon, lat, name, single_eof=None, head=''):
+def plot_three_eofs(eofs, expvar, lon, lat, name, single_eof=None, head=''):
     from numpy import arange, meshgrid
+    import numpy as np
     import matplotlib
     from mpl_toolkits.basemap import Basemap
     import math
@@ -201,28 +202,29 @@ def plot_three_eofs(eofs, lon, lat, name, single_eof=None, head=''):
         if eofs.shape[1:] == (68,88):
             msknc = Dataset('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
             grey = msknc.variables['mask'][:]
-            map_axes.contourf(x, y, grey, (0,0.5,1), colors=('1','0.5'))
+            map_axes.contourf(x, y, np.flipud(grey), (0,0.5,1), colors=('1','0.5'))
         contours = map_axes.contour(x, y, eofs[count, :, :].squeeze(),
                 linewidths=0.4, colors='k',levels=levs)
         cs = map_axes.contourf(x, y, eofs[count, :, :].squeeze(),
                 levels=levs, cmap=plt.cm.RdBu_r)
-        map_axes.drawparallels(parallels, labels=[True,False,False,False],fontsize=8)
-        map_axes.drawmeridians(meridians, labels=[False,False,False,True],fontsize=8)
+        map_axes.drawparallels(parallels, labels=[True,False,False,False], fontsize=8)
+        map_axes.drawmeridians(meridians, labels=[False,False,False,True], fontsize=8)
         map_axes.drawcoastlines()
         # Labels
-        ax.set_title(string + str(count+1))
+        ax.text(0.8,1.03,str(round(expvar[count]*100,1))+'%',transform=ax.transAxes)
+        ax.set_title('Rotated ' + string + str(count+1))
         subfig = replace[count]
         count = count + 1
     #fig.subplots_adjust(right=0.8)
     #cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
     cbar_ax, kw = mpl.colorbar.make_axes([ax for ax in axes.flat], orientation='horizontal')
     cb = plt.colorbar(cs, cax=cbar_ax, orientation='horizontal')
-    if name=='HWF': units='days'
-    if name=='HWN': units='events'
-    if name=='HWD': units='days'
+    if name=='HWF': units='Days'
+    if name=='HWN': units='Events'
+    if name=='HWD': units='Days'
     if name=='HWA': units='$^\circ C^2$'
     if name=='HWM': units='$^\circ C^2$'
-    if name=='HWT': units=''
+    if name=='HWT': units='Days'
     cb.set_label(units)
     #fig.text(0.5,0.975, name+' '+head, horizontalalignment='center',
     #               verticalalignment='top')
@@ -245,7 +247,7 @@ def plot_lags(rhos, ps, name):
     mrange = arange(0,-25,-1)
     months = ["Jan","Dec","Nov","Oct","Sep","Aug","Jul","Jun","May","Apr","Mar","Feb"]
     months += months+["Jan"]
-    for pc in range(0,4,1):
+    for pc in range(0,ps.shape[1],1):
         plt.plot(mrange, rhos[:,pc], label="PC%s"%(pc+1))
         #Plot dots for significance. p<=0.05
         plt.plot(mrange[ps[:,pc]<=0.05], rhos[ps[:,pc]<=0.05,pc], 'ko')
