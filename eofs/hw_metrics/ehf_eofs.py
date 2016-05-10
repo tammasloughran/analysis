@@ -111,6 +111,7 @@ if __name__ == '__main__':
     hwm = detrend_kendal(hwm)
     hwt = detrend_kendal(hwt)
     metric_dict = {"HWN":hwn,"HWF":hwf,"HWD":hwd,"HWA":hwa,"HWM":hwm,"HWT":hwt}
+    print "HW?    pc1        pc12        pc3        pc4"
     for metric_name in metric_dict.keys():
         # Set up solver
         solver = Eof(metric_dict[metric_name], weights=wgts)
@@ -133,8 +134,9 @@ if __name__ == '__main__':
 
         # Get explained variances of rotated EOFs
         expvar = rotate.expvar_from_eofs(eofs,total_variance)
+        print metric_name+' ', expvar
 
-        # Scale the rotated PCs by dividing by the square root of the eigenvalues.
+        # Scale the rotated PCs by dividing by the square root of the variances.
         pcs = pcs/np.sqrt(expvar*total_variance)
 
         np.save(metric_name+'_rotated_pcs', pcs)
@@ -145,7 +147,7 @@ if __name__ == '__main__':
         # Plotting.
         years = np.arange(start_year,end_year+1)
         pcaplot.plot_eigenvalues(explained_variance, errors, metric_name)
-        #pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(metric_name), head='VARIMAX EOFs')
+        pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(metric_name), head='VARIMAX EOFs')
         #pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(metric_name), head='Simple EOFs')
         pcaplot.plot_three_eofs(eofs, expvar, lon, lat, metric_name, head='Rotated EOFs')
         #pcaplot.plot_eofs(eofs_covariance, lon, lat, 
@@ -166,9 +168,8 @@ if __name__ == '__main__':
         outfile.close()
 
         # Lag Correlations
-        mds = ["Nino3.4","SOI","DMI","SAM","STRH"]
+        mds = ["Nino 3.4","SOI","DMI","SAM","STRH"]
         mdsn = 0
-        import pdb
         for mode in [nino34, soi, dmi, sam, strh]:
             mode = mode['%s-01'%(start_year-2):'%s-12'%(end_year)]
             rho_lag = np.zeros((25, pcs.shape[1]))
@@ -182,5 +183,5 @@ if __name__ == '__main__':
                 for pc in range(pcs.shape[1]):
                     rho_lag[lag,pc], p_lag[lag,pc] = \
                         stats.mstats.spearmanr(mode_lag, pcs[:-1,pc])
-            pcaplot.plot_lags(rho_lag, p_lag, metric_name+"_%s"%(mds[mdsn]))
+            pcaplot.plot_lags(rho_lag, p_lag, metric_name+" PCs & %s"%(mds[mdsn]))
             mdsn+=1

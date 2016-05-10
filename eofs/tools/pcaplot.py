@@ -170,12 +170,13 @@ def plot_three_eofs(eofs, expvar, lon, lat, name, single_eof=None, head=''):
         step = round((maxval)/4.,1)
     else:
         step = math.ceil((maxval)/4.)
+    if name=='HWD': step = 1
     levs = arange(-(5.*step), (5.*step)+step, step)
     # Define the parallels and meridians
     parallels = arange(-40., -9., 10.)
     meridians = arange(120., 160., 10.)
     # make the figure
-    matplotlib.rcParams['contour.negative_linestyle'] = 'solid'
+    matplotlib.rcParams['contour.negative_linestyle'] = 'dashed'
     plt.figure()
     if single_eof!=None:
         fig, axes = plt.subplots(nrows=1, ncols=1)
@@ -187,10 +188,20 @@ def plot_three_eofs(eofs, expvar, lon, lat, name, single_eof=None, head=''):
         subfig = 'a) '
     string = "EOF "
     replace = ['b) ','c) ','d) ', '']
+    if name=='HWD':
+        subfig = 'd) ' 
+        replace = ['e) ','f) ','', '']
+    if name=='HWA':
+        subfig = 'g) ' 
+        replace = ['h) ','','', '']
+    if name=='HWT':
+        subfig = 'i) ' 
+        replace = ['j) ','k) ','', '']
     for ax in axes.flat:
         try:
             dummy = eofs[count, :, :]
         except:
+            fig.delaxes(ax)
             break
         # Use an equidistant cylyndrical map projection.
         map_axes = Basemap(ax=ax, projection='cyl',
@@ -207,24 +218,34 @@ def plot_three_eofs(eofs, expvar, lon, lat, name, single_eof=None, head=''):
                 linewidths=0.4, colors='k',levels=levs)
         cs = map_axes.contourf(x, y, eofs[count, :, :].squeeze(),
                 levels=levs, cmap=plt.cm.RdBu_r)
-        map_axes.drawparallels(parallels, labels=[True,False,False,False], fontsize=8)
-        map_axes.drawmeridians(meridians, labels=[False,False,False,True], fontsize=8)
+        map_axes.drawparallels(parallels, labels=[True,False,False,False], fontsize=8, linewidth=0)
+        map_axes.drawmeridians(meridians, labels=[False,False,False,True], fontsize=8, linewidth=0)
         map_axes.drawcoastlines()
         # Labels
         ax.text(0.8,1.03,str(round(expvar[count]*100,1))+'%',transform=ax.transAxes)
-        ax.set_title('Rotated ' + string + str(count+1))
+        ax.set_title(subfig+ ' ' + string + str(count+1))
         subfig = replace[count]
         count = count + 1
     #fig.subplots_adjust(right=0.8)
     #cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
     cbar_ax, kw = mpl.colorbar.make_axes([ax for ax in axes.flat], orientation='horizontal')
     cb = plt.colorbar(cs, cax=cbar_ax, orientation='horizontal')
-    if name=='HWF': units='Days'
-    if name=='HWN': units='Events'
-    if name=='HWD': units='Days'
-    if name=='HWA': units='$^\circ C^2$'
-    if name=='HWM': units='$^\circ C^2$'
-    if name=='HWT': units='Days'
+    if name=='HWF':
+        units='Days'
+        #plt.figtext(0.05,0.55,'a)')
+    if name=='HWN':
+        units='Events'
+    if name=='HWD':
+        units='Days'
+        #plt.figtext(0.05,0.55,'b)')
+    if name=='HWA':
+        units='$^\circ C^2$'
+        #plt.figtext(0.05,0.55,'c)')
+    if name=='HWM':
+        units='$^\circ C^2$'
+    if name=='HWT':
+        #plt.figtext(0.05,0.55,'d)')
+        units='Days'
     cb.set_label(units)
     #fig.text(0.5,0.975, name+' '+head, horizontalalignment='center',
     #               verticalalignment='top')
@@ -247,12 +268,19 @@ def plot_lags(rhos, ps, name):
     mrange = arange(0,-25,-1)
     months = ["Jan","Dec","Nov","Oct","Sep","Aug","Jul","Jun","May","Apr","Mar","Feb"]
     months += months+["Jan"]
+    linestyle = ['-','--','-.',':']
     for pc in range(0,ps.shape[1],1):
-        plt.plot(mrange, rhos[:,pc], label="PC%s"%(pc+1))
+        plt.plot(mrange, rhos[:,pc], label="PC%s"%(pc+1), linestyle=linestyle[pc])
         #Plot dots for significance. p<=0.05
         plt.plot(mrange[ps[:,pc]<=0.05], rhos[ps[:,pc]<=0.05,pc], 'ko')
     plt.xticks(mrange, months, size='small', rotation=25)
-    plt.title(name+" Lag Correlations")
+    lbl = ''
+    if name=='HWF PCs & Nino 3.4': lbl = 'a) '
+    if name=='HWD PCs & DMI': lbl = 'b) '
+    if name=='HWA PCs & Nino 3.4': lbl = 'c) '
+    if name=='HWT PCs & Nino 3.4': lbl = 'd) '
+    if name=='HWT PCs & SAM': lbl = 'e) '
+    plt.title(lbl + name + " Lead Correlations")
     plt.xlabel("Lag Month")
     plt.ylabel(r'$\rho$')
     plt.ylim((-0.8,0.8))
