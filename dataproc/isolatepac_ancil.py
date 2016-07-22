@@ -78,7 +78,7 @@ ax.grid(True)
 ax.set_xlabel('Date')
 ax.set_ylabel('Nino 3.4 ($^\circ$C)')
 fig.autofmt_xdate()
-plt.show()
+#plt.show()
 
 # Define the years that have nonlinear lanina summers. The given year is the year containing January.
 nlln_years = [2014, 2011, 2008, 2004, 1989, 1986, 1976, 1974]
@@ -138,14 +138,24 @@ for i,j in enumerate(np.where((lats>-30)&(lats<=-20))[0]):
     n = float(np.sum((lats<30)&(lats>=20)))
     factor = 1+(1./n) - (n-i)/n
     pac_mask[:,j,(lons>120)&(lons<290)] = pac_mask[:,j,(lons>120)&(lons<290)]*factor
-for ii,i in enumerate(np.where((lons>120)&(lons<=130))[0]):
-    n = float(np.sum((lons>120)&(lons<=130)))
+for ii,i in enumerate(np.where((lons>120)&(lons<=140))[0]):
+    n = float(np.sum((lons>120)&(lons<=140)))
     factor = 1+(1./n) - (n-ii)/n
     pac_mask[:,(lats>-30)&(lats<30),i] = pac_mask[:,(lats>-30)&(lats<30),i]*factor
 pac_mask[:,114:,208:] = 0 # remove caribean 
 pac_mask[:,105:,221:] = 0 # remove caribean
+
 elnino = elnino*pac_mask
+for t in xrange(0,17):
+    for y in xrange(0,150):
+        for x in xrange(0,120):
+            if elnino[t,y,x]>0.: elnino[t,y,x] = 0
 lanina = lanina*pac_mask
+for t in xrange(0,17):
+    for y in xrange(0,150):
+        for x in xrange(0,120):
+            if lanina[t,y,x]<0.: lanina[t,y,x] = 0
+
 
 piod = np.array(ensonc.variables['piod_sst'][:])
 piod[piod>100] = 0
@@ -156,20 +166,23 @@ ind_mask = np.ones(elnino.shape)
 ind_mask[:,lats>=30,:] = 0
 ind_mask[:,lats<=-30,:] = 0
 ind_mask[:,:,lons<=30] = 0
-ind_mask[:,:,lons>=120] = 0
+ind_mask[:,:,lons>=130] = 0
 # Linear damping north south and eastward
 for i,j in enumerate(np.where((lats<30)&(lats>=20))[0]):
     n = float(np.sum((lats<30)&(lats>=20)))
     factor = (n-i)/n
-    ind_mask[:,j,(lons>30)&(lons<120)] = ind_mask[:,j,(lons>30)&(lons<120)]*factor
+    ind_mask[:,j,(lons>30)&(lons<130)] = ind_mask[:,j,(lons>30)&(lons<130)]*factor
 for i,j in enumerate(np.where((lats>-30)&(lats<=-20))[0]):
     n = float(np.sum((lats<30)&(lats>=20)))
     factor = 1+(1./n) - (n-i)/n
-    ind_mask[:,j,(lons>30)&(lons<120)] = ind_mask[:,j,(lons>30)&(lons<120)]*factor
-for ii,i in enumerate(np.where((lons>110)&(lons<=120))[0]):
-    n = float(np.sum((lons>110)&(lons<=120)))
+    ind_mask[:,j,(lons>30)&(lons<130)] = ind_mask[:,j,(lons>30)&(lons<130)]*factor
+for ii,i in enumerate(np.where((lons>110)&(lons<=130))[0]):
+    n = float(np.sum((lons>110)&(lons<=130)))
     factor = (n-ii)/n
     ind_mask[:,(lats>-30)&(lats<30),i] = ind_mask[:,(lats>-30)&(lats<30),i]*factor
+ind_mask[:,91:,83:] = 0 # Remove south China sea
+ind_mask[:,93:,81:] = 0 # South China sea
+ind_mask[:,89:,85:] = 0 # South China
 piod = piod*ind_mask
 niod = niod*ind_mask
 
