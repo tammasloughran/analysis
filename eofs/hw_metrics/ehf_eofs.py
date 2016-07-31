@@ -139,6 +139,18 @@ if __name__ == '__main__':
         # Scale the rotated PCs by dividing by the square root of the variances.
         pcs = pcs/np.sqrt(expvar*total_variance)
 
+        # The interpretation is easier if the negative EOFs and their PCs are multiplied by -1.
+        # These EOFs are HWF EOF1, HWD EOF123, HWA EOF12. HWT is negative but the interpretation is fine.
+        if metric_name=='HWF':
+            eofs[0,...] *= -1. 
+            pcs[:,0] *= -1. 
+        elif metric_name=='HWD':
+            eofs[0:3,...] *= -1.
+            pcs[:,0:3] *= -1.
+        elif metric_name=='HWA':
+            eofs[0:2,...] *= -1.
+            pcs[:,0:2] *= -1.
+
         np.save(metric_name+'_rotated_pcs', pcs)
 
         #pcaplot.eofscatter(eofs2)

@@ -9,7 +9,6 @@ from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
 from mpl_toolkits.basemap import Basemap
 import mpl_toolkits.basemap as bm
 from scipy import signal
-import pdb
 
 # Load data
 hadisst_file = '/media/Jupiter/observations/HadISST/sst/HadISST_sst.nc'
@@ -146,17 +145,20 @@ pac_mask[:,114:,208:] = 0 # remove caribean
 pac_mask[:,105:,221:] = 0 # remove caribean
 
 elnino = elnino*pac_mask
+# There are still positive anomalies in the far western pacific 
+# that need to be removed.
 for t in xrange(0,17):
     for y in xrange(0,150):
         for x in xrange(0,120):
             if elnino[t,y,x]>0.: elnino[t,y,x] = 0
 lanina = lanina*pac_mask
+# And remove negative anomalies in far western Pacific.
 for t in xrange(0,17):
     for y in xrange(0,150):
         for x in xrange(0,120):
             if lanina[t,y,x]<0.: lanina[t,y,x] = 0
 
-
+# Isolated indian ocean ssts
 piod = np.array(ensonc.variables['piod_sst'][:])
 piod[piod>100] = 0
 niod = np.array(ensonc.variables['niod_sst'][:])
