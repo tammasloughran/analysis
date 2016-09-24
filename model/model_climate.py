@@ -99,7 +99,7 @@ def plot_stream(u,v,lats,lons,units,rng,fname):
     mp.drawparallels([-80,-40,-60,-20,0,20,40,60,80],labels=[1, 0, 0, 0],linewidth=0)
     mp.drawmeridians([0,40,80,120,160,200,240,280,320],labels=[0, 0, 0, 1],linewidth=0)
     cb.set_label(units)
-    plt.show(fname,format='eps')
+    plt.savefig(fname,format='eps')
 
 plot_map(mslp_ensmean,lats,lons,'Pa',500,'mslp_nino_ensmean.eps')
 plot_map(temp_ensmean,lats,lons,'${}^{\circ}C$',5,'temp_nino_ensmean.eps')
