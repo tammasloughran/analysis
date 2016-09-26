@@ -5,6 +5,7 @@ import netCDF4 as nc
 import pdb
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+import glob
 import pdb
 
 
@@ -81,7 +82,7 @@ def load_pr(filename):
     return pr.squeeze()
 
 
-def plot_pr(data, title, filename):
+def plot_pr(data, n, title, filename):
     # Create the map projection
     m = Basemap(projection='mill',
             #boundinglat=-10,lon_0=90,resolution='l')
@@ -94,7 +95,7 @@ def plot_pr(data, title, filename):
     #levs = np.arange(900,1150,5)
     # Plot contours and filled contours
     conts = m.contour(x,y,data/100.,linewidths=0.4,colors='k')
-    plt.clabel(conts, fmt='%4.0f', fontsize=10)
+    plt.clabel(conts, fmt='%4.3f', fontsize=10)
     #m.contourf(x,y,data/100.,cmap='viridis')
     # Make the colourbar
     #cbar = plt.colorbar(orientation='horizontal')
@@ -106,59 +107,73 @@ def plot_pr(data, title, filename):
     m.drawcoastlines()
     m.drawmeridians(np.arange(lons[0],lons[-1]+10,40.),labels=[1,0,0,1],linewidth=0)
     m.drawparallels(np.arange(-60,1,20.),labels=[1,0,0,1],linewidth=0)
-    plt.title(title)
-    plt.savefig(filename, format='eps')
+    plt.title(title+' consisting of '+str(n)+'days')
+    plt.savefig(filename, format='png')
     #plt.show()
     plt.close()
 
 
 def select_heatwave_days_pr(ensemble, group):
-    """Select pressure  for days where heatwaves >=7 days duration
+    """Select the third day of pressure for heatwaves >=5 days duration
 
     Arguments:
-    ensembles -- a list of strings with the ensemble codes
+    ensembles -- a strings with the ensemble code
     group -- a string describing the experiment group control elnino or lanina
 
     Returns:
     composite
     """
-    #composite = np.ones((len(lats),len(lons)))
     # Load the heatwave events.
     #events = load_events(hwdir+ensemble+'/EHF_heatwaves_ACCESS1-0_'+ensemble+'_daily.nc')
     ends = load_ends(hwdir+ensemble+'/EHF_heatwaves_ACCESS1-0_'+ensemble+'_daily.nc')
+    # Exclude events < 5 days
+    ends[ends<5] = 0
 
-    # Exclude events < 7 days
-    ends[ends<7] = 0
-
-    # Exlude out of season events; 305=Nov 1st, 455=Apr 1st 
-    ends[:304,...] = 0
-    ends[455:,...] = 0
-
-    # Select the Southeastern Australian region
-    #nea = ends[:,:,75:80] Northeastern Australia
-    #nea = nea[:,51:56,:]
-    sea = ends[:,:,75:80]
-    sea = sea[:,42:46,:]
-
+    # Exlude out of season events; 304=Nov 1st, 455=Apr 1st 
+    ends = ends[:455,...]
+    ends = ends[304:,...]
+    
+    # Select the region of interest (this will change at some point)
+    # Northeastern Australia
+    #reg = ends[:,:,75:80]
+    #reg = nea[:,51:56,:]
+    # Southeastern Australia
+    reg = ends[:,:,75:80]
+    reg = reg[:,42:46,:]
+    
     # Construct a time index indicating if heatwaves occur within this region.
-    index = sea.sum(axis=2)
-    index = index.sum(axis=1)
+    index = np.max(np.max(reg,axis=2), axis=1)
+    for i in np.where(index>0)[0]:
+        try:
+            for ii in xrange(0,int(index[i]-1)):
+                index[i+ii] += 1
+        except IndexError:
+            continue
     index = index>0
-    index = np.roll(index,2)
+
+    # Select only the third day of heatwave
+    #index = reg.sum(axis=2)
+    #index = index.sum(axis=1)
+    #index = np.diff(index) # shape - 1
+    #index[index<0] = 0
+    #index = np.append([0],index) # restore original shape
+    #for i in np.where(index>0)[0]:
+    #    index[i] = 0
+    #    index[i+2] = 1
 
     # Load the pressure data
-    pr = load_pr(modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe????-??.nc')
-    prclim = np.mean(pr,axis=0)
-    pr = np.delete(pr, [59], axis=0) # Remove feb 29th. It doesnt exist in events
-
-    # Select only the heatwave days using index
+    prfiles = [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2000-11.nc']
+    prfiles += [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2000-12.nc']
+    prfiles += [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2001-01.nc']
+    prfiles += [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2001-02.nc']
+    prfiles += [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2001-03.nc']
+    pr = load_pr(prfiles)
+    
+    # Select only the third heatwave days using index
     pr = pr[index,...]
-
-    # Composite of heatwave days
-    #composite = np.mean(pr, axis=0)
-    composite = pr
-    #composite = composite-prclim
-    return composite
+    
+    # Calculate anomalies from climatology
+    return pr - pclim
 
 
 def construct_composite(ensembles, group):
@@ -201,9 +216,8 @@ def construct_composite(ensembles, group):
 
 def plotmaps(data,name,filename,colours='viridis'):
     fmt = '%1.0f'
-    fig = plt.figure()
     parallels = np.arange(-90., 120., 10.)
-    meridians = np.arange(0., 360., 10.)
+    #meridians = np.arange(0., 360., 10.)
     map_axes = Basemap(projection='robin',lon_0=180.,resolution='l')
     map_axes.drawparallels(parallels, linewidth=0.3, \
                     labels=[True,False,False,False], fontsize=8, xoffset=0.6)
@@ -231,7 +245,7 @@ def plotmaps(data,name,filename,colours='viridis'):
     map_axes.drawcoastlines()
     plt.title(name)
     plt.tight_layout()
-    #plt.savefig(filename, format='eps')
+    #plt.savefig(filename, format='png')
     plt.show()
     plt.close()
 
@@ -239,10 +253,12 @@ def plotmaps(data,name,filename,colours='viridis'):
 if __name__=='__main__':
     ncs = nc.MFDataset('/srv/ccrc/data46/z5032520/modelout/ACCESS/vamrb/vamrba.pa19*')
     pclim = ncs.variables['p'][-12*30:]
+    ncs.close()
     pclim = np.squeeze(np.mean(pclim, axis=0))
     comp = np.zeros(pclim.shape)
-    n=0
+    n = 0
     for ens in control:
+        print ens
         # Select heatwave days
         pr_days = select_heatwave_days_pr(ens,'control')
         
@@ -250,14 +266,16 @@ if __name__=='__main__':
         #for i in xrange(pr_days.shape[0]):
         #    plot_pr(pr_days[i,...], '%s %s'%(ens, i), '%s_%s.eps'%(ens, i))
         if pr_days.shape[0]>0:
-            plot_pr(pr_days.mean(axis=0)-pclim, '%s composite'%(ens), '%s_composite.eps'%(ens))
-            n=n+pr_days.shape[0]
-            comp = comp + (pr_days.mean(axis=0)-pclim)
-    ccomp = comp/n
-    plot_pr(ccomp, 'control composite', 'control_composite.eps')
+            #plot_pr(pr_days.mean(axis=0)-pclim, '%s composite'%(ens), '%s_composite.png'%(ens))
+            n += 1
+            ndays = n + pr_days.shape[0]
+            comp = comp + np.mean(pr_days, axis=0)
+    ccomp = comp/float(n)
+    plot_pr(ccomp, ndays, 'control composite', 'control_composite.png')
     comp = np.zeros(pclim.shape)
-    n=0
+    n = 0
     for ens in elnino:
+        print ens
         # Select heatwave days
         pr_days = select_heatwave_days_pr(ens,'elnino')
 
@@ -265,14 +283,16 @@ if __name__=='__main__':
         #for i in xrange(pr_days.shape[0]):
         #    plot_pr(pr_days[i,...], '%s %s'%(ens, i), '%s_%s.eps'%(ens, i))
         if pr_days.shape[0]>0:
-            plot_pr(pr_days.mean(axis=0)-pclim, '%s composite'%(ens), '%s_composite.eps'%(ens))
-            n=n+pr_days.shape[0]
-            comp = comp + (pr_days.mean(axis=0)-pclim)
-    ocomp = comp/n
-    plot_pr(ocomp, 'El Nino composite', 'elnino_composite.eps')
+            #plot_pr(pr_days.mean(axis=0)-pclim, '%s composite'%(ens), '%s_composite.png'%(ens))
+            n += 1
+            ndays = n + pr_days.shape[0]
+            comp = comp + np.mean(pr_days, axis=0)
+    ocomp = comp/float(n)
+    plot_pr(ocomp, ndays, 'El Nino composite', 'elnino_composite.png')
     comp = np.zeros(pclim.shape)
-    n=0
+    n = 0
     for ens in lanina:
+        print ens
         # Select heatwave days
         pr_days = select_heatwave_days_pr(ens,'lanina')
 
@@ -280,8 +300,9 @@ if __name__=='__main__':
         #for i in xrange(pr_days.shape[0]):
         #    plot_pr(pr_days[i,...], '%s %s'%(ens, i), '%s_%s.eps'%(ens, i))
         if pr_days.shape[0]>0:
-            plot_pr(pr_days.mean(axis=0)-pclim, '%s composite'%(ens), '%s_composite.eps'%(ens))
-            n=n+pr_days.shape[0]
-            comp = comp + (pr_days.mean(axis=0)-pclim)
-    acomp = comp/n
-    plot_pr(acomp, 'La Nina composite', 'lanina_composite.eps')
+            #plot_pr(pr_days.mean(axis=0)-pclim, '%s composite'%(ens), '%s_composite.png'%(ens))
+            n += 1  
+            ndays = n + pr_days.shape[0]
+            comp = comp + np.mean(pr_days, axis=0)
+    acomp = comp/float(n)
+    plot_pr(acomp, ndays, 'La Nina composite', 'lanina_composite.png')
