@@ -50,7 +50,7 @@ lons = controlnc.variables['longitude'][:]
 
 
 # Function to loop and mean over all ensembles
-def mean_ensembles(experiment_ens,name):
+def mean_ensembles(experiment_ens):
     mslp_ensmean = np.zeros(pr_summer_clim.shape)
     temp_ensmean = np.zeros(temp_summer_clim.shape)
     rain_ensmean = np.zeros(rain_summer_clim.shape)
@@ -124,21 +124,21 @@ def plot_stream(u,v,lats,lons,units,rng,fname):
 
 # Plot the meaning function and plot the results
 print "Meaning El Nino"
-mslp_ninomean, temp_ninomean, rain_ninomean, u_ninomean, v_ninomean = mean_ensembles(elnino_ens,'nino')
+mslp_ninomean, temp_ninomean, rain_ninomean, u_ninomean, v_ninomean = mean_ensembles(elnino_ens)
 plot_map(mslp_ninomean,lats,lons,'Pa',500,'mslp_nino_ensmean.eps')
 plot_map(temp_ninomean,lats,lons,'${}^{\circ}C$',3,'temp_nino_ensmean.eps')
 plot_map(rain_ninomean*86400,lats,lons,'$mm/day$', 7,'rain_nino_ensmean.eps')
 plot_stream(u_ninomean,v_ninomean,lats1,lons,'$ms^{-1}$',12,'winds_nino_ensmean.eps')
 
 print "Meaning La Nina"
-mslp_ninamean, temp_ninamean, rain_ninamean, u_ninamean, v_ninamean = mean_ensembles(lanina_ens,'nina')
+mslp_ninamean, temp_ninamean, rain_ninamean, u_ninamean, v_ninamean = mean_ensembles(lanina_ens)
 plot_map(mslp_ninamean,lats,lons,'Pa',500,'mslp_nina_ensmean.eps')
 plot_map(temp_ninamean,lats,lons,'${}^{\circ}C$',3,'temp_nina_ensmean.eps')
 plot_map(rain_ninamean*86400,lats,lons,'$mm/day$', 7,'rain_nina_ensmean.eps')
 plot_stream(u_ninamean,v_ninamean,lats1,lons,'$ms^{-1}$',12,'winds_nina_ensmean.eps')
 
 print "Meaning Modoki"
-mslp_modokimean, temp_modokimean, rain_modokimean, u_modokimean, v_modokimean = mean_ensembles(modoki_ens,'modoki')
+mslp_modokimean, temp_modokimean, rain_modokimean, u_modokimean, v_modokimean = mean_ensembles(modoki_ens)
 plot_map(mslp_modokimean,lats,lons,'Pa',500,'mslp_modoki_ensmean.eps')
 plot_map(temp_modokimean,lats,lons,'${}^{\circ}C$',3,'temp_modoki_ensmean.eps')
 plot_map(rain_modokimean*86400,lats,lons,'$mm/day$', 7,'rain_modoki_ensmean.eps')

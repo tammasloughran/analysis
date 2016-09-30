@@ -69,7 +69,7 @@ nina_ensembles = ['vamre','vamrf','vamrg','vamrh','vamri','vamrj','vamrk','vamrl
 
 # Directory of data
 directory = '/srv/ccrc/data46/z5032520/ehfheatwaves/'
-filename = directory+'vamrk/EHF_heatwaves_ACCESS1-0_vamrk_yearly_summer.nc'
+filename = directory+'vamrk/EHF_heatwaves_ACCESS1.3_vamrk_yearly_summer.nc'
 
 # Get lats and lons
 _,_,_,_,_,_, lats, lons = load_ensemble_hw(filename, get_latlon=True)
@@ -90,19 +90,19 @@ lanina = {'hwf': empty.copy(), 'hwn': empty.copy(), \
 
 # Load control ensebles
 for n, ens in enumerate(control_ensembles):
-    filename = directory+ens+'/EHF_heatwaves_ACCESS1-0_'+ens+'_yearly_summer.nc'
+    filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
     control['hwf'][n], control['hwn'][n], \
     control['hwd'][n], control['hwa'][n], \
     control['hwm'][n], control['hwt'][n], _, _ = load_ensemble_hw(filename)
 # Load el nino ensebles
 for n, ens in enumerate(nino_ensembles):
-    filename = directory+ens+'/EHF_heatwaves_ACCESS1-0_'+ens+'_yearly_summer.nc'
+    filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
     elnino['hwf'][n], elnino['hwn'][n], \
     elnino['hwd'][n], elnino['hwa'][n], \
     elnino['hwm'][n], elnino['hwt'][n], _, _ = load_ensemble_hw(filename)
 # Load la nina ensebles
 for n, ens in enumerate(nina_ensembles):
-    filename = directory+ens+'/EHF_heatwaves_ACCESS1-0_'+ens+'_yearly_summer.nc'
+    filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
     lanina['hwf'][n], lanina['hwn'][n], \
     lanina['hwd'][n], lanina['hwa'][n], \
     lanina['hwm'][n], lanina['hwt'][n], _, _ = load_ensemble_hw(filename)
