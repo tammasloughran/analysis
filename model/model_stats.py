@@ -5,7 +5,7 @@ from mpl_toolkits.basemap import Basemap
 import netCDF4 as nc
 import scipy.stats as stats
 import datetime as dt
-import pdb
+
 
 # Load an ensemble heatwave data.
 def load_ensemble_hw(filename, hwdefinition='EHF', get_latlon=False):

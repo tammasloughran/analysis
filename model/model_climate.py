@@ -42,6 +42,8 @@ u_summer_clim = np.squeeze(np.mean(u_summer, axis=0))
 v = controlnc.variables['u'][:]
 v_summer = u[summer]
 v_summer_clim = np.squeeze(np.mean(v_summer, axis=0))
+# 500hPa geopotential
+hgt500 = controlnc.variables['hgt_1'][:,5,...]
 
 # Load latitude and longitude
 lats = controlnc.variables['latitude'][:]
