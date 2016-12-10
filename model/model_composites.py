@@ -4,7 +4,6 @@ import datetime as dt
 import netCDF4 as nc
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
-import pdb
 
 
 def load_ends(filename):
@@ -79,12 +78,15 @@ def plot_pr(data, n, title, filename):
     plt.close()
 
 
-def select_heatwave_days_pr(ensemble, group, hwdir, modeldir):
+def select_heatwave_days_pr(ensemble, region, group, hwdir, modeldir):
     """Select the third day of pressure for heatwaves >=5 days duration
 
     Arguments:
     ensembles -- a strings with the ensemble code
+    region -- a mask to calculate the composites for
     group -- a string describing the experiment group control elnino or lanina
+    hwdir -- heatwaves files directory
+    modeldir -- model data directory
 
     Returns:
     composite
@@ -103,21 +105,19 @@ def select_heatwave_days_pr(ensemble, group, hwdir, modeldir):
     ends = ends[nov1:,...]
     
     # Select the region of interest (this will change at some point)
-    # Northwestern Australia
-    reg = ends[:,:,67:73]
-    reg = reg[:,56:61,:]
-    # Northeastern Australia
-    #reg = ends[:,:,75:80]
-    #reg = reg[:,51:56,:]
-    # Southeastern Australia
-    #reg = ends[:,:,75:80]
-    #reg = reg[:,42:46,:]
+    # Australia
+    ends = ends[:,:,(lons>=112.5)&(lons<=155.625)]
+    ends = ends[:,(lats>=-43.75)&(lats<=-11.25),:]
+    region = np.repeat(region[None,...], ends.shape[0], axis=0)
+    ends.mask = np.logical_not(region)
+
     
     # Construct a time index indicating if heatwaves occur within this region.
-    index = np.max(np.max(reg,axis=2), axis=1)
+    index = np.max(np.max(ends,axis=2), axis=1)
+    bakup = index
     for i in np.where(index>0)[0]:
         try:
-            for ii in xrange(0,int(index[i]-1)):
+            for ii in xrange(0,int(bakup[i]-1)):
                 index[i+ii] += 1
         except IndexError:
             continue
@@ -136,21 +136,12 @@ def select_heatwave_days_pr(ensemble, group, hwdir, modeldir):
         pr2 = prdata - climp
         pr = np.concatenate((pr, pr2), axis=0)
 
-    #prfiles = [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2000-11.nc']
-    #prfiles += [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2000-12.nc']
-    #prfiles += [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2001-01.nc']
-    #prfiles += [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2001-02.nc']
-    #prfiles += [modeldir+group+'/'+ensemble+'/'+ensemble+'a.pe2001-03.nc']
-    #pr = load_pr(prfiles)
-    
-    # Select only the third heatwave days using index
+    # Select only the heatwave days using index
     pr = pr[index,...]
-    
-    # Calculate anomalies from climatology
-    return pr #- pclim
+    return pr
 
 
-def construct_composite(ensembles, group, hwdir, modeldir):
+def construct_composite(ensembles, region, group, hwdir, modeldir):
     """Construct a composite of all heatwaves within a region for all 
     ensembles in a group.
 
@@ -169,12 +160,13 @@ def construct_composite(ensembles, group, hwdir, modeldir):
     for ens in ensembles:
         print ens
         # Select heatwave days
-        pr_days = select_heatwave_days_pr(ens,group,hwdir,modeldir)
+        pr_days = select_heatwave_days_pr(ens, region, group, hwdir, modeldir)
         # If the ensemble has heatwaves then put it in the composite
         if pr_days.shape[0]>0:
             n += 1
             ndays += pr_days.shape[0]
             comp += np.mean(pr_days, axis=0)
+            plot_pr(np.mean(pr_days, axis=0),1,ens,ens+'_composite.png')
     comp = comp/float(n) # Each ensemble has equal weighting
     return comp, ndays, n
 
@@ -193,8 +185,36 @@ if __name__=='__main__':
               'vamrm','vamrn','vamro','vamrp','vamrq','vamrr','vamrs','vamrt',
               'vamru','vamrv','vamrw','vamrx','vamry','vamrz','vaqga','vaqgb',
               'vaqgc','vaqgd','vaqge','vaqgf','vaqgg','vaqgh']
+    modoki = ['vaqoc','vaqog','vaqok','vaqoo','vaqos','vaqow','vaqpa','vaqod',
+              'vaqoh','vaqol','vaqop','vaqot','vaqox','vaqpb','vaqoa','vaqoe',
+              'vaqoi','vaqom','vaqoq','vaqou','vaqoy','vaqpc','vaqob','vaqof',
+              'vaqoj','vaqon','vaqor','vaqov','vaqoz','vaqpd']
+    pacnino = ['varma','varmc','varme','varmg','varmi','varmk','varmm',
+               'varmo','varmq','varms','varmu','varmw','varmy','varna',
+               'varnc','varmb','varmd','varmf','varmh','varmj','varml',
+               'varmn','varmp','varmr','varmt','varmv','varmx','varmz',
+               'varnb','varnd']
+    pacnina = ['varoa','varoc','varoe','varog','varoi','varok','varom',
+               'varoo','varoq','varos','varou','varow','varoy','varpa',
+               'varpc','varob','varod','varof','varoh','varoj','varol',
+               'varon','varop','varor','varot','varov','varox','varoz',
+               'varpb','varpd']
+    indpiod = ['varqb','varqd','varqf','varqh','varqj','varql','varqn',
+               'varqp','varqr','varqt','varqv','varqx','varqz','varrc',
+               'varqa','varqc','varqe','varqg','varqi','varqk','varqm',
+               'varqo','varqq','varqs','varqu','varqw','varqy','varrb',
+               'varrd']
+    indniod = ['varsa','varsb','varsc','varsd','varse','varsf','varsg',
+               'varsh','varsi','varsj','varsk','varsl','varsm','varsn',
+               'varso','varsp','varsq','varsr','varss','varst','varsu',
+               'varsv','varsx','varsz','varta','vartb','vartc','vartd']
+    indpacnino = ['vasba','vasbc','vasbe','vasbg','vasbi','vasbk','vasbm',
+                  'vasbo','vasbq','vasbs','vasbu','vasca',
+                  'vascc','vasbb','vasbd','vasbf','vasbh','vasbj','vasbl',
+                  'vasbn','vasbp','vasbr','vasbt','vasbv','vasbx','vasbz',
+                  'vascb','vascd']
 
-    # directories
+    # Directories
     hwdir = '/srv/ccrc/data46/z5032520/ehfheatwaves/'
     modeldir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/'
 
@@ -216,14 +236,44 @@ if __name__=='__main__':
     for month in xrange(1,13,1):
         pclim[month-1,...] = prc[date_range.month==month].mean(axis=0)
     
+    # Load region mask
+    masknc = nc.Dataset('HWF_masks.nc','r')
+    neaus = masknc.variables['masks'][0,...].astype(int)
+    
     # Control composite
-    ccomp, ndays, n = construct_composite(control,'control', hwdir, modeldir)
+    ccomp, ndays, n = construct_composite(control, neaus,'control', hwdir, modeldir)
     plot_pr(ccomp, ndays, 'control composite', 'control_composite.png')
     
     # El Nino composite
-    ocomp, ndays, n = construct_composite(elnino,'elnino', hwdir, modeldir)
+    ocomp, ndays, n = construct_composite(elnino, neaus, 'elnino', hwdir, modeldir)
     plot_pr(ocomp, ndays, 'El Nino composite', 'elnino_composite.png')
     
     # La Nina composite
-    acomp, ndays, n = construct_composite(lanina,'lanina', hwdir, modeldir)
+    acomp, ndays, n = construct_composite(lanina, neaus, 'lanina', hwdir, modeldir)
     plot_pr(acomp, ndays, 'La Nina composite', 'lanina_composite.png')
+    
+    # Modoki composite
+    hwdir = '/srv/ccrc/data48/z5032520/ehfheatwaves/'
+    modeldir = '/srv/ccrc/data48/z5032520/modelout/ACCESS/'
+    mcomp, ndays, n = construct_composite(modoki, neaus, 'modokielnino', hwdir, modeldir)
+    plot_pr(mcomp, ndays, 'Modoki composite', 'modoki_composite.png')
+    
+    # Pacific El Nino
+    ocomp, ndays, n = construct_composite(pacnino, neaus, 'pac_nino', hwdir, modeldir)
+    plot_pr(ocomp, ndays, 'Pacific El Nino composite', 'pac_nino_composite.png')
+    
+    # Pacific La Nina
+    acomp, ndays, n = construct_composite(pacnina, neaus, 'pac_nina', hwdir, modeldir)
+    plot_pr(acomp, ndays, 'Pacific La Nina composite', 'pac_nina_composite.png')
+    
+    # Indian PIOD
+    pcomp, ndays, n = construct_composite(indpiod, neaus, 'ind_piod', hwdir, modeldir)
+    plot_pr(pcomp, ndays, 'Indian PIOD composite', 'ind_piod_composite.png')
+
+    # Indian NIOD
+    ncomp, ndays, n = construct_composite(indniod, neaus, 'ind_niod', hwdir, modeldir)
+    plot_pr(ncomp, ndays, 'Indian NIOD composite', 'ind_niod_composite.png')
+    
+    # Indo-Pacific El Nino
+    ipcomp, ndays, n = construct_composite(indpacnino, neaus, 'indpac_nino', hwdir, modeldir)
+    plot_pr(ipcomp, ndays, 'Indo_pacific El Nino composite', 'indpac_nino_composite.png')

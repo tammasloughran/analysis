@@ -149,7 +149,7 @@ for n,aspect in enumerate(hwasp):
     cbar_ax, kw = mpl.colorbar.make_axes([axs for axs in axes.flat], orientation='horizontal')
     cb = plt.colorbar(pcol, cax=cbar_ax, orientation='horizontal')
     plt.title(label[n]+' EOFs')
-    plt.savefig(label[n]+'_EOFs.png',format='png')
+    plt.savefig(label[n]+'_EOFs.eps',format='eps')
     plt.close()
 
     for pc in xrange(4):
