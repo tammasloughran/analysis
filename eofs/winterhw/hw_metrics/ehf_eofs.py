@@ -15,13 +15,14 @@ from eofs.standard import Eof
 from tools import rotate
 from tools import pcaplot
 from tools import load_data
+import pdb
+
 
 def detrend_kendal(data):
     from scipy.stats.mstats import theilslopes
     import numpy as np
     slope = np.ones(data.shape[1:])*np.nan
     intercept = np.ones(data.shape[1:])*np.nan
-    import pdb
     for y in xrange(0,data.shape[1],1):
         for x in xrange(0,data.shape[2],1):
             if not data.mask[:,y,x].any():
@@ -119,7 +120,7 @@ if __name__ == '__main__':
         total_variance = solver.totalAnomalyVariance()
         errors = solver.northTest(vfscaled=True)
         retain = nsigpcs(explained_variance, errors)
-        if retain==1: retain = 4
+        if retain<=1: retain = 4
         pcs = solver.pcs(pcscaling=0, npcs=retain)
         eigens = solver.eigenvalues()
         eofs = solver.eofs(eofscaling=2, neofs=retain)
@@ -168,20 +169,20 @@ if __name__ == '__main__':
         outfile.close()
 
         # Lag Correlations
-        #mds = ["Nino3.4","SOI","DMI","SAM","STRH"]
-        #mdsn = 0
-        #for mode in [nino34, soi, dmi, sam, strh]:
-        #    mode = mode['%s-01'%(start_year-2):'%s-12'%(end_year)]
-        #    rho_lag = np.zeros((25, pcs.shape[1]))
-        #    p_lag = np.zeros((25, pcs.shape[1]))
-        #    for lag in range(0,25,1):
-        #        mode_lag = mode.shift(lag)
-        #        axis = mode_lag.index.month
-        #        mode_lag = mode_lag[(axis==12)|(axis==1)|(axis==2)]
-        #        mode_lag = mode_lag.resample('AS-JUL', how='mean')
-        #        mode_lag = mode_lag['%s-01'%(start_year):'%s-12'%(end_year-1)]
-        #        for pc in range(pcs.shape[1]):
-        #            rho_lag[lag,pc], p_lag[lag,pc] = \
-        #                stats.mstats.spearmanr(mode_lag, pcs[:-1,pc])
-        #    pcaplot.plot_lags(rho_lag, p_lag, metric_name+"_%s"%(mds[mdsn]))
-        #    mdsn+=1
+        mds = ["Nino3.4","SOI","DMI","SAM","STRH"]
+        mdsn = 0
+        for mode in [nino34, soi, dmi, sam, strh]:
+            mode = mode['%s-01'%(start_year-2):'%s-12'%(end_year)]
+            rho_lag = np.zeros((25, pcs.shape[1]))
+            p_lag = np.zeros((25, pcs.shape[1]))
+            for lag in range(0,25,1):
+                mode_lag = mode.shift(lag)
+                axis = mode_lag.index.month
+                mode_lag = mode_lag[(axis==6)|(axis==7)|(axis==8)]
+                mode_lag = mode_lag.resample('AS-JAN', how='mean')
+                mode_lag = mode_lag['%s-01'%(start_year):'%s-12'%(end_year-1)]
+                for pc in range(pcs.shape[1]):
+                    rho_lag[lag,pc], p_lag[lag,pc] = \
+                        stats.mstats.spearmanr(mode_lag, pcs[:-1,pc])
+            pcaplot.plot_lags(rho_lag, p_lag, metric_name+"_%s"%(mds[mdsn]))
+            mdsn+=1

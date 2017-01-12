@@ -151,6 +151,7 @@ def plot_eofs(eofs, lon, lat, name, single_eof=None, head=''):
     plt.savefig(plotfilename, format='eps')
     plt.close()
 
+
 def plot_three_eofs(eofs, expvar, lon, lat, name, single_eof=None, head=''):
     from numpy import arange, meshgrid
     import numpy as np
@@ -256,6 +257,109 @@ def plot_three_eofs(eofs, expvar, lon, lat, name, single_eof=None, head=''):
     plt.savefig(plotfilename, format='eps')
     plt.close()
 
+def plot_three_eofs_add(eofs, expvar, lon, lat, name, fig, axes, single_eof=None, head=''):
+    from numpy import arange, meshgrid
+    import numpy as np
+    import matplotlib
+    from mpl_toolkits.basemap import Basemap
+    import math
+    from netCDF4 import Dataset
+    import matplotlib as mpl
+    # Define the scale of the plot based on minima and maxima.
+    maxval = eofs[0,:,:].max()
+    absminval = abs(eofs[0,:,:].min())
+    if absminval>maxval:
+        maxval = absminval
+    maxval = math.ceil(maxval)
+    if maxval<5:
+        #If the maximum is very small round steps to nearest decimal point.
+        step = round((maxval)/4.,1)
+    else:
+        step = math.ceil((maxval)/4.)
+    if name=='HWD': step = 1
+    levs = arange(-(5.*step), (5.*step)+step, step)
+    # Define the parallels and meridians
+    parallels = arange(-40., -9., 10.)
+    meridians = arange(120., 160., 10.)
+    # make the figure
+    matplotlib.rcParams['contour.negative_linestyle'] = 'dashed'
+    count = 0
+    string = name + " EOF "
+    ax_section = axes.flat
+    subfig = 'a) '
+    replace = ['b) ','c) ','d) ', '']
+    if name=='HWF':
+        subfig = 'a) '
+        replace = ['b) ','c) ','d) ', '']
+        ax_section = axes.flat[:3]
+    if name=='HWD':
+        subfig = 'd) ' 
+        replace = ['e) ','f) ','', '']
+        ax_section = axes.flat[3:6]
+    if name=='HWA':
+        subfig = 'g) ' 
+        replace = ['h) ','','', '']
+        ax_section = axes.flat[6:9]
+    if name=='HWT':
+        subfig = 'i) ' 
+        replace = ['j) ','k) ','', '']
+        ax_section = axes.flat[9:]
+    for ax in ax_section:
+        try:
+            dummy = eofs[count, :, :]
+        except:
+            fig.delaxes(ax)
+            break
+        # Use an equidistant cylyndrical map projection.
+        map_axes = Basemap(ax=ax, projection='cyl',
+            llcrnrlat=-44, urcrnrlat=-10,
+            llcrnrlon=112, urcrnrlon=156)
+        # Create the basemap grid 
+        x, y = map_axes(*meshgrid(lon, lat))
+        # Plot
+        if eofs.shape[1:] == (68,88):
+            msknc = Dataset('/srv/ccrc/data35/z5032520/AWAP/mask/varmask.nc')
+            grey = msknc.variables['mask'][:]
+            map_axes.contourf(x, y, np.flipud(grey), (0,0.5,1), colors=('1','0.5'))
+        contours = map_axes.contour(x, y, eofs[count, :, :].squeeze(),
+                linewidths=0.4, colors='k',levels=levs)
+        cs = map_axes.contourf(x, y, eofs[count, :, :].squeeze(),
+                levels=levs, cmap=plt.cm.RdBu_r)
+        map_axes.drawparallels(parallels, labels=[True,False,False,False], fontsize=8, linewidth=0)
+        map_axes.drawmeridians(meridians, labels=[False,False,False,True], fontsize=8, linewidth=0)
+        map_axes.drawcoastlines()
+        # Labels
+        ax.text(0.8,1.03,str(round(expvar[count]*100,1))+'%',transform=ax.transAxes)
+        ax.set_title(subfig+ ' ' + string + str(count+1))
+        subfig = replace[count]
+        count = count + 1
+    #fig.subplots_adjust(right=0.8)
+    #cbar_ax = fig.add_axes([0.85, 0.12, 0.05, 0.76])
+    cbar_ax, kw = mpl.colorbar.make_axes([axs for axs in ax_section], orientation='horizontal')
+    cb = plt.colorbar(cs, cax=cbar_ax, orientation='horizontal')
+    if name=='HWF':
+        units='Days'
+    if name=='HWN':
+        units='Events'
+    if name=='HWD':
+        units='Days'
+    if name=='HWA':
+        units='$^\circ C^2$'
+    if name=='HWM':
+        units='$^\circ C^2$'
+    if name=='HWT':
+        units='Days'
+    cb.set_label(units)
+    #fig.text(0.5,0.975, name+' '+head, horizontalalignment='center',
+    #               verticalalignment='top')
+    # Save
+    #plt.tight_layout()
+    #rev = svnversion()
+    #plotfilename = name+'block'+"_r"+rev+".eps"
+    #plt.savefig(plotfilename, format='eps')
+    #plt.close()
+
+
 def plot_lags(rhos, ps, name):
     """Plot the laged correlations betweena a pc and index.
 
@@ -290,6 +394,43 @@ def plot_lags(rhos, ps, name):
     plotfilename = name+"_lagrho_r"+rev+".eps"
     plt.savefig(plotfilename,format='eps')
     plt.close()
+
+def plot_lags_add(rhos, ps, name, axis):
+    """Plot the laged correlations betweena a pc and index.
+
+    Arguments
+    rhos -- correlations for each PC against each month. PCs on second axis.
+    ps -- same as rhos but p-values.
+    """
+    from numpy import nan, arange
+    plt.figure(2)
+    mrange = arange(0,-25,-1)
+    months = ["Jan","Dec","Nov","Oct","Sep","Aug","Jul","Jun","May","Apr","Mar","Feb"]
+    months += months+["Jan"]
+    linestyle = ['-','--','-.',':']
+    for pc in range(0,ps.shape[1],1):
+        axis.plot(mrange, rhos[:,pc], label="PC%s"%(pc+1), linestyle=linestyle[pc])
+        #Plot dots for significance. p<=0.05
+        axis.plot(mrange[ps[:,pc]<=0.05], rhos[ps[:,pc]<=0.05,pc], 'ko')
+    axis.set_xticks(mrange)
+    axis.set_xticklabels(months, size='small', rotation=25)
+    lbl = ''
+    if name=='HWF PCs & Nino 3.4': lbl = 'a) '
+    if name=='HWD PCs & DMI': lbl = 'b) '
+    if name=='HWA PCs & Nino 3.4': lbl = 'c) '
+    if name=='HWT PCs & Nino 3.4': lbl = 'd) '
+    if name=='HWT PCs & SAM': lbl = 'e) '
+    axis.set_title(lbl + name + " Lead Correlations")
+    axis.set_xlabel("Lag Month")
+    axis.set_ylabel(r'$\rho$')
+    axis.set_ylim((-0.8,0.8))
+    axis.plot([-25,0],[0,0],'k')
+    axis.legend(loc=2)
+    #rev = svnversion()
+    #plotfilename = name+"_lagrho_r"+rev+".eps"
+    #plt.savefig(plotfilename,format='eps')
+    #plt.close()
+
 
 def plot_pcs(pcs, mode, time, name, yearmean=False, head=''):
     """Plot the 1st and 2nd principle component time series.

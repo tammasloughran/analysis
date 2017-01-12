@@ -47,23 +47,6 @@ om_lats = om_lats[llat:ulat]
 om_lats= om_lats[::-1]
 omnc.close()
 
-# Summer pressure anomalies from 20CR
-prfile = ('/home/nfs/z5032520/analysis/dataproc/summer_mslp_1911-2011.nc')
-prnc = Dataset(prfile, 'r')
-pr = prnc.variables['mslp'][:]
-pr_lats = prnc.variables['lat'][:]
-pr_lons = prnc.variables['lon'][:]
-ulat = np.where(pr_lats>-70.)[0].max()
-llat = np.where(pr_lats<30.)[0].min()
-llon = np.where(pr_lons>40.)[0].min()
-ulon = np.where(pr_lons<260.)[0].max()
-pr = pr[:,llat:ulat,llon:ulon]
-pr = pr[:,::-1,:]
-pr_lons = pr_lons[llon:ulon]
-pr_lats = pr_lats[llat:ulat]
-pr_lats= pr_lats[::-1]
-prnc.close()
-
 direct = '/home/nfs/z5032520/analysis/eofs/hw_metrics/'
 # Principle components from PCA of heatwaves
 hwn_pcs = np.load(direct+'HWN_rotated_pcs.npy')[:-1]
@@ -99,72 +82,13 @@ def linregress_2D(x,y):
     return slope, intercept, correlation, p, error
 
 
-def plot_pcr(slope, p, title, filename):
-    import math
-    import bh_fdr
-    # Create the map projection
-    m = Basemap(projection='mill',
-            llcrnrlon=pr_lons[0],llcrnrlat=pr_lats[0],
-            urcrnrlon=pr_lons[-1],urcrnrlat=pr_lats[-1])
-    # Grid the lats and lons and feed it to the map instance
-    lns,lts = np.meshgrid(pr_lons,pr_lats)
-    x,y = m(lns,lts)
-    # Define the range of the pressure levels to contour
-    levs = np.arange(-120,130,20)
-    # Plot contours and filled contours
-    m.contour(x,y,slope,linewidths=0.4,colors='k',levels=levs)
-    m.contourf(x,y,slope,cmap='bwr',levels=levs)
-    # Make the colourbar
-    cbar = plt.colorbar(orientation='horizontal')
-    cbar.set_label('Pa')
-    # Plot the significance mask
-    sigmask, p_fdr = bh_fdr.bh_fdr(p, 0.05)
-    #sigmask = p<0.05
-    m.contourf(x, y, sigmask, 1, colors='none', hatches=[None,'x'])
-    m.drawcoastlines()
-    m.drawmeridians(np.arange(pr_lons[0],pr_lons[-1]+10,40.),labels=[1,0,0,1],linewidth=0)
-    m.drawparallels(np.arange(-60,1,20.),labels=[1,0,0,1],linewidth=0)
-    plt.title(title)
-    plt.savefig(filename, format='eps')
-    plt.close()
-
-def plot_pcr_add(slope, p, title, filename, axes):
-    import math
-    import bh_fdr
-    # Create the map projection
-    m = Basemap(ax=axes, projection='mill',
-            llcrnrlon=pr_lons[0],llcrnrlat=pr_lats[0],
-            urcrnrlon=pr_lons[-1],urcrnrlat=pr_lats[-1])
-    # Grid the lats and lons and feed it to the map instance
-    lns,lts = np.meshgrid(pr_lons,pr_lats)
-    x,y = m(lns,lts)
-    # Define the range of the pressure levels to contour
-    levs = np.arange(-120,130,20)
-    # Plot contours and filled contours
-    m.contour(x,y,slope,linewidths=0.4,colors='k',levels=levs)
-    fcont = m.contourf(x,y,slope,cmap='bwr',levels=levs)
-    # Make the colourbar
-    cbar = m.colorbar(fcont, pad=0.3, location='bottom')
-    cbar.set_label('Pa')
-    # Plot the significance mask
-    sigmask, p_fdr = bh_fdr.bh_fdr(p, 0.05)
-    #sigmask = p<0.05
-    m.contourf(x, y, sigmask, 1, colors='none', hatches=[None,'x'])
-    m.drawcoastlines()
-    m.drawmeridians(np.arange(pr_lons[0],pr_lons[-1]+10,40.),labels=[1,0,0,1],linewidth=0)
-    m.drawparallels(np.arange(-60,1,20.),labels=[1,0,0,1],linewidth=0)
-    plt.title(title)
-    #plt.savefig(filename, format='eps')
-    #plt.close()
-
-
 def plot_pcr_vector(slope,slope2,slope3, p, title, filename):
     import math
     import bh_fdr
     # Create the map projection
     m = Basemap(projection='mill',
-            llcrnrlon=pr_lons[0],llcrnrlat=pr_lats[0],
-            urcrnrlon=pr_lons[-1],urcrnrlat=pr_lats[-1])
+            llcrnrlon=om_lons[0],llcrnrlat=om_lats[0],
+            urcrnrlon=om_lons[-1],urcrnrlat=om_lats[-1])
     # Grid the lats and lons and feed it to the map instance
     lns,lts = np.meshgrid(om_lons,om_lats)
     x,y = m(lns,lts)
@@ -181,111 +105,105 @@ def plot_pcr_vector(slope,slope2,slope3, p, title, filename):
     qk = plt.quiverkey(Q, 0.1, -0.15, 0.5, '0.5 m/s', labelpos='W')
     # Make the colourbar
     m.drawcoastlines()
-    m.drawmeridians(np.arange(pr_lons[0],pr_lons[-1]+10,40.),labels=[1,0,0,1],linewidth=0)
+    m.drawmeridians(np.arange(om_lons[0],om_lons[-1]+10,40.),labels=[1,0,0,1],linewidth=0)
     m.drawparallels(np.arange(-60,1,20.),labels=[1,0,0,1],linewidth=0)
     plt.title(title)
     plt.savefig(filename, format='eps')
     plt.close()
+
 
 def plot_pcr_vector_add(slope,slope2,slope3, p, title, filename, axes):
     import math
     import bh_fdr
     # Create the map projection
     m = Basemap(ax=axes,projection='mill',
-            llcrnrlon=pr_lons[0],llcrnrlat=pr_lats[0],
-            urcrnrlon=pr_lons[-1],urcrnrlat=pr_lats[-1])
+            llcrnrlon=om_lons[0],llcrnrlat=om_lats[0],
+            urcrnrlon=om_lons[-1],urcrnrlat=om_lats[-1])
     # Grid the lats and lons and feed it to the map instance
     lns,lts = np.meshgrid(om_lons,om_lats)
     x,y = m(lns,lts)
     # Define the range of the pressure levels to contour
-    levs = np.arange(-.006,.0065,0.0005)
+    levs = np.arange(-.018,.02,0.002)
     #m.contour(x,y,slope3,linewidths=0.4,colors='k',levels=levs)
     omgc=m.contourf(x,y,slope3,cmap='bwr',levels=levs)
     sigmask, p_fdr = bh_fdr.bh_fdr(p, 0.05)
-    m.contourf(x, y, sigmask, 1, colors='none', hatches=[None,'x'])
+    m.contourf(x, y, sigmask, 1, colors='none', hatches=[None,'xx'])
     # Plot contours and filled contours
     uproj,vproj,xx,yy = m.transform_vector(slope,slope2,u_lons,u_lats,slope2.shape[1]/2,slope2.shape[0]/2,returnxy=True,masked=True)
     Q = m.quiver(xx,yy,uproj,vproj)
     # Make the colourbar
     cbar = m.colorbar(omgc,pad=0.4,location='bottom')
     cbar.set_label('Pa/s')
-    qk = plt.quiverkey(Q, 0.1, -0.1, 0.5, '0.5 m/s', labelpos='W')
+    qk = plt.quiverkey(Q, 0.1, -0.1, 1, '1 m/s', labelpos='W')
     # Make the colourbar
     m.drawcoastlines()
-    m.drawmeridians(np.arange(pr_lons[0],pr_lons[-1]+10,40.),labels=[1,0,0,1],linewidth=0)
+    m.drawmeridians(np.arange(om_lons[0],om_lons[-1]+10,40.),labels=[1,0,0,1],linewidth=0)
     m.drawparallels(np.arange(-60,1,20.),labels=[1,0,0,1],linewidth=0)
     plt.title(title)
     #plt.savefig(filename, format='eps')
     #plt.close()
 
 
-
 # Perform regression and plot
 #final_fig, final_axes = plt.subplots(nrows=3,ncols=1,figsize=(12,15))
-#omg_fig, omg_axes = plt.subplots(nrows=3,ncols=1,figsize=(12,15))
+omg_fig, omg_axes = plt.subplots(nrows=3,ncols=1,figsize=(12,15))
 # PC1
 # Regressions
-slope, intercept, correlation, p, error = linregress_2D(hwn_pcs[:,0], pr)
 slope2, intercept, _, _, error = linregress_2D(hwn_pcs[:,0], u)
 slope3, intercept, _, _, error = linregress_2D(hwn_pcs[:,0], v)
-slope4, intercept, _, _, error = linregress_2D(hwn_pcs[:,0], omega)
+slope4, intercept, _, p, error = linregress_2D(hwn_pcs[:,0], omega)
 # Plots
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN PC1', 'regres_pr_HWNpc1')
+#plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN PC1', 'regres_pr_HWNpc1')
 #plot_pcr_vector(slope2, slope3, slope4, p, 'Linear regression of summer winds over HWN PC1', 'regres_wind_HWNpc1')
-slope, intercept, correlation, p, error = linregress_2D(hwf_pcs[:,0], pr)
 slope2, intercept, correlation, _, error = linregress_2D(hwf_pcs[:,0], u)
 slope3, intercept, correlation, _, error = linregress_2D(hwf_pcs[:,0], v)
-slope4, intercept, _, _, error = linregress_2D(hwf_pcs[:,0], omega)
-plot_pcr(slope, p, 'a) Linear regression of summer MSLP over HWF PC1', 'regres_pr_HWFpc1')
+slope4, intercept, _, p, error = linregress_2D(hwf_pcs[:,0], omega)
+#plot_pcr(slope, p, 'a) Linear regression of summer MSLP over HWF PC1', 'regres_pr_HWFpc1')
 #first=True
 #plot_pcr_add(slope, p, 'a) Linear regression of summer MSLP over HWF PC1', 'regres_pr_HWFpc1', final_axes[0])
-#plot_pcr_vector_add(slope2, slope3, slope4, p, 'Linear regression of summer winds over HWF PC1', 'regres_wind_HWFpc1', omg_axes[0])
+plot_pcr_vector_add(slope2, slope3, slope4, p, 'Linear regression of summer winds over HWF PC1', 'regres_wind_HWFpc1', omg_axes[0])
 #first=False
 #plot_pcr_vector(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWF PC1', 'regres_wind_HWFpc1')
-slope, intercept, correlation, p, error = linregress_2D(hwd_pcs[:,0], pr)
 slope2, intercept, correlation, _, error = linregress_2D(hwd_pcs[:,0], u)
 slope3, intercept, correlation, _, error = linregress_2D(hwd_pcs[:,0], v)
-slope4, intercept, _, _, error = linregress_2D(hwd_pcs[:,0], omega)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD PC1', 'regres_pr_HWDpc1')
+slope4, intercept, _, p, error = linregress_2D(hwd_pcs[:,0], omega)
+#plot_pcr(slope, p, 'Linear regression of summer MSLP over HWD PC1', 'regres_pr_HWDpc1')
 #plot_pcr_vector(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWD PC1', 'regres_wind_HWDpc1')
-slope, intercept, correlation, p, error = linregress_2D(hwa_pcs[:,0], pr)
 slope2, intercept, correlation, _, error = linregress_2D(hwa_pcs[:,0], u)
 slope3, intercept, correlation, _, error = linregress_2D(hwa_pcs[:,0], v)
-slope4, intercept, _, _, error = linregress_2D(hwa_pcs[:,0], omega)
-plot_pcr(slope, p, 'c) Linear regression of summer MSLP over HWA PC1', 'regres_pr_HWApc1')
+slope4, intercept, _, p, error = linregress_2D(hwa_pcs[:,0], omega)
+#plot_pcr(slope, p, 'c) Linear regression of summer MSLP over HWA PC1', 'regres_pr_HWApc1')
 #plot_pcr_add(slope, p, 'c) Linear regression of summer MSLP over HWA PC1', 'regres_pr_HWApc1',final_axes[2])
 #plot_pcr_vector(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWA PC1', 'regres_wind_HWApc1')
-#plot_pcr_vector_add(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWA PC1', 'regres_wind_HWApc1',omg_axes[2])
-slope, intercept, correlation, p, error = linregress_2D(hwm_pcs[:,0], pr)
+plot_pcr_vector_add(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWA PC1', 'regres_wind_HWApc1',omg_axes[2])
 slope2, intercept, correlation, _, error = linregress_2D(hwm_pcs[:,0], u)
 slope3, intercept, correlation, _, error = linregress_2D(hwm_pcs[:,0], v)
 slope4, intercept, _, _, error = linregress_2D(hwm_pcs[:,0], omega)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM PC1', 'regres_pr_HWMpc1')
+#plot_pcr(slope, p, 'Linear regression of summer MSLP over HWM PC1', 'regres_pr_HWMpc1')
 #plot_pcr_vector(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWM PC1', 'regres_wind_HWMpc1')
-slope, intercept, correlation, p, error = linregress_2D(hwt_pcs[:,0], pr)
 slope2, intercept, correlation, _, error = linregress_2D(hwt_pcs[:,0], u)
 slope3, intercept, correlation, _, error = linregress_2D(hwt_pcs[:,0], v)
 slope4, intercept, _, _, error = linregress_2D(hwt_pcs[:,0], omega)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT PC1', 'regres_pr_HWTpc1')
+#plot_pcr(slope, p, 'Linear regression of summer MSLP over HWT PC1', 'regres_pr_HWTpc1')
 #plot_pcr_vector(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWT PC1', 'regres_wind_HWTpc1')
 
 # PC2
-slope, intercept, correlation, p, error = linregress_2D(hwn_pcs[:,1], pr)
 slope2, intercept, correlation, _, error = linregress_2D(hwn_pcs[:,1], u)
 slope3, intercept, correlation, _, error = linregress_2D(hwn_pcs[:,1], v)
 slope4, intercept, _, _, error = linregress_2D(hwn_pcs[:,1], omega)
-plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN PC2', 'regres_pr_HWNpc2')
+#plot_pcr(slope, p, 'Linear regression of summer MSLP over HWN PC2', 'regres_pr_HWNpc2')
 #plot_pcr_vector(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWN PC2', 'regres_wind_HWNpc2')
-slope, intercept, correlation, p, error = linregress_2D(hwf_pcs[:,1], pr)
 slope2, intercept, correlation, _, error = linregress_2D(hwf_pcs[:,1], u)
 slope3, intercept, correlation, _, error = linregress_2D(hwf_pcs[:,1], v)
-slope4, intercept, _, p, error = linregress_2D(hwf_pcs[:,1], omega*1000)
-plot_pcr(slope, p, 'b) Linear regression of summer MSLP over HWF PC2', 'regres_pr_HWFpc2')
+slope4, intercept, _, p, error = linregress_2D(hwf_pcs[:,1], omega)
+#plot_pcr(slope, p, 'b) Linear regression of summer MSLP over HWF PC2', 'regres_pr_HWFpc2')
 #plot_pcr_add(slope, p, 'b) Linear regression of summer MSLP over HWF PC2', 'regres_pr_HWFpc2',final_axes[1])
 #plt.savefig('final_pr.eps',format='eps')
 #plot_pcr_vector(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWF PC2', 'regres_wind_HWFpc2')
-#plot_pcr_vector_add(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWF PC2', 'regres_wind_HWFpc2', omg_axes[1])
-#omg_fig.savefig('final_omg.eps',format='eps')
+plot_pcr_vector_add(slope2, slope3,slope4, p, 'Linear regression of summer winds over HWF PC2', 'regres_wind_HWFpc2', omg_axes[1])
+omg_fig.savefig('final_omg.eps',format='eps')
+import sys
+sys.exit()
 slope, intercept, correlation, p, error = linregress_2D(hwd_pcs[:,1], pr)
 slope2, intercept, correlation, _, error = linregress_2D(hwd_pcs[:,1], u)
 slope3, intercept, correlation, _, error = linregress_2D(hwd_pcs[:,1], v)

@@ -614,7 +614,7 @@ for aspect in control:
     sig = pv<threshold
     indpac_diff = np.ma.median(indpac[aspect], axis=0)-np.ma.median(control[aspect], axis=0)
     plotmaps(indpac_diff, sig, aspect, 'median_'+aspect+'_indpac_diff.eps', 'bwr')
-    
+
 
 meanmean, lower, upper = bootstrap(elnino['hwf'], control['hwf'])
 signif = ((meanmean<0)&(upper<0)) | ((meanmean>0)&(lower>0))

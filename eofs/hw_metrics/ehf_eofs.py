@@ -15,13 +15,13 @@ from eofs.standard import Eof
 from tools import rotate
 from tools import pcaplot
 from tools import load_data
+import matplotlib.pyplot as plt
 
 def detrend_kendal(data):
     from scipy.stats.mstats import theilslopes
     import numpy as np
     slope = np.ones(data.shape[1:])*np.nan
     intercept = np.ones(data.shape[1:])*np.nan
-    import pdb
     for y in xrange(0,data.shape[1],1):
         for x in xrange(0,data.shape[2],1):
             if not data.mask[:,y,x].any():
@@ -112,6 +112,10 @@ if __name__ == '__main__':
     hwt = detrend_kendal(hwt)
     metric_dict = {"HWN":hwn,"HWF":hwf,"HWD":hwd,"HWA":hwa,"HWM":hwm,"HWT":hwt}
     print "HW?    pc1        pc12        pc3        pc4"
+    final_fig, final_axes = plt.subplots(nrows=4, ncols=3, figsize=(12,18))
+    lag_fig, lag_axes = plt.subplots(nrows=3, ncols=2, figsize=(15,18))
+    theselags = ['HWFNino 3.4','HWDDMI','HWANino 3.4','HWTNino 3.4','HWTSAM']
+    iii=0
     for metric_name in metric_dict.keys():
         # Set up solver
         solver = Eof(metric_dict[metric_name], weights=wgts)
@@ -162,6 +166,8 @@ if __name__ == '__main__':
         pcaplot.plot_eofs(eofs, lon, lat, "%s_Rotated_EOFs"%(metric_name), head='VARIMAX EOFs')
         #pcaplot.plot_eofs(eofs2, lon, lat, "%s_EOFs"%(metric_name), head='Simple EOFs')
         pcaplot.plot_three_eofs(eofs, expvar, lon, lat, metric_name, head='Rotated EOFs')
+        if metric_name in ['HWF','HWD','HWA','HWT']:
+            pcaplot.plot_three_eofs_add(eofs, expvar, lon, lat, metric_name,final_fig,final_axes, head='Rotated EOFs')
         #pcaplot.plot_eofs(eofs_covariance, lon, lat, 
         #        "%s_EOFs_Covariance"%(metric_name))
         #pcaplot.plot_eofs(eofs_correlation, lon, lat, 
@@ -178,6 +184,11 @@ if __name__ == '__main__':
                 outfile.write("%+.2f (%.3f) "%(rho, p))
             outfile.write("\n")
         outfile.close()
+
+        agreement = np.array([np.nan,np.nan,np.nan,np.nan])
+        for pc in xrange(pcs.shape[1]):
+            agreement[pc] = (np.sign(ninoslice)==np.sign(pcs[:-1,pc])).mean()
+        print "agr. ", agreement
 
         # Lag Correlations
         mds = ["Nino 3.4","SOI","DMI","SAM","STRH"]
@@ -196,4 +207,12 @@ if __name__ == '__main__':
                     rho_lag[lag,pc], p_lag[lag,pc] = \
                         stats.mstats.spearmanr(mode_lag, pcs[:-1,pc])
             pcaplot.plot_lags(rho_lag, p_lag, metric_name+" PCs & %s"%(mds[mdsn]))
+            if metric_name+mds[mdsn] in theselags:
+                pcaplot.plot_lags_add(rho_lag, p_lag, metric_name+" PCs & %s"%(mds[mdsn]),lag_axes.flat[iii])
+                iii = iii+1
+            if iii==5:
+                lag_fig.delaxes(lag_axes.flat[iii])
+                iii = iii+1
             mdsn+=1
+    lag_fig.savefig('final_lag.eps',format='eps')
+    final_fig.savefig('final_fig.eps', format='eps')

@@ -3,7 +3,9 @@ from netCDF4 import Dataset
 from scipy.stats import linregress
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import datetime as dt
+
 
 # Summer sstaessure anomalies from HadISST
 sstfile = ('/media/Jupiter/observations/HadISST/sst/indo-pacific-so_SST.nc')
@@ -77,6 +79,7 @@ def linregress_2D(x,y):
 def plot_pcr(slope, p, title, filename):
     import math
     import bh_fdr
+    plt.figure()
     # Create the map projection
     m = Basemap(projection='mill',
             llcrnrlon=sst_lons[0],llcrnrlat=sst_lats[-1],
@@ -88,9 +91,9 @@ def plot_pcr(slope, p, title, filename):
     levs = np.arange(-0.6,0.65,0.1)
     # Plot contours and filled contours
     m.contour(x,y,slope,linewidths=0.4,colors='k',levels=levs)
-    m.contourf(x,y,slope,cmap='bwr',levels=levs)
+    fcont = m.contourf(x,y,slope,cmap='bwr',levels=levs)
     # Make the colourbar
-    cbar = plt.colorbar(orientation='horizontal')
+    cbar = plt.colorbar(fcont, orientation='horizontal')
     cbar.set_label('$^\circ$C')
     # Plot the significance mask
     sigmask, p_fdr = bh_fdr.bh_fdr(p, 0.05)
@@ -103,16 +106,52 @@ def plot_pcr(slope, p, title, filename):
     plt.savefig(filename, format='eps')
     plt.close()
 
+def plot_pcr_add(slope, p, title, filename, axes):
+    import math
+    import bh_fdr
+    # Create the map projection
+    m = Basemap(ax=axes, projection='mill',
+            llcrnrlon=sst_lons[0],llcrnrlat=sst_lats[-1],
+            urcrnrlon=sst_lons[-1],urcrnrlat=sst_lats[0])
+    # Grid the lats and lons and feed it to the map instance
+    lns,lts = np.meshgrid(sst_lons,sst_lats)
+    x,y = m(lns,lts)
+    # Define the range of the sstaessure levels to contour
+    levs = np.arange(-0.6,0.65,0.1)
+    # Plot contours and filled contours
+    m.contour(x,y,slope,linewidths=0.4,colors='k',levels=levs)
+    fcont = m.contourf(x,y,slope,cmap='bwr',levels=levs)
+    #cbar_ax, kw = mpl.colorbar.make_axes(axes, orientation='horizontal')
+    cb = m.colorbar(fcont, pad=0.3, location='bottom')
+    cb.set_label('$^\circ$C')
+    # Plot the significance mask
+    sigmask, p_fdr = bh_fdr.bh_fdr(p, 0.05)
+    #sigmask = p<0.05
+    m.contourf(x, y, sigmask, 1, colors='none', hatches=[None,'x'])
+    m.drawcoastlines()
+    m.drawmeridians(np.arange(sst_lons[0],sst_lons[-1]+10,50.),labels=[1,0,0,1],linewidth=0)
+    m.drawparallels(np.arange(sst_lats[-1]+10-0.5,sst_lats[0],20.),labels=[1,0,0,1],linewidth=0)
+    plt.title(title)
+    #plt.savefig(filename, format='eps')
+    #plt.close()
+
+
 # Perform regression and plot
+import matplotlib.pyplot as plt
+final_fig, final_axes = plt.subplots(nrows=3,ncols=1,figsize=(12,15))
 #PC1
 slope, intercept, correlation, p, error = linregress_2D(hwn_pcs[:,0], ssta)
 plot_pcr(slope, p, 'Linear regression of summer SST over HWN PC1', 'regres_ssta_HWNpc1')
 slope, intercept, correlation, p, error = linregress_2D(hwf_pcs[:,0], ssta)
 plot_pcr(slope, p, 'a) Linear regression of summer SST over HWF PC1', 'regres_ssta_HWFpc1')
+first=True
+plot_pcr_add(slope, p, 'a) Linear regression of summer SST over HWF PC1', 'regres_ssta_HWFpc1', final_axes[0])
+first=False
 slope, intercept, correlation, p, error = linregress_2D(hwd_pcs[:,0], ssta)
 plot_pcr(slope, p, 'Linear regression of summer SST over HWD PC1', 'regres_ssta_HWDpc1')
 slope, intercept, correlation, p, error = linregress_2D(hwa_pcs[:,0], ssta)
 plot_pcr(slope, p, 'c) Linear regression of summer SST over HWA PC1', 'regres_ssta_HWApc1')
+plot_pcr_add(slope, p, 'c) Linear regression of summer SST over HWA PC1', 'regres_ssta_HWApc1', final_axes[2])
 slope, intercept, correlation, p, error = linregress_2D(hwm_pcs[:,0], ssta)
 plot_pcr(slope, p, 'Linear regression of summer SST over HWM PC1', 'regres_ssta_HWMpc1')
 slope, intercept, correlation, p, error = linregress_2D(hwt_pcs[:,0], ssta)
@@ -122,6 +161,8 @@ slope, intercept, correlation, p, error = linregress_2D(hwn_pcs[:,1], ssta)
 plot_pcr(slope, p, 'Linear regression of summer SST over HWN PC2', 'regres_ssta_HWNpc2')
 slope, intercept, correlation, p, error = linregress_2D(hwf_pcs[:,1], ssta)
 plot_pcr(slope, p, 'b) Linear regression of summer SST over HWF PC2', 'regres_ssta_HWFpc2')
+plot_pcr_add(slope, p, 'b) Linear regression of summer SST over HWF PC2', 'regres_ssta_HWFpc2', final_axes[1])
+final_fig.savefig('final_sst.eps',format='eps')
 slope, intercept, correlation, p, error = linregress_2D(hwd_pcs[:,1], ssta)
 plot_pcr(slope, p, 'Linear regression of summer SST over HWD PC2', 'regres_ssta_HWDpc2')
 slope, intercept, correlation, p, error = linregress_2D(hwa_pcs[:,1], ssta)
