@@ -9,6 +9,7 @@ from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
 from mpl_toolkits.basemap import Basemap
 import mpl_toolkits.basemap as bm
 from scipy import signal
+import sys
 
 # Load data
 hadisst_file = '/media/Jupiter/observations/HadISST/sst/HadISST_sst.nc'
@@ -37,20 +38,49 @@ for imonth in xrange(0,12):
 # Subtract climatology
 month = 0
 sst_absolute = sst.copy()
-for imonth in xrange(0,dates2.shape[0]):
+for imonth in xrange(0,sst.shape[0]):
     sst[imonth,...] = sst[imonth,...] - sst_clim[month,...]
     if month<11: month += 1
     else: month = 0
 
 # Detrend
-satera = dates2.year>=1970
-sst = sst[satera] # Select 1970 and later
-dates2 = dates2[satera]
+sel_from = dates2.year>=1911
+sst = sst[sel_from] # Select 1911 and later
+dates2 = dates2[sel_from]
 mask = np.sum(sst.mask,axis=0)>0 # Create a mask for where data extsts for all time.
 mask = np.broadcast_to(mask,sst.shape) # Broacast to shape of sst
 sst = signal.detrend(sst,axis=0) # Detrend
 sst = np.ma.array(sst,mask=mask) # Reapply mask
 
+def plt_dec(data,year):
+    m = Basemap(projection='robin', lon_0=180.)
+    m.drawcoastlines()
+    parallels = np.arange(-90., 120., 30.)
+    meridians = np.arange(0., 360., 30.)
+    m.drawparallels(parallels,labels=[True,False,False,False], linewidth=0.3)
+    meridians = m.drawmeridians(meridians,labels=[False,False,False,True], linewidth=0.3)
+    for mr in meridians:
+        try: meridians[mr][1][0].set_rotation(50)
+        except: pass
+    fafa, ulons = bm.shiftgrid(1, data, lons)
+    xx,yy = np.meshgrid(ulons, lats)
+    x,y = m(xx,yy)
+    fcont = m.contourf(x,y,fafa,cmap='seismic',levels=np.arange(-2,2.2,0.2),extend='both')
+    m.contour(x,y,fafa,colors='k',levels=[0])
+    m.fillcontinents(color='gray',lake_color='gray')
+    cbar = plt.colorbar(fcont, orientation='horizontal')
+    #cbar.ax.get_xaxis().set_ticks([])
+    #for j, lab in enumerate([str(i) for i in np.arange(-2,2.2,0.2)]):
+    #    cbar.ax.text((1/15.)*j, -0.5, lab, ha='center', va='center')
+    plt.title(str(year))
+    plt.savefig(str(year)+'_dec.eps',format='eps')
+    plt.close()
+
+i = -1
+for iyear in xrange(1911,2015,1):
+    i += 12
+    plt_dec(sst[i,...],iyear)
+sys.exit()
 # Calculate EMI
 # Regions
 sst_a = sst[:,(lats<=10)&(lats>=-10),:]
@@ -73,18 +103,21 @@ emi = emia - 0.5*emib - 0.5*emic
 
 # Plot EMI
 fig, ax = plt.subplots()
-rnge = 528
+#rnge = 528
+rnge = 1248
 ax.plot_date(dates[-rnge:], emi[-rnge:], '-')
 ax.plot_date(dates[-rnge:], np.zeros(rnge), 'k')
 ax.plot_date(dates[-rnge:], np.ones(rnge)*emi.std(), 'r--')
 ax.plot_date(dates[-rnge:], -np.ones(rnge)*emi.std(), 'g--')
-ax.xaxis.set_major_locator(YearLocator())
-ax.xaxis.set_major_formatter(DateFormatter('%Y'))
+ax.xaxis.set_major_locator(YearLocator(base=5))
+ax.xaxis.set_minor_locator(YearLocator(base=1))
+#ax.xaxis.set_major_formatter(DateFormatter('%Y'))
 ax.autoscale_view()
 ax.grid(True)
+ax.xaxis.grid(True, which="minor")
 ax.set_xlabel('Date')
 ax.set_ylabel('EMI')
-fig.autofmt_xdate()
+#fig.autofmt_xdate()
 plt.show()
 
 # This just constructs the anomalies for visual inspection of each year. 

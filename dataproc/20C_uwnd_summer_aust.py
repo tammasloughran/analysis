@@ -11,8 +11,8 @@ import numpy as np
 
 # Start code
 # Define data and dates
-twentyc_dir = '/media/Jupiter/reanalysis/20crv2/prmsl/'
-file_list = glob.glob(twentyc_dir+'aus_prmsl.????.nc')
+twentyc_dir = '/srv/ccrc/data35/z5032520/20CRv2/uwnd/'
+file_list = glob.glob(twentyc_dir+'aus_uwnd.10m.????.nc')
 ncget = Dataset(file_list[0])
 lat = ncget.variables['lat'][:]
 lon = ncget.variables['lon'][:]
@@ -27,8 +27,8 @@ years = np.array([dates[i].year for i in range(dates.size)])
 
 # Get base period data (1961-1990)
 for cyear in range(1961,1991,1):
-    ncdata = Dataset(twentyc_dir+'aus_prmsl.%s.nc'%(cyear))
-    pr_cyear = ncdata.variables['prmsl'][:]
+    ncdata = Dataset(twentyc_dir+'aus_uwnd.10m.%s.nc'%(cyear))
+    pr_cyear = ncdata.variables['uwnd'][:]
     ndays = pr_cyear.shape[0]
     pr_base[years==cyear,:,:] = pr_cyear
 
@@ -49,12 +49,12 @@ reference = dt.datetime(1800,1,1,0,0)
 for cyear in range(1911,2013,1):
     iyear = cyear-1911
     # Load
-    ncdata = Dataset(twentyc_dir+'aus_prmsl.%s.nc'%(cyear))
+    ncdata = Dataset(twentyc_dir+'aus_uwnd.10m.%s.nc'%(cyear))
     time = ncdata.variables['time'][:]
     deltas = np.array([dt.timedelta(hours=time[i]) for i in range(time.size)])
     dates = reference + deltas
     months = np.array([dates[i].month for i in range(dates.size)])
-    pr_cyear = ncdata.variables['prmsl'][:]
+    pr_cyear = ncdata.variables['uwnd'][:]
     # Monthly means
     for imonth in range(0,12,1):
         cmonth = imonth+1
@@ -70,7 +70,7 @@ for cyear in range(1911,2013,1):
     pr1 = pr_anom[10:12,:,:]
 
 # Output file
-outfile = Dataset("summer_mslp_1911-2013.nc",'w')
+outfile = Dataset("summer_uwnd_1911-2013.nc",'w')
 # Dims
 outfile.createDimension("time", size=pr_summer.shape[0])
 outfile.createDimension("lat", size=pr_summer.shape[1])
@@ -88,10 +88,10 @@ olon = outfile.createVariable("lon",'f',dimensions=('lon'))
 setattr(olon,"long_name","Longitude")
 setattr(olon,"units","degrees_east")
 setattr(olon,"standard_name","longitude")
-omslp = outfile.createVariable("mslp",'f',dimensions=('time','lat','lon'))
-setattr(omslp,"long_name","Summer Mean Sea Level Pressure Anomaly")
+omslp = outfile.createVariable("uwnd",'f',dimensions=('time','lat','lon'))
+setattr(omslp,"long_name","Summer Mean U Wind Anomaly")
 setattr(omslp,"units","Pa")
-setattr(omslp,"standard_name","air_pressure_anomaly")
+setattr(omslp,"standard_name","u")
 setattr(omslp,"missing_value",-9.96921e+36)
 otime[:] = range(1911,2012,1)
 olat[:] = lat

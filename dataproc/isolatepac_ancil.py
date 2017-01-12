@@ -122,6 +122,8 @@ lanina[lanina>100] = 0
 lats = ensonc.variables['lat'][:]
 lons = ensonc.variables['lon'][:]
 
+
+
 pac_mask = np.ones(elnino.shape)
 # zero anomalies outside pacific +-30N of equator
 pac_mask[:,lats>=30,:] = 0
@@ -143,6 +145,28 @@ for ii,i in enumerate(np.where((lons>120)&(lons<=140))[0]):
     pac_mask[:,(lats>-30)&(lats<30),i] = pac_mask[:,(lats>-30)&(lats<30),i]*factor
 pac_mask[:,114:,208:] = 0 # remove caribean 
 pac_mask[:,105:,221:] = 0 # remove caribean
+
+# Indo-pacific region
+indopac_mask = np.ones(elnino.shape)
+# zero anomalies outside pacific +-30N of equator
+indopac_mask[:,lats>=30,:] = 0
+indopac_mask[:,lats<=-30,:] = 0
+indopac_mask[:,:,lons<=30] = 0
+indopac_mask[:,:,lons>=290] = 0
+# Linear damping north south and westward
+for i,j in enumerate(np.where((lats<30)&(lats>=20))[0]):
+    n = float(np.sum((lats<30)&(lats>=20)))
+    factor = (n-i)/n
+    indopac_mask[:,j,(lons>30)&(lons<290)] = indopac_mask[:,j,(lons>30)&(lons<290)]*factor
+for i,j in enumerate(np.where((lats>-30)&(lats<=-20))[0]):
+    n = float(np.sum((lats<30)&(lats>=20)))
+    factor = 1+(1./n) - (n-i)/n
+    indopac_mask[:,j,(lons>30)&(lons<290)] = indopac_mask[:,j,(lons>30)&(lons<290)]*factor
+indopac_mask[:,114:,208:] = 0 # remove caribean 
+indopac_mask[:,105:,221:] = 0 # remove caribean
+
+indopac_nino = elnino*indopac_mask
+indopac_nina = lanina*indopac_mask
 
 elnino = elnino*pac_mask
 # There are still positive anomalies in the far western pacific 
@@ -214,4 +238,10 @@ piodout[:] = piod
 niodout = isonc.createVariable('niod_sst','f8',('time','lat','lon'))
 setattr(niodout, 'units', 'degC')
 niodout[:] = niod
+ipelout = isonc.createVariable('indopac_nino','f8',('time','lat','lon'))
+setattr(ipelout, 'units', 'degC')
+ipelout[:] = indopac_nino
+iplaout = isonc.createVariable('indopac_nina','f8',('time','lat','lon'))
+setattr(iplaout, 'units', 'degC')
+iplaout[:] = indopac_nina
 isonc.close()
