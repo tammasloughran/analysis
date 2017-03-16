@@ -47,6 +47,7 @@ def nsigpcs(varfrac, north):
 
 # Define Heatwave directories and ensemble codes
 hwdir = '/srv/ccrc/data46/z5032520/ehfheatwaves/'
+hwdir2 = '/srv/ccrc/data48/z5032520/ehfheatwaves/'
 control = ['vamrc','vaowa','vaowb','vaowc','vaowd','vaowe','vaowg','vaowh',
            'vaowi','vaowj','vaowk','vaowl','vaowm','vaown','vaowo','vaowp',
            'vaowq','vaowr','vaows','vaowt','vaowu','vaowv','vaoww','vaowx',
@@ -55,10 +56,14 @@ elnino = ['vamrd','vaoqa','vaoqb','vaoqc','vaoqd','vaoqe','vaoqf','vaoqg',
           'vaoqi','vaoqj','vaoqk','vaoql','vaoqm','vaoqo','vaoqp','vaoqq',
           'vaoqr','vaoqs','vaoqt','vaoqu','vaoqv','vaoqw','vaoqx','vaoqy',
           'vaoqz','vaqgl','vaqgm','vaqgn','vaoqh','vaoqn']
-lanina = ['vamre','vamrf','vamrg','vamrh','vamri','vamrj','vamrk','vamrl',
-          'vamrm','vamrn','vamro','vamrp','vamrq','vamrr','vamrs','vamrt',
-          'vamru','vamrv','vamrw','vamrx','vamry','vamrz','vaqga','vaqgb',
-          'vaqgc','vaqgd','vaqge','vaqgf','vaqgg','vaqgh']
+#lanina = ['vamre','vamrf','vamrg','vamrh','vamri','vamrj','vamrk','vamrl',
+#          'vamrm','vamrn','vamro','vamrp','vamrq','vamrr','vamrs','vamrt',
+#          'vamru','vamrv','vamrw','vamrx','vamry','vamrz','vaqga','vaqgb',
+#          'vaqgc','vaqgd','vaqge','vaqgf','vaqgg','vaqgh']
+modoki = ['vaqoc','vaqog','vaqok','vaqoo','vaqos','vaqow','vaqpa','vaqod',
+          'vaqoh','vaqol','vaqop','vaqot','vaqox','vaqpb','vaqoa','vaqoe',
+          'vaqoi','vaqom','vaqoq','vaqou','vaqoy','vaqpc','vaqob','vaqof',
+          'vaqoj','vaqon','vaqor','vaqov','vaqoz','vaqpd']
 
 
 # Load netcdf metadata
@@ -74,7 +79,7 @@ example_file.close()
 
 
 # Allocate heatwave arrays.
-nens = len(control) + len(elnino) + len(lanina)
+nens = len(control) + len(elnino) + len(modoki)
 hwf = np.ma.ones((nens,)+nlatnlon)*np.nan
 hwn = np.ma.ones((nens,)+nlatnlon)*np.nan
 hwd = np.ma.ones((nens,)+nlatnlon)*np.nan
@@ -85,13 +90,13 @@ hwt = np.ma.ones((nens,)+nlatnlon)*np.nan
 
 # Load the ensembles and construct a dummy time axis as lanina->control->elnino
 i = 0
-for ens in lanina:
+for ens in control:
     filename = hwdir+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
     hwf[i,...], hwn[i,...], hwd[i,...], \
     hwa[i,...], hwm[i,...], hwt[i,...] = load_heatwaves(filename)
     i += 1
-for ens in control:
-    filename = hwdir+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
+for ens in modoki:
+    filename = hwdir2+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
     hwf[i,...], hwn[i,...], hwd[i,...], \
     hwa[i,...], hwm[i,...], hwt[i,...] = load_heatwaves(filename)
     i += 1
@@ -125,7 +130,7 @@ for n,aspect in enumerate(hwasp):
     #retain = nsigpcs(explained_variance, errors)
     eofs = solver.eofs(eofscaling=2, neofs=4)
     pcs = solver.pcs(pcscaling=1, npcs=4)
-    pcs, eofs, R = rotate.do_rotation(pcs, eofs)
+    #pcs, eofs, R = rotate.do_rotation(pcs, eofs)
     
     # Multiply negative eofs by -1
     for ii in xrange(eofs.shape[0]):
@@ -149,7 +154,7 @@ for n,aspect in enumerate(hwasp):
     cbar_ax, kw = mpl.colorbar.make_axes([axs for axs in axes.flat], orientation='horizontal')
     cb = plt.colorbar(pcol, cax=cbar_ax, orientation='horizontal')
     plt.title(label[n]+' EOFs')
-    plt.savefig(label[n]+'_EOFs.eps',format='eps')
+    plt.savefig('mdknino_'+label[n]+'_EOFs.eps',format='eps')
     plt.close()
 
     for pc in xrange(4):
@@ -163,11 +168,11 @@ for n,aspect in enumerate(hwasp):
         plt.boxplot(pcs[0:30,pc],positions=[0])
         plt.boxplot(pcs[30:60,pc],positions=[1])
         plt.boxplot(pcs[60:90,pc],positions=[2])
-        plt.xticks([0,1,2], ['La Nina','Control','El Nino'])
+        plt.xticks([0,1,2], ['Control','Modoki','El Nino'])
         plt.xlim((-.5,2.5))
         plt.axhline(color='k')
         plt.ylabel(label[n]+' PC'+str(pc+1))
-        plt.savefig(label[n]+'_PC'+str(pc+1)+'.png',format='png')
+        plt.savefig('mdknino_'+label[n]+'_PC'+str(pc+1)+'.png',format='png')
         plt.close()
 
     # Construct the masks
@@ -177,12 +182,20 @@ for n,aspect in enumerate(hwasp):
         masks[msk,...] = eofs[msk,...]>sigma*2.0
 
     # Save the masks to file
-    outnc = nc.Dataset(label[n]+'_masks.nc','w')
+    outnc = nc.Dataset('mdknino_'+label[n]+'_masks.nc','w')
     outnc.createDimension('lons', masks.shape[2])
     outnc.createDimension('lats', masks.shape[1])
     outnc.createDimension('nmask', masks.shape[0])
     olons = outnc.createVariable('lons', float, dimensions=('lons'))
+    setattr(olons, 'long_name', 'Longitude')
+    setattr(olons, 'units', 'degrees_east')
+    setattr(olons, 'standard_name', 'longitude')
+    setattr(olons, 'axis', 'X')
     olats = outnc.createVariable('lats', float, dimensions=('lats'))
+    setattr(olats, 'long_name', 'Latitude')
+    setattr(olats, 'units', 'degrees_north')
+    setattr(olats, 'standard_name', 'latitude')
+    setattr(olats, 'axis', 'Y')
     onmask = outnc.createVariable('nmask', int, dimensions=('nmask'))
     omasks = outnc.createVariable('masks', float, dimensions=('nmask','lats','lons'))
     olons[:] = lons
@@ -190,4 +203,4 @@ for n,aspect in enumerate(hwasp):
     onmask[:] = range(masks.shape[0])
     omasks[:] = masks
     outnc.close()
-    np.save(label[n]+'_masks.npy', masks)
+    np.save('mkdnino_'+label[n]+'_masks.npy', masks)

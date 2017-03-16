@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 plt.rc('font', family='sans')
 from mpl_toolkits.basemap import Basemap
 import scipy.stats as stats
+import matplotlib
 
 # Load data
-#hwfile = nc.Dataset('EHF_heatwaves_20CRV2_1901-2012_yearly_summer.nc', 'r')
-hwfile = nc.Dataset('/srv/ccrc/data35/z5032520/AWAP/yearly/ehfhw/EHF_heatwaves____yearly_summer.nc','r')
+#hwfile = nc.Dataset('/home/nfs/z5032520/analysis/modoki/EHF_heatwaves_20CRV2_1901-2012_yearly_summer.nc', 'r')
+#hwfile = nc.Dataset('/srv/ccrc/data35/z5032520/AWAP/yearly/ehfhw/EHF_heatwaves____yearly_summer.nc','r')
+hwfile = nc.Dataset('EHF_heatwaves_AWAP_bp1961-2010_yearly_summer.nc','r')
 hwf = hwfile.variables['HWF_EHF'][:]
 hwf.data[hwf.mask==True] = np.nan
 hwd = hwfile.variables['HWD_EHF'][:]
@@ -25,11 +27,13 @@ time = hwfile.variables['time'][:]
 lats = hwfile.variables['lat'][:]
 lons = hwfile.variables['lon'][:]
 
+base = (time>=1961)&(time<=2010)
+
 # Define modoki years
-#modoki_years = [1923, 1929, 1940, 1946, 1958, 1963, 1977, 1986,
-#                1990, 1991, 1992, 1994, 2002, 2004, 2009]
-#modoki_years = [1986,1990, 1991, 1992, 1994, 2002, 2004, 2009]
-modoki_years = [1923, 1929, 1940, 1946, 1958, 1963, 1977]
+modoki_years = [1923, 1929, 1940, 1946, 1958, 1963, 1977, 1986,
+                1990, 1991, 1992, 1994, 2002, 2004, 2009]
+#modoki_years = [1986, 1990, 1991, 1992, 1994, 2002, 2004, 2009]
+#modoki_years = [1923, 1929, 1940, 1946, 1958, 1963, 1977]
 modoki = []
 for i in modoki_years:
     modoki.append(np.where(time==i)[0][0])
@@ -39,6 +43,9 @@ for i in modoki_years:
 # All El nino years
 elnino_years = [1911, 1913, 1914, 1918, 1925, 1930, 1941, 1951,
                 1957, 1965, 1969, 1972, 1976, 1982, 1987, 1997, 2006]
+#elnino_years = [1982, 1987, 1997, 2006]
+#elnino_years = [1911, 1913, 1914, 1918, 1925, 1930, 1941, 1951,
+#                1957, 1965, 1969, 1972, 1976]
 elnino = []
 for i in elnino_years:
     elnino.append(np.where(time==i)[0][0])
@@ -49,7 +56,7 @@ def composite_anomaly(data, index):
     """
     data_select = data[index,...].mean(axis=0)
     # Use 60:89 for 20cr and 50:79 for awap 1961-1990
-    data_clim = data[50:79,...].mean(axis=0)
+    data_clim = data[base,...].mean(axis=0)
     return data_select - data_clim
 
 
@@ -134,51 +141,67 @@ def plotaus(data, signif, filename, units, title, rng):
 #sig = np.ma.array(pv<0.05, mask=hwf.mask[0])
 #plotaus(hwm_modoki, sig, 'hwm_modoki.eps', 'degC^2', 'HWM Modoki', range(-20,21,5))
 
+
+matplotlib.rcParams['contour.negative_linestyle'] = 'dashed'
 #GRL Figures
 pv = np.zeros(hwf.shape[1:])
 for jj in xrange(hwf.shape[1]):
     for ii in xrange(hwf.shape[2]):
-        _, pv[jj,ii] = stats.ks_2samp(hwf[elnino,jj,ii],hwf[50:79,jj,ii])
+        _, pv[jj,ii] = stats.ks_2samp(hwf[elnino,jj,ii],hwf[base,jj,ii])
 #ts, pv = stats.ttest_ind(hwf[elnino],hwf[50:79,...],axis=0,equal_var=False, nan_policy='omit')
 sig = np.ma.array(pv<0.05, mask=hwf.mask[0])
-rng = range(-16,17,4)
-f, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
+rng = range(-15,16,3)
+f, (ax1, ax2) = plt.subplots(nrows=2, ncols=1,figsize=(6,10))
 m = Basemap(ax=ax1, projection='mill',llcrnrlon=110.,llcrnrlat=-45.,urcrnrlon=157.,urcrnrlat=-10.,resolution='l',fix_aspect=True)
 lns, lts = np.meshgrid(lons, lats)
 x,y = m(lns,lts)
 xx,yy = m(lns-.5,lts-.5)
 cont = m.contour(x, y, hwf_elnino, linewidths=0.4, colors='k', levels=rng)
-plt.clabel(cont, fmt='%1.0f', fontsize=10)
+for i,c in enumerate(cont.collections):
+    if cont.levels[i]<0:
+        c.set_dashes([(0, (2.0,2.0))])
+#plt.clabel(cont, fmt='%1.0f', fontsize=10)
 colors = m.pcolormesh(xx, yy, hwf_elnino, cmap='bwr', vmin=-rng[-1], vmax=rng[-1])
-m.contourf(x, y, sig, 1, colors='none', hatches=[None,'xx'])
+m.contourf(x, y, sig, 1, colors='none', hatches=[None,'xxx'])
 m.drawcoastlines()
-m.drawmeridians(np.arange(110,157+10,10.),labels=[1,0,0,1],linewidth=0.2,fontsize=12)
-m.drawparallels(np.arange(-40,0,10.),labels=[1,0,0,1],linewidth=0.2,fontsize=12)#ts, pv = stats.ttest_ind(hwf[modoki],hwf[50:79,...],axis=0,equal_var=False, nan_policy='omit')
-cbar = m.colorbar(colors, location='bottom', pad = 0.25)
+m.drawmeridians(np.arange(110,157+10,10.),labels=[1,0,0,1],linewidth=0,fontsize=10)
+m.drawparallels(np.arange(-40,0,10.),labels=[1,0,0,1],linewidth=0,fontsize=10)
+cbar = m.colorbar(colors, location='bottom', pad=0.25)
 cbar.set_label('Days')
 cbar.set_ticks(rng)
+for t in cbar.ax.get_xticklabels(): t.set_fontsize(10) 
 ax1.set_title('a)', loc='left')
-#ts, pv = stats.ttest_ind(hwf[modoki],hwf[50:79,...],axis=0,equal_var=False, nan_policy='omit')
 pv = np.zeros(hwf.shape[1:])
 for jj in xrange(hwf.shape[1]):
     for ii in xrange(hwf.shape[2]):
-        _, pv[jj,ii] = stats.ks_2samp(hwf[modoki,jj,ii],hwf[50:79,jj,ii])
+        _, pv[jj,ii] = stats.ks_2samp(hwf[modoki,jj,ii],hwf[base,jj,ii])
 sig = np.ma.array(pv<0.05, mask=hwf.mask[0])
 m = Basemap(ax=ax2, projection='mill',llcrnrlon=110.,llcrnrlat=-45.,urcrnrlon=157.,urcrnrlat=-10.,resolution='l',fix_aspect=True)
 lns, lts = np.meshgrid(lons, lats)
 x,y = m(lns,lts)
+m.drawmeridians(np.arange(110,157+10,10.),labels=[1,0,0,1],linewidth=0,fontsize=10)
+m.drawparallels(np.arange(-40,0,10.),labels=[1,0,0,1],linewidth=0,fontsize=10)
 cont = m.contour(x, y, hwf_modoki, linewidths=0.4, colors='k', levels=rng)
-plt.clabel(cont, fmt='%1.0f', fontsize=10)
+for i,c in enumerate(cont.collections):
+    if cont.levels[i]<0:
+        c.set_dashes([(0, (2.0,2.0))])
+#plt.clabel(cont, fmt='%1.0f', fontsize=10)
 colors = m.pcolormesh(xx, yy, hwf_modoki, cmap='bwr', vmin=-rng[-1], vmax=rng[-1])
-m.contourf(x, y, sig, 1, colors='none', hatches=[None,'xx'])
+m.contourf(x, y, sig, 1, colors='none', hatches=[None,'xxx'])
 m.drawcoastlines()
-m.drawmeridians(np.arange(110,157+10,10.),labels=[1,0,0,1],linewidth=0.2,fontsize=12)
-m.drawparallels(np.arange(-40,0,10.),labels=[1,0,0,1],linewidth=0.2,fontsize=12)#ts, pv = stats.ttest_ind(hwf[modoki],hwf[50:79,...],axis=0,equal_var=False, nan_policy='omit')
-cbar = m.colorbar(colors, location='bottom', pad = 0.25)
+cbar = m.colorbar(colors, location='bottom', pad=0.25)
 cbar.set_label('Days')
 cbar.set_ticks(rng)
+for t in cbar.ax.get_xticklabels(): t.set_fontsize(10) 
 ax2.set_title('b)', loc='left')
 #plt.savefig(filename='GRL_figure1.eps', format='eps')
+
+# Calculate the area average diffference between modoki years and EP years.
+neanc = nc.Dataset('/home/nfs/z5032520/analysis/model/mdknino_HWF_masks_awap.nc', 'r')
+neaawap = neanc.variables['masks'][0,...].astype('int')
+diff = hwf_elnino - hwf_modoki
+neave = diff[neaawap].mean()
+print 'Average over region:', neave
 
 # Plot all modoki years
 #for i in modoki_years:
