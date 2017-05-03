@@ -30,9 +30,9 @@ lons = hwfile.variables['lon'][:]
 base = (time>=1961)&(time<=2010)
 
 # Define modoki years
-modoki_years = [1923, 1929, 1940, 1946, 1958, 1963, 1977, 1986,
-                1990, 1991, 1992, 1994, 2002, 2004, 2009]
-#modoki_years = [1986, 1990, 1991, 1992, 1994, 2002, 2004, 2009]
+#modoki_years = [1923, 1929, 1940, 1946, 1958, 1963, 1977, 1986,
+#                1990, 1991, 1992, 1994, 2002, 2004, 2009]
+modoki_years = [1986, 1990, 1991, 1992, 1994, 2002, 2004, 2009]
 #modoki_years = [1923, 1929, 1940, 1946, 1958, 1963, 1977]
 modoki = []
 for i in modoki_years:
@@ -86,7 +86,10 @@ def plotaus(data, signif, filename, units, title, rng):
     lns, lts = np.meshgrid(lons, lats)
     x,y = m(lns,lts)
     cont = m.contour(x, y, data, linewidths=0.4, colors='k', levels=rng)
-    plt.clabel(cont, fmt='%1.0f', fontsize=10)
+    for i,c in enumerate(cont.collections):
+        if cont.levels[i]<0:
+            c.set_dashes([(0, (2.0,2.0))])
+    #plt.clabel(cont, fmt='%1.0f', fontsize=10)
     colors = m.pcolormesh(x, y, data, cmap='bwr', vmin=-rng[-1], vmax=rng[-1])
     m.contourf(x, y, signif, 1, colors='none', hatches=[None,'xx'])
     cbar = m.colorbar(colors, location='bottom', pad = 0.25)
@@ -94,11 +97,11 @@ def plotaus(data, signif, filename, units, title, rng):
     cbar.set_ticks(rng)
     plt.title(title)
     m.drawcoastlines()
-    m.drawmeridians(np.arange(110,157+10,10.),labels=[1,0,0,1],linewidth=0.2,fontsize=12)
-    m.drawparallels(np.arange(-40,0,10.),labels=[1,0,0,1],linewidth=0.2,fontsize=12)
-    plt.savefig(filename, format='svg')
+    #m.drawmeridians(np.arange(110,157+10,10.),labels=[1,0,0,1],linewidth=0.2,fontsize=12)
+    #m.drawparallels(np.arange(-40,0,10.),labels=[1,0,0,1],linewidth=0.2,fontsize=12)
+    plt.savefig(filename, format='eps')
     plt.close()
-    #pt.show()
+    #plt.show()
 
 
 #ts, pv = stats.ttest_ind(hwf[elnino],hwf[50:79,...],axis=0,equal_var=False, nan_policy='omit')
@@ -123,7 +126,7 @@ def plotaus(data, signif, filename, units, title, rng):
 #
 #ts, pv = stats.ttest_ind(hwf[modoki],hwf[50:79,...],axis=0,equal_var=False, nan_policy='omit')
 #sig = np.ma.array(pv<0.05, mask=hwf.mask[0])
-#plotaus(hwf_modoki, sig, 'hwf_modoki.eps', 'Days', 'HWF Modoki', range(-20,21,5))
+#plotaus(hwf_modoki, sig, 'hwf_modoki.eps', 'Days', 'HWF Modoki', range(-15,16,3))
 #
 #ts, pv = stats.ttest_ind(hwn[modoki],hwn[50:79,...],axis=0,equal_var=False, nan_policy='omit')
 #sig = np.ma.array(pv<0.05, mask=hwf.mask[0])
@@ -194,14 +197,22 @@ cbar.set_label('Days')
 cbar.set_ticks(rng)
 for t in cbar.ax.get_xticklabels(): t.set_fontsize(10) 
 ax2.set_title('b)', loc='left')
-#plt.savefig(filename='GRL_figure1.eps', format='eps')
+plt.savefig(filename='GRL_supfigure4.eps', format='eps')
 
 # Calculate the area average diffference between modoki years and EP years.
 neanc = nc.Dataset('/home/nfs/z5032520/analysis/model/mdknino_HWF_masks_awap.nc', 'r')
-neaawap = neanc.variables['masks'][0,...].astype('int')
+neaawap = neanc.variables['masks'][0,...].astype('bool')
+neaawap = np.flipud(neaawap)
 diff = hwf_elnino - hwf_modoki
 neave = diff[neaawap].mean()
-print 'Average over region:', neave
+print 'Nino-Modoki Average over region:', neave
+diff = hwf_elnino
+neave = diff[neaawap].mean()
+print 'Nino-Clim Average over region:', neave
+diff = hwf_modoki
+neave = diff[neaawap].mean()
+print 'Modoki-Clim Average over region:', neave
+
 
 # Plot all modoki years
 #for i in modoki_years:

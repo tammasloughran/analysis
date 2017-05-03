@@ -109,6 +109,9 @@ emi = emia - 0.5*emib - 0.5*emic
 #emi2 = emi[(dates2.year>=1980)&(dates2.year==2005)]
 #emi = emi/0.54
 
+exceed = emi>1.5
+for xx in dates[exceed]:
+    print xx
 
 # Plot EMI
 #fig, ax = plt.subplots()

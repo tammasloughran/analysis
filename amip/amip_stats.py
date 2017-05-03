@@ -16,8 +16,8 @@ import matplotlib as mpl
 from mpl_toolkits.basemap import Basemap
 
 # User. Manually select the aspect and enso phase
-aspect = 'HWM'
-phase = 'lanina'
+aspect = 'HWF'
+phase = 'ep'
 
 # Define some variables
 cwd = os.getcwd()
@@ -29,10 +29,17 @@ models = ['ACCESS1-0','ACCESS1-3','BNU-ESM','CCSM4','CMCC-CM','CNRM-CM5',
 #models = ['IPSL-CM5A-LR','MIROC5','MPI-ESM-MR','MRI-CGCM3','NorESM1-M','inmcm4']
 elnino_years = [1982, 1987, 1991, 1997, 2002]
 lanina_years = [1984, 1988, 1998, 1999, 2007]
+modoki_years = [1986, 1990, 1991, 1992, 1994, 2002, 2004]
+ep_years = [1982, 1987, 1997, 2006]
+
 if phase=='elnino':
     phase_years = elnino_years
 elif phase=='lanina':
     phase_years = lanina_years
+elif phase=='modoki':
+    phase_years = modoki_years
+elif phase=='ep':
+    phase_years = ep_years
 
 parallels = np.arange(-40., -9., 10.)
 meridians = np.arange(120., 160., 10.,)
@@ -131,13 +138,13 @@ clim = (times>=1979)&(times<=2008)
 aspect_phase = var[phase_i,...].mean(axis=0)-var[clim].mean(axis=0)
 
 # Construct figure
-f, axes = plt.subplots(nrows=4, ncols=4, figsize=(10,9), sharex=True, sharey=True)
+f, axes = plt.subplots(nrows=5, ncols=3, figsize=(9,9), sharex=True, sharey=True)
 f.subplots_adjust(hspace=0, wspace=0)
 # Plot AWAP
-mappable = plot_map_div(lons, lats, aspect_phase, ax=axes[0][0], title=aspect+'_AWAP')
+#mappable = plot_map_div(lons, lats, aspect_phase, ax=axes[0][0], title=aspect+'_AWAP')
 
-
-for model,ax in zip(models,[x for x in axes.flat][1:]):
+#for model,ax in zip(models,[x for x in axes.flat][1:]):
+for model,ax in zip(models,[x for x in axes.flat]):
     print model
     
     # Load data
@@ -159,7 +166,7 @@ for model,ax in zip(models,[x for x in axes.flat][1:]):
     aspect_phase = var[phase_i,...].mean(axis=0)-var[clim].mean(axis=0)
 
     # Plot the elnino composites 
-    plot_map_div(lons,lats,aspect_phase,ax=ax,title=aspect+'_'+model)
+    mappable = plot_map_div(lons,lats,aspect_phase,ax=ax,title=aspect+'_'+model)
 
 
 # Plot the colorbar

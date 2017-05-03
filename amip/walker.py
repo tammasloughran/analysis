@@ -57,7 +57,6 @@ def plot_streamfunction(sfunc, ltude, pr, fname):
     plt.plot([115,120],[980,980],'k',linewidth=5)
     cbar = plt.colorbar(fill)
     cbar.set_label('kg s$^{-1}$')
-    
     ax = plt.gca()
     ax.set_yscale('log')
     ax.invert_yaxis()

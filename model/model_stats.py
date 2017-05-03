@@ -205,6 +205,7 @@ nea[0,24:26,:] = 0
 nea = nea[0].astype('bool')
 
 
+
 def plotmap_test(data,aspect,test,name,colours='bwr'):
     #fmt = '%1.0f'
     plt.figure()
@@ -459,7 +460,7 @@ def mannwhitneyu_3d(ad,bd):
 
 def random_replace_subsample(data, nsub=20, average=True):
     """Select a random subsample of size nsub from data and optionally 
-    calculate the average caculate the average.
+    calculate the average.
     
     Inputs
     data - Data to subsample
@@ -476,15 +477,15 @@ def random_replace_subsample(data, nsub=20, average=True):
     return sample
 
 
-def make_pdf(data, title=''):
+def make_pdf(data, obs, title=''):
     distribution = data[:,nea].mean(axis=1)
     plt.figure()
     plt.hist(distribution, bins=50, normed=True, color='grey')
-    plt.xticks(np.arange(-10,10,2))
+    plt.xticks(np.arange(-20,20,2))
     plt.vlines(distribution.mean(), 0, 0.25, colors='k')
     plt.vlines(np.percentile(distribution, 5), 0, 0.25, colors='k', linestyles='dashed')
     plt.vlines(np.percentile(distribution, 95), 0, 0.25, colors='k', linestyles='dashed')
-    plt.vlines(-1.64742634643, 0, 0.25, colors='k', linestyles='dotted')
+    plt.vlines(obs, 0, 0.25, colors='k', linestyles='dotted')
     plt.xlabel('Days')
     ylbl = plt.ylabel('Pr.')
     ylbl.set_rotation(0)
@@ -492,7 +493,7 @@ def make_pdf(data, title=''):
     plt.show()
 
 
-def bootstrap(data1, data2, nsamples=10000, title=''):
+def bootstrap(data1, data2, obs, nsamples=10000, title=''):
     """Calculate the fifth and ninetyfifth percentil confidence intervals 
     for the difference of means of two groups using bootstrapping with 
     replacement. 
@@ -510,7 +511,7 @@ def bootstrap(data1, data2, nsamples=10000, title=''):
     for ni in xrange(nsamples):
         dffrnc[ni,...] = random_replace_subsample(data1, nsub=15) - random_replace_subsample(data2, nsub=15)
     avg = dffrnc.mean(axis=0)
-    make_pdf(dffrnc,title)
+    make_pdf(dffrnc,obs,title=title)
     fifthint = np.percentile(dffrnc, 5, axis=0)
     ninfifthint = np.percentile(dffrnc, 95, axis=0)
     return avg, fifthint, ninfifthint
@@ -727,17 +728,16 @@ map_axes.drawcoastlines()
 
 #plt.savefig(filename, format='eps')
 
-#meanmean, lower, upper = bootstrap(elnino['hwf'], control['hwf'])
+meanmean, lower, upper = bootstrap(elnino['hwf'], control['hwf'],4.30997512747, title='EP - Clim.')
 #signif = ((meanmean<0)&(upper<0)) | ((meanmean>0)&(lower>0))
 #plotmaps(meanmean, signif, 'hwf', 'bootstraped_mean_hwf.eps', 'bwr')
 #meanmean, lower, upper = bootstrap(lanina['hwf'], control['hwf'])
 #signif = ((meanmean<0)&(upper<0)) | ((meanmean>0)&(lower>0))
 #plotmaps(meanmean, signif, 'hwf', 'bootstraped_mean_hwf_lanina.eps', 'bwr')
-#meanmean, lower, upper = bootstrap(modoki['hwf'], control['hwf'])
+meanmean, lower, upper = bootstrap(modoki['hwf'], control['hwf'],2.21729386892, title='Modoki - Clim.')
 #signif = ((meanmean<0)&(upper<0)) | ((meanmean>0)&(lower>0))
 #plotmaps(meanmean, signif, 'hwf', 'bootstraped_mean_hwf_modoki.eps', 'bwr')
-
-#meanmean, lower, upper = bootstrap(elnino['hwf'], modoki['hwf'],title='EP - Modoki')
+meanmean, lower, upper = bootstrap(elnino['hwf'], modoki['hwf'], 2.09268125855 ,title='EP - Modoki')
 
 #signif = ((meanmean<0)&(upper<0)) | ((meanmean>0)&(lower>0))
 #pv = np.zeros(elnino['hwf'].shape[1:])
