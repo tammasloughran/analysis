@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed May  3 14:42:49 2017
+Created on Tue May  9 14:45:42 2017
 
 @author: Tammas Loughran
 """
 
-
 import numpy as np
-import pandas as pd
-import datetime as dt
 import netCDF4 as nc
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import scipy.stats as stats
 
-# define the ensembles
+# Define the ensemble members
 control = ['vamrc','vaowa','vaowb','vaowc','vaowd','vaowe','vaowg','vaowh',
            'vaowi','vaowj','vaowk','vaowl','vaowm','vaown','vaowo','vaowp',
            'vaowq','vaowr','vaows','vaowt','vaowu','vaowv','vaoww','vaowx',
@@ -29,10 +26,14 @@ lanina = ['vamre','vamrf','vamrg','vamrh','vamri','vamrj','vamrk','vamrl',
           'vaqgc','vaqgd','vaqge','vaqgf','vaqgg','vaqgh']
 hwdir = '/srv/ccrc/data46/z5032520/ehfheatwaves/'
 
-# Load the pressure climatology
 modeldir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/'
+lsmnc = nc.Dataset(modeldir+'sftlf_fx_ACCESS1-0_historical_r0i0p0.nc', 'r')
+lsm = lsmnc.variables['sftlf'][:]
+lsmnc.close()
 group = 'control'
-pr = np.empty((0,145,192))
+print group
+#Load the EF data from the control
+cEF = np.empty((0,145,192))
 for ens in control:
     print ens
     for month in ['11','12','01','02','03']:
@@ -40,15 +41,102 @@ for ens in control:
             year = '2000'
         else:
             year = '2001'
-        prfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
-        prnc = nc.Dataset(prfile,'r')
-        pr = np.append(pr, np.squeeze(prnc.variables['p_1'][:]).mean(axis=0)[None,...], axis=0)
-        prnc.close()
-#pclim = pr.mean(axis=0)
-pclim = np.ones((5,)+pr.shape[1:])*np.nan
-for i in xrange(5):
-    pclim[i,...] = pr[i::5].mean(axis=0)
-    
+        ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
+        qnc = nc.Dataset(ncfile,'r')
+        Qe = qnc.variables['lh'][:]
+        Qh = qnc.variables['sh'][:]
+        cEF = np.append(cEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+        qnc.close()
+cEF_clim = cEF.mean(axis=0)
+
+group = 'elnino'
+print group
+#Load the EF data from the control
+oEF = np.empty((0,145,192))
+for ens in elnino:
+    print ens
+    for month in ['11','12','01','02','03']:
+        if month=='11' or month=='12': 
+            year = '2000'
+        else:
+            year = '2001'
+        ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
+        qnc = nc.Dataset(ncfile,'r')
+        Qe = qnc.variables['lh'][:]
+        Qh = qnc.variables['sh'][:]
+        oEF = np.append(oEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+        qnc.close()
+oEF_clim = oEF.mean(axis=0)
+
+group = 'lanina'
+print group
+#Load the EF data from the control
+aEF = np.empty((0,145,192))
+for ens in lanina:
+    print ens
+    for month in ['11','12','01','02','03']:
+        if month=='11' or month=='12': 
+            year = '2000'
+        else:
+            year = '2001'
+        ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
+        qnc = nc.Dataset(ncfile,'r')
+        Qe = qnc.variables['lh'][:]
+        Qh = qnc.variables['sh'][:]
+        aEF = np.append(aEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+        qnc.close()
+aEF_clim = aEF.mean(axis=0)
+
+hwnc = nc.Dataset(hwdir+'vamrd/EHF_heatwaves_ACCESS1.3_vamrd_daily.nc')
+lats = hwnc.variables['lat'][:]
+lons = hwnc.variables['lon'][:]
+hwnc.close()
+
+# Plot the climatology
+#mp = Basemap(projection='mill',
+#             llcrnrlon=110.,llcrnrlat=-48.,
+#             urcrnrlon=157.,urcrnrlat=-5.)
+#lns,lts = np.meshgrid(lons,lats)
+#x,y = mp(lns-1,lts-1)
+data = oEF_clim-aEF_clim
+data[lsm<50] = 0
+#_, p = stats.ttest_ind(oEF, aEF, axis=0,equal_var=False)
+#sig = p<0.05
+#sig[lsm<50] = 1
+#mp.contour(x,y,sig,levels=[1],colors='k')
+#shade = mp.pcolormesh(x,y,data,vmin=-.3,vmax=0.3,cmap='BrBG')
+#mp.drawcoastlines()
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
+#mp.colorbar(shade)
+#plt.show()
+
+f, axes = plt.subplots(nrows=2, ncols=1,figsize=(6,8))
+mp = Basemap(ax=axes[0],projection='mill',
+             llcrnrlon=110.,llcrnrlat=-48.,
+             urcrnrlon=157.,urcrnrlat=-5.)
+lns,lts = np.meshgrid(lons,lats)
+x,y = mp(lns-1,lts-1)
+shade = mp.pcolormesh(x,y,np.ma.array(cEF_clim, mask=lsm<50),vmin=0,vmax=1,cmap='terrain_r')
+mp.drawcoastlines()
+mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
+mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
+mp.colorbar(shade)
+axes[0].set_title('a) Control Climatology',loc='left')
+mp = Basemap(ax=axes[1],projection='mill',
+             llcrnrlon=110.,llcrnrlat=-48.,
+             urcrnrlon=157.,urcrnrlat=-5.)
+lns,lts = np.meshgrid(lons,lats)
+x,y = mp(lns-1,lts-1)
+#mp.contour(x,y,sig,levels=[1],colors='k')
+shade = mp.pcolormesh(x,y,data,vmin=-.3,vmax=0.3,cmap='BrBG')
+mp.drawcoastlines()
+mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
+mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
+mp.colorbar(shade)
+axes[1].set_title('b) El Nino - La Nina',loc='left')
+plt.savefig('EF_alldays.eps',format='eps')
+
 #Load the metadata from the first file
 hwnc = nc.Dataset(hwdir+'vamrd/EHF_heatwaves_ACCESS1.3_vamrd_daily.nc')
 lats = hwnc.variables['lat'][:]
@@ -75,37 +163,6 @@ event = event[:,(lats>=-43.75)&(lats<=-10),:]
 lats2 = lats[(lats>=-43.75)&(lats<=-10)]
 lons2 = lons[(lons>=112.5)&(lons<=155.625)]
 
-# Load the pressure data
-modeldir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/'
-group = 'elnino'
-pr = np.empty((0,145,192))
-for ens in elnino:
-    print ens
-    for i,month in enumerate(['11','12','01','02','03']):
-        prclim = pclim[i,...]
-        if month=='11' or month=='12': 
-            year = '2000'
-        else:
-            year = '2001'
-        prfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
-        prnc = nc.Dataset(prfile,'r')
-        pr = np.append(pr, np.squeeze(prnc.variables['p_1'][:]-pclim[i]), axis=0)
-        prnc.close()
-
-
-def plot_pr(data,p,ax,ndays=0):
-    m = Basemap(ax=ax,projection='mill',
-            llcrnrlon=70.,llcrnrlat=-60.,
-            urcrnrlon=220.,urcrnrlat=20.)
-    lns,lts = np.meshgrid(lons,lats)
-    x,y = m(lns,lts)
-    #sig = m.contour(x,y,(p<0.02).astype('int'),colors='k',linewidths=0.3)
-    cont = m.contourf(x,y,data,cmap='bwr',levels=range(-700,800,100),extend='both')
-    m.drawcoastlines()
-    #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
-    #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])
-    return cont
-    
 # define region of interest
 def region_mask(lon,lat,size=7.5):
     region = np.zeros(event.shape[1:])
@@ -122,6 +179,20 @@ neaus = region_mask(139.,-18.)
 naus = region_mask(129.,-12)
 eaus = region_mask(145.5,-24)
 
+
+def plot_ef(data,ax,ndays=0):
+    m = Basemap(ax=ax,projection='mill',
+                llcrnrlon=110.,llcrnrlat=-48.,
+                urcrnrlon=157.,urcrnrlat=-5.)
+    lns,lts = np.meshgrid(lons,lats)
+    x,y = m(lns,lts)
+    #sig = m.contour(x,y,(p<0.02).astype('int'),colors='k',linewidths=0.3)
+    cont = m.contourf(x,y,data,cmap='bwr',levels=np.arange(0,1,0.2))
+    m.drawcoastlines()
+    #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
+    #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])
+    return cont
+
 f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75))
 
 # create index using the region of interest
@@ -129,8 +200,7 @@ event.mask = np.logical_not(seaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
-plot_pr(pr[index,...].mean(axis=0),p,axes[3][0])
+plot_ef(oEF[index,...].mean(axis=0),axes[3][0])
 ndays=index.sum()
 axes[3][0].set_title('g) n='+str(ndays), loc='left')
 
@@ -138,8 +208,7 @@ event.mask = np.logical_not(eaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
-plot_pr(pr[index,...].mean(axis=0),p,axes[2][0])
+plot_ef(oEF[index,...].mean(axis=0),axes[2][0])
 ndays=index.sum()
 axes[2][0].set_title('e) n='+str(ndays), loc='left')
 
@@ -147,8 +216,7 @@ event.mask = np.logical_not(neaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
-plot_pr(pr[index,...].mean(axis=0),p,axes[1][0])
+plot_ef(oEF[index,...].mean(axis=0),axes[1][0])
 ndays=index.sum()
 axes[1][0].set_title('c) n='+str(ndays), loc='left')
 
@@ -156,11 +224,9 @@ event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
-plot_pr(pr[index,...].mean(axis=0),p,axes[0][0])
+plot_ef(oEF[index,...].mean(axis=0),axes[0][0])
 ndays=index.sum()
 axes[0][0].set_title('a) n='+str(ndays), loc='left')
-
 
 #Load the metadata from the first file
 hwnc = nc.Dataset(hwdir+'vamre/EHF_heatwaves_ACCESS1.3_vamre_daily.nc')
@@ -188,52 +254,24 @@ event = event[:,(lats>=-43.75)&(lats<=-10),:]
 lats2 = lats[(lats>=-43.75)&(lats<=-10)]
 lons2 = lons[(lons>=112.5)&(lons<=155.625)]
 
-# Load the pressure data
-modeldir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/'
-group = 'lanina'
-pr = np.empty((0,145,192))
-for ens in lanina:
-    print ens
-    for i,month in enumerate(['11','12','01','02','03']):
-        prclim = pclim[i,...]
-        if month=='11' or month=='12': 
-            year = '2000'
-        else:
-            year = '2001'
-        prfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
-        prnc = nc.Dataset(prfile,'r')
-        pr = np.append(pr, np.squeeze(prnc.variables['p_1'][:]-pclim[i]), axis=0)
-        prnc.close()
-
-# define region of interest
-#(129.,-12),(139.,-18),(145.5,-24),(141,-31),(115,-27)
-seaus = region_mask(141.,-31.)
-neaus = region_mask(139.,-18.)
-naus = region_mask(129.,-12)
-eaus = region_mask(145.5,-24)
-
-# create index using the region of interest (& tasman pr>1020hpa)
 event.mask = np.logical_not(seaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
-plot_pr(pr[index,...].mean(axis=0),p,axes[3][1])
+plot_ef(aEF[index,...].mean(axis=0),axes[3][1])
 ndays=index.sum()
 axes[3][1].set_title('h) n='+str(ndays), loc='left')
     
 event.mask = np.logical_not(eaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
-plot_pr(pr[index,...].mean(axis=0),p,axes[2][1])
+plot_ef(aEF[index,...].mean(axis=0),axes[2][1])
 ndays=index.sum()
 axes[2][1].set_title('f) n='+str(ndays), loc='left')
 
 event.mask = np.logical_not(neaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
-plot_pr(pr[index,...].mean(axis=0),p,axes[1][1])
+plot_ef(aEF[index,...].mean(axis=0),axes[1][1])
 ndays=index.sum()
 axes[1][1].set_title('d) n='+str(ndays), loc='left')
 
@@ -241,8 +279,7 @@ event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
-cont = plot_pr(pr[index,...].mean(axis=0),p,axes[0][1])
+cont = plot_ef(aEF[index,...].mean(axis=0),axes[0][1])
 ndays=index.sum()
 axes[0][1].set_title('b) n='+str(ndays), loc='left')
 
@@ -250,4 +287,4 @@ cax = f.add_axes([0.1,0.07,0.8,0.02])
 plt.colorbar(cont,cax=cax,orientation='horizontal')
 cax.set_xlabel('Pa')
 f.suptitle('El Nino            La Nina', fontsize=20)
-plt.savefig('mslp_composites.eps',format='eps')
+plt.savefig('EF_composites.eps',format='eps')
