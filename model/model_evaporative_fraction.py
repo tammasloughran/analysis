@@ -187,7 +187,7 @@ def plot_ef(data,ax,ndays=0):
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
     #sig = m.contour(x,y,(p<0.02).astype('int'),colors='k',linewidths=0.3)
-    cont = m.contourf(x,y,data,cmap='bwr',levels=np.arange(0,1,0.2))
+    cont = m.pcolormesh(x,y,data,cmap='BrBG',vmin=-0.4,vmax=0.4)
     m.drawcoastlines()
     #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
     #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])
@@ -200,7 +200,9 @@ event.mask = np.logical_not(seaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-plot_ef(oEF[index,...].mean(axis=0),axes[3][0])
+data = oEF[index,...].mean(axis=0) - cEF_clim
+data[lsm<50] = 0
+plot_ef(data,axes[3][0])
 ndays=index.sum()
 axes[3][0].set_title('g) n='+str(ndays), loc='left')
 
@@ -208,7 +210,9 @@ event.mask = np.logical_not(eaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-plot_ef(oEF[index,...].mean(axis=0),axes[2][0])
+data = oEF[index,...].mean(axis=0) - cEF_clim
+data[lsm<50] = 0
+plot_ef(data,axes[2][0])
 ndays=index.sum()
 axes[2][0].set_title('e) n='+str(ndays), loc='left')
 
@@ -216,7 +220,9 @@ event.mask = np.logical_not(neaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-plot_ef(oEF[index,...].mean(axis=0),axes[1][0])
+data = oEF[index,...].mean(axis=0) - cEF_clim
+data[lsm<50] = 0
+plot_ef(data,axes[1][0])
 ndays=index.sum()
 axes[1][0].set_title('c) n='+str(ndays), loc='left')
 
@@ -224,7 +230,9 @@ event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-plot_ef(oEF[index,...].mean(axis=0),axes[0][0])
+data = oEF[index,...].mean(axis=0) - cEF_clim
+data[lsm<50] = 0
+plot_ef(data,axes[0][0])
 ndays=index.sum()
 axes[0][0].set_title('a) n='+str(ndays), loc='left')
 
@@ -257,21 +265,27 @@ lons2 = lons[(lons>=112.5)&(lons<=155.625)]
 event.mask = np.logical_not(seaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-plot_ef(aEF[index,...].mean(axis=0),axes[3][1])
+data = aEF[index,...].mean(axis=0) - cEF_clim
+data[lsm<50] = 0
+plot_ef(data,axes[3][1])
 ndays=index.sum()
 axes[3][1].set_title('h) n='+str(ndays), loc='left')
     
 event.mask = np.logical_not(eaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-plot_ef(aEF[index,...].mean(axis=0),axes[2][1])
+data = aEF[index,...].mean(axis=0) - cEF_clim
+data[lsm<50] = 0
+plot_ef(data,axes[2][1])
 ndays=index.sum()
 axes[2][1].set_title('f) n='+str(ndays), loc='left')
 
 event.mask = np.logical_not(neaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-plot_ef(aEF[index,...].mean(axis=0),axes[1][1])
+data = aEF[index,...].mean(axis=0) - cEF_clim
+data[lsm<50] = 0
+plot_ef(data,axes[1][1])
 ndays=index.sum()
 axes[1][1].set_title('d) n='+str(ndays), loc='left')
 
@@ -279,12 +293,13 @@ event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-cont = plot_ef(aEF[index,...].mean(axis=0),axes[0][1])
+data = aEF[index,...].mean(axis=0) - cEF_clim
+data[lsm<50] = 0
+mesh = plot_ef(data,axes[0][1])
 ndays=index.sum()
 axes[0][1].set_title('b) n='+str(ndays), loc='left')
 
 cax = f.add_axes([0.1,0.07,0.8,0.02])
-plt.colorbar(cont,cax=cax,orientation='horizontal')
-cax.set_xlabel('Pa')
+plt.colorbar(mesh,cax=cax,orientation='horizontal')
 f.suptitle('El Nino            La Nina', fontsize=20)
 plt.savefig('EF_composites.eps',format='eps')
