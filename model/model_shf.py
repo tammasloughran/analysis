@@ -43,9 +43,10 @@ for ens in control:
             year = '2001'
         ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
         qnc = nc.Dataset(ncfile,'r')
-        Qe = qnc.variables['lh'][:]
+        #Qe = qnc.variables['lh'][:]
         Qh = qnc.variables['sh'][:]
-        cEF = np.append(cEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+        #cEF = np.append(cEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+        cEF = np.append(cEF, np.squeeze(Qh), axis=0)
         qnc.close()
 cEF_clim = cEF.mean(axis=0)
 
@@ -62,9 +63,10 @@ for ens in elnino:
             year = '2001'
         ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
         qnc = nc.Dataset(ncfile,'r')
-        Qe = qnc.variables['lh'][:]
+        #Qe = qnc.variables['lh'][:]
         Qh = qnc.variables['sh'][:]
-        oEF = np.append(oEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+        oEF = np.append(oEF, np.squeeze(Qh), axis=0)
+        #oEF = np.append(oEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
         qnc.close()
 oEF_clim = oEF.mean(axis=0)
 
@@ -81,9 +83,10 @@ for ens in lanina:
             year = '2001'
         ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
         qnc = nc.Dataset(ncfile,'r')
-        Qe = qnc.variables['lh'][:]
+        #Qe = qnc.variables['lh'][:]
         Qh = qnc.variables['sh'][:]
-        aEF = np.append(aEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+        aEF = np.append(aEF, np.squeeze(Qh), axis=0)
+        #aEF = np.append(aEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
         qnc.close()
 aEF_clim = aEF.mean(axis=0)
 
@@ -99,7 +102,7 @@ hwnc.close()
 #lns,lts = np.meshgrid(lons,lats)
 #x,y = mp(lns-1,lts-1)
 data = oEF_clim-aEF_clim
-data[lsm<50] = 0
+data = np.ma.array(data,mask=lsm<50)
 #_, p = stats.ttest_ind(oEF, aEF, axis=0,equal_var=False)
 #sig = p<0.05
 #sig[lsm<50] = 1
@@ -112,34 +115,41 @@ data[lsm<50] = 0
 #plt.show()
 
 f, axes = plt.subplots(nrows=2, ncols=1,figsize=(6,8))
-mp = Basemap(ax=axes[0],projection='mill',
+mp = Basemap(ax=axes[0],
+             projection='mill',
              llcrnrlon=110.,llcrnrlat=-48.,
              urcrnrlon=157.,urcrnrlat=-5.)
 lns,lts = np.meshgrid(lons,lats)
-x,y = mp(lns-1,lts-1)
-shade = mp.pcolormesh(x,y,np.ma.array(cEF_clim, mask=lsm<50),vmin=0,vmax=1,cmap='terrain_r')
-levels = np.arange(0,1,0.1)
-mp.contour(x,y,np.ma.array(cEF_clim, mask=lsm<50),colors='k',levels=levels,linewidths=0.3)
+x,y = mp(lns,lts)
+z = np.ma.array(cEF_clim, mask=lsm<50)
+shade = mp.pcolormesh(x,y,z,vmin=0,vmax=140,cmap='YlOrRd')
+levels = np.arange(0,141,15)
+mp.contour(x,y,z,colors='k',levels=levels,linewidths=0.3)
 mp.drawcoastlines()
 mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
 mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
-mp.colorbar(shade)
+cbar = mp.colorbar(shade)
+cbar.set_label('$Wm^{-2}$')
 axes[0].set_title('a) Control Climatology',loc='left')
 mp = Basemap(ax=axes[1],projection='mill',
              llcrnrlon=110.,llcrnrlat=-48.,
              urcrnrlon=157.,urcrnrlat=-5.)
 lns,lts = np.meshgrid(lons,lats)
-x,y = mp(lns-1,lts-1)
+x,y = mp(lns,lts)
 #mp.contour(x,y,sig,levels=[1],colors='k')
-shade = mp.pcolormesh(x,y,data,vmin=-.3,vmax=0.3,cmap='BrBG')
-levels = np.arange(-1,1,0.06)
+shade = mp.pcolormesh(x,y,data,vmin=0,vmax=30,cmap='YlOrRd')
+levels = np.arange(0,35,5)
 mp.contour(x,y,data,colors='k',levels=levels,linewidths=0.3)
 mp.drawcoastlines()
 mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
 mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
-mp.colorbar(shade)
+cbar = mp.colorbar(shade)
+cbar.set_ticks(levels)
+cbar.set_ticklabels(levels.astype('int'))
+cbar.set_label('$Wm^{-2}$')
 axes[1].set_title('b) El Nino - La Nina',loc='left')
-plt.savefig('EF_alldays.eps',format='eps')
+plt.savefig('SHF_alldays.eps',format='eps')
+
 
 #Load the metadata from the first file
 hwnc = nc.Dataset(hwdir+'vamrd/EHF_heatwaves_ACCESS1.3_vamrd_daily.nc')
@@ -192,9 +202,9 @@ def plot_ef(data,ax,ndays=0):
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
     #sig = m.contour(x,y,(p<0.02).astype('int'),colors='k',linewidths=0.3)
-    cont = m.pcolormesh(x,y,data,cmap='terrain_r',vmin=0,vmax=1)
-    levels = np.arange(0,1,0.1)
-    m.contour(x,y,data,colors='k',linewidths=0.3,levels=levels)
+    cont = m.pcolormesh(x,y,data,cmap='bwr',vmin=-45,vmax=45)
+    levels = np.arange(-40,50,10)
+    m.contour(x,y,data,colors='k',levels=levels,linewidths=0.3)
     m.drawcoastlines()
     #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
     #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])
@@ -207,7 +217,7 @@ event.mask = np.logical_not(seaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = oEF[index,...].mean(axis=0) #- cEF_clim
+data = oEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
 plot_ef(data,axes[3][0])
 ndays=index.sum()
@@ -217,7 +227,7 @@ event.mask = np.logical_not(eaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = oEF[index,...].mean(axis=0) #- cEF_clim
+data = oEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
 plot_ef(data,axes[2][0])
 ndays=index.sum()
@@ -227,7 +237,7 @@ event.mask = np.logical_not(neaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = oEF[index,...].mean(axis=0) #- cEF_clim
+data = oEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
 plot_ef(data,axes[1][0])
 ndays=index.sum()
@@ -237,7 +247,7 @@ event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = oEF[index,...].mean(axis=0) #- cEF_clim
+data = oEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
 plot_ef(data,axes[0][0])
 ndays=index.sum()
@@ -272,7 +282,7 @@ lons2 = lons[(lons>=112.5)&(lons<=155.625)]
 event.mask = np.logical_not(seaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = aEF[index,...].mean(axis=0) #- cEF_clim
+data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
 plot_ef(data,axes[3][1])
 ndays=index.sum()
@@ -281,7 +291,7 @@ axes[3][1].set_title('h) n='+str(ndays), loc='left')
 event.mask = np.logical_not(eaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-data = aEF[index,...].mean(axis=0) #- cEF_clim
+data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
 plot_ef(data,axes[2][1])
 ndays=index.sum()
@@ -290,7 +300,7 @@ axes[2][1].set_title('f) n='+str(ndays), loc='left')
 event.mask = np.logical_not(neaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-data = aEF[index,...].mean(axis=0) #- cEF_clim
+data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
 plot_ef(data,axes[1][1])
 ndays=index.sum()
@@ -300,13 +310,14 @@ event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-data = aEF[index,...].mean(axis=0) #- cEF_clim
+data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
 mesh = plot_ef(data,axes[0][1])
 ndays=index.sum()
 axes[0][1].set_title('b) n='+str(ndays), loc='left')
 
 cax = f.add_axes([0.1,0.07,0.8,0.02])
-plt.colorbar(mesh,cax=cax,orientation='horizontal')
+cbar = plt.colorbar(mesh,cax=cax,orientation='horizontal')
+cbar.set_label('$Wm^{-2}$')
 f.suptitle('El Nino            La Nina', fontsize=20)
-plt.savefig('EF_composites.eps',format='eps')
+plt.savefig('SHF_composites.eps',format='eps')
