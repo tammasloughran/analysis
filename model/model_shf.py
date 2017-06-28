@@ -204,7 +204,12 @@ def plot_ef(data,ax,ndays=0):
     #sig = m.contour(x,y,(p<0.02).astype('int'),colors='k',linewidths=0.3)
     cont = m.pcolormesh(x,y,data,cmap='bwr',vmin=-45,vmax=45)
     levels = np.arange(-40,50,10)
-    m.contour(x,y,data,colors='k',levels=levels,linewidths=0.3)
+    cnt = m.contour(x,y,data,colors='k',levels=levels,linewidths=0.3)
+    for c in cnt.collections:
+        if c.get_linestyle() == [(None, None)]:
+            continue
+        else:
+            c.set_dashes([(0, (2.0, 2.0))])
     m.drawcoastlines()
     #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
     #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])

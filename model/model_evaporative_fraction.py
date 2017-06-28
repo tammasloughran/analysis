@@ -191,56 +191,83 @@ def plot_ef(data,ax,ndays=0):
                 urcrnrlon=157.,urcrnrlat=-5.)
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
-    #sig = m.contour(x,y,(p<0.02).astype('int'),colors='k',linewidths=0.3)
-    cont = m.pcolormesh(x,y,data,cmap='terrain_r',vmin=0,vmax=1)
-    levels = np.arange(0,1,0.1)
-    m.contour(x,y,data,colors='k',linewidths=0.3,levels=levels)
+    #cont = m.pcolormesh(x,y,data,cmap='terrain_r',vmin=0,vmax=1)
+    cont = m.pcolormesh(x,y,data,cmap='BrBG',vmin=-.4,vmax=.4)
+    #levels = np.arange(0,1,.1)
+    m.contourf(x,y,sig<0.05, 1, colors='none', hatches=[None,'xxx'])
+    levels = np.arange(-.4,.48,0.08)
+    cnt = m.contour(x,y,data,colors='k',linewidths=0.3,levels=levels)
+    for c in cnt.collections:
+        if c.get_linestyle() == [(None, None)]:
+            continue
+        else:
+            c.set_dashes([(0, (2.0, 2.0))])
     m.drawcoastlines()
     #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
     #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])
     return cont
 
-f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75))
+f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75),sharex=True,sharey=True)
 
 # create index using the region of interest
 event.mask = np.logical_not(seaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = oEF[index,...].mean(axis=0) #- cEF_clim
+#only = oEF[index,...][:176]
+abs_data = oEF[index,...] 
+data = oEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
+t, sig = stats.ttest_ind(abs_data, cEF, axis=0, equal_var=False)
+sig[lsm<50] = np.nan
 plot_ef(data,axes[3][0])
 ndays=index.sum()
+#ndays = 176
 axes[3][0].set_title('g) n='+str(ndays), loc='left')
 
 event.mask = np.logical_not(eaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = oEF[index,...].mean(axis=0) #- cEF_clim
+#only = oEF[index,...][:95]
+abs_data = oEF[index,...]
+data = oEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
+t, sig = stats.ttest_ind(abs_data, cEF, axis=0, equal_var=False)
+sig[lsm<50] = np.nan
 plot_ef(data,axes[2][0])
 ndays=index.sum()
+#ndays = 95
 axes[2][0].set_title('e) n='+str(ndays), loc='left')
 
 event.mask = np.logical_not(neaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = oEF[index,...].mean(axis=0) #- cEF_clim
+#only = oEF[index,...][:87]
+abs_data = oEF[index,...]
+data = oEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
+t, sig = stats.ttest_ind(abs_data, cEF, axis=0, equal_var=False)
+sig[lsm<50] = np.nan
 plot_ef(data,axes[1][0])
 ndays=index.sum()
+#ndays = 87
 axes[1][0].set_title('c) n='+str(ndays), loc='left')
 
 event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = oEF[index,...].mean(axis=0) #- cEF_clim
+#only = oEF[index,...][:50]
+abs_data = oEF[index,...]
+data = oEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
+t, sig = stats.ttest_ind(abs_data, cEF, axis=0, equal_var=False)
+sig[lsm<50] = np.nan
 plot_ef(data,axes[0][0])
 ndays=index.sum()
+#ndays = 50
 axes[0][0].set_title('a) n='+str(ndays), loc='left')
 
 #Load the metadata from the first file
@@ -255,6 +282,8 @@ days = np.array([i.day for i in dates])
 nov1 = np.where((years==2000)&(months==11)&(days==1))[0]
 mar31 = np.where((years==2001)&(months==3)&(days==31))[0]
 delta = int(mar31+1-nov1)
+
+abs_data = 0
 
 # Load the event data
 event = hwnc.variables['event'][nov1:mar31+1,...]
@@ -272,8 +301,11 @@ lons2 = lons[(lons>=112.5)&(lons<=155.625)]
 event.mask = np.logical_not(seaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-data = aEF[index,...].mean(axis=0) #- cEF_clim
+abs_data = aEF[index,...]
+data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
+t, sig = stats.ttest_ind(abs_data, cEF, axis=0, equal_var=False)
+sig[lsm<50] = np.nan
 plot_ef(data,axes[3][1])
 ndays=index.sum()
 axes[3][1].set_title('h) n='+str(ndays), loc='left')
@@ -281,8 +313,11 @@ axes[3][1].set_title('h) n='+str(ndays), loc='left')
 event.mask = np.logical_not(eaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-data = aEF[index,...].mean(axis=0) #- cEF_clim
+abs_data = aEF[index,...]
+data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
+t, sig = stats.ttest_ind(abs_data, cEF, axis=0, equal_var=False)
+sig[lsm<50] = np.nan
 plot_ef(data,axes[2][1])
 ndays=index.sum()
 axes[2][1].set_title('f) n='+str(ndays), loc='left')
@@ -290,8 +325,11 @@ axes[2][1].set_title('f) n='+str(ndays), loc='left')
 event.mask = np.logical_not(neaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-data = aEF[index,...].mean(axis=0) #- cEF_clim
+abs_data = aEF[index,...]
+data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
+t, sig = stats.ttest_ind(abs_data, cEF, axis=0, equal_var=False)
+sig[lsm<50] = np.nan
 plot_ef(data,axes[1][1])
 ndays=index.sum()
 axes[1][1].set_title('d) n='+str(ndays), loc='left')
@@ -300,8 +338,11 @@ event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-data = aEF[index,...].mean(axis=0) #- cEF_clim
+abs_data = aEF[index,...]
+data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
+t, sig = stats.ttest_ind(abs_data, cEF, axis=0, equal_var=False)
+sig[lsm<50] = np.nan
 mesh = plot_ef(data,axes[0][1])
 ndays=index.sum()
 axes[0][1].set_title('b) n='+str(ndays), loc='left')

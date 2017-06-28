@@ -44,7 +44,7 @@ for ens in control:
         prnc = nc.Dataset(prfile,'r')
         pr = np.append(pr, np.squeeze(prnc.variables['p_1'][:]).mean(axis=0)[None,...], axis=0)
         prnc.close()
-#pclim = pr.mean(axis=0)
+prc = pr
 pclim = np.ones((5,)+pr.shape[1:])*np.nan
 for i in xrange(5):
     pclim[i,...] = pr[i::5].mean(axis=0)
@@ -99,8 +99,8 @@ def plot_pr(data,p,ax,ndays=0):
             urcrnrlon=220.,urcrnrlat=20.)
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
-    #sig = m.contour(x,y,(p<0.02).astype('int'),colors='k',linewidths=0.3)
     cont = m.contourf(x,y,data,cmap='bwr',levels=range(-700,800,100),extend='both')
+    m.contourf(x,y,p<0.05,1,colors='none',hatches=[None,'xxx'])
     m.drawcoastlines()
     #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
     #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])
@@ -122,14 +122,14 @@ neaus = region_mask(139.,-18.)
 naus = region_mask(129.,-12)
 eaus = region_mask(145.5,-24)
 
-f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75))
+f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75),sharex=True,sharey=True)
 
 # create index using the region of interest
 event.mask = np.logical_not(seaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
+_, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 plot_pr(pr[index,...].mean(axis=0),p,axes[3][0])
 ndays=index.sum()
 axes[3][0].set_title('g) n='+str(ndays), loc='left')
@@ -138,7 +138,7 @@ event.mask = np.logical_not(eaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
+_, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 plot_pr(pr[index,...].mean(axis=0),p,axes[2][0])
 ndays=index.sum()
 axes[2][0].set_title('e) n='+str(ndays), loc='left')
@@ -147,7 +147,7 @@ event.mask = np.logical_not(neaus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
+_, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 plot_pr(pr[index,...].mean(axis=0),p,axes[1][0])
 ndays=index.sum()
 axes[1][0].set_title('c) n='+str(ndays), loc='left')
@@ -156,7 +156,7 @@ event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
+_, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 plot_pr(pr[index,...].mean(axis=0),p,axes[0][0])
 ndays=index.sum()
 axes[0][0].set_title('a) n='+str(ndays), loc='left')
@@ -216,7 +216,7 @@ eaus = region_mask(145.5,-24)
 event.mask = np.logical_not(seaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
+_, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 plot_pr(pr[index,...].mean(axis=0),p,axes[3][1])
 ndays=index.sum()
 axes[3][1].set_title('h) n='+str(ndays), loc='left')
@@ -224,7 +224,7 @@ axes[3][1].set_title('h) n='+str(ndays), loc='left')
 event.mask = np.logical_not(eaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
+_, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 plot_pr(pr[index,...].mean(axis=0),p,axes[2][1])
 ndays=index.sum()
 axes[2][1].set_title('f) n='+str(ndays), loc='left')
@@ -232,7 +232,7 @@ axes[2][1].set_title('f) n='+str(ndays), loc='left')
 event.mask = np.logical_not(neaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
+_, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 plot_pr(pr[index,...].mean(axis=0),p,axes[1][1])
 ndays=index.sum()
 axes[1][1].set_title('d) n='+str(ndays), loc='left')
@@ -241,7 +241,7 @@ event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
-_, p = stats.ttest_1samp(pr[index,...], 0, axis=0)
+_, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 cont = plot_pr(pr[index,...].mean(axis=0),p,axes[0][1])
 ndays=index.sum()
 axes[0][1].set_title('b) n='+str(ndays), loc='left')
