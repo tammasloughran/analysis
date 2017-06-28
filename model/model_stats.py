@@ -200,9 +200,9 @@ for n, ens in enumerate(indpac_ensembles):
     indpac['hwm'][n], indpac['hwt'][n], _, _ = load_ensemble_hw(filename)
 
 # Load HWF EOF1
-nea = np.load('mkdnino_HWF_masks.npy')
-nea[0,24:26,:] = 0
-nea = nea[0].astype('bool')
+#nea = np.load('mkdnino_HWF_masks.npy')
+#nea[0,24:26,:] = 0
+#nea = nea[0].astype('bool')
 
 
 
@@ -517,6 +517,90 @@ def bootstrap(data1, data2, obs, nsamples=10000, title=''):
     return avg, fifthint, ninfifthint
     
     
+# Figure for chapter 2
+def subplot_aus(data, lons, lats, signif, ax):
+    map_axes = Basemap(ax=ax, projection='cyl',
+        llcrnrlat=-44, urcrnrlat=-10,
+        llcrnrlon=112, urcrnrlon=156,resolution='l')
+    xx, yy = np.meshgrid(lons, lats)
+    x, y = map_axes(xx,yy)
+    xx = xx - 0.5 # The data projection is slightly off compared to the coastlines.
+    yy = yy - 0.5
+    px, py = map_axes(xx,yy)
+    data = np.ma.array(data,mask=np.isnan(data))
+    shade = map_axes.pcolormesh(px,py,data,cmap='bwr',vmin=cints[0],vmax=cints[-1])
+    map_axes.contourf(x,y,signif, 1, colors='none', hatches=[None,'xx'])
+    cont = map_axes.contour(x,y,data,colors='k',linewidths=0.5,levels=cints)
+    for c in cont.collections:
+        if c.get_linestyle() == [(None, None)]:
+           continue
+        else:
+            c.set_dashes([(0, (2.0, 2.0))])
+    map_axes.drawcoastlines()
+    return map_axes, shade
+    #map_axes.colorbar(shade,location='bottom',ax=axes[2][i])
+
+fig, axes = plt.subplots(nrows=3,ncols=3,figsize=(9,7),sharex=False,sharey=False)
+ts, pv = stats.ttest_ind(elnino['hwf'],control['hwf'],equal_var=False,nan_policy='omit')
+sig = pv<threshold
+nino_diff = np.ma.mean(elnino['hwf'],axis=0)-np.ma.mean(control['hwf'],axis=0)
+cints = np.arange(-9,10,3)
+subplot_aus(nino_diff,lons,lats,sig,axes[0][0])
+axes[0][0].set_title('a)',loc='left')
+ts, pv = stats.ttest_ind(elnino['hwd'],control['hwd'],equal_var=False,nan_policy='omit')
+sig = pv<threshold
+nino_diff = np.ma.mean(elnino['hwd'],axis=0)-np.ma.mean(control['hwd'],axis=0)
+cints = np.arange(-4,5,1)
+subplot_aus(nino_diff,lons,lats,sig,axes[0][1])
+axes[0][1].set_title('b)',loc='left')
+ts, pv = stats.ttest_ind(elnino['hwa'],control['hwa'],equal_var=False,nan_policy='omit')
+sig = pv<threshold
+nino_diff = np.ma.mean(elnino['hwa'],axis=0)-np.ma.mean(control['hwa'],axis=0)
+cints = np.arange(-10,12,2)
+subplot_aus(nino_diff,lons,lats,sig,axes[0][2])
+axes[0][2].set_title('c)',loc='left')
+ts, pv = stats.ttest_ind(lanina['hwf'],control['hwf'],equal_var=False,nan_policy='omit')
+sig = pv<threshold
+nina_diff = np.ma.mean(lanina['hwf'],axis=0)-np.ma.mean(control['hwf'],axis=0)
+cints = np.arange(-9,10,3)
+subplot_aus(nina_diff,lons,lats,sig,axes[1][0])
+axes[1][0].set_title('d)',loc='left')
+ts, pv = stats.ttest_ind(lanina['hwd'],control['hwd'],equal_var=False,nan_policy='omit')
+sig = pv<threshold
+nina_diff = np.ma.mean(lanina['hwd'],axis=0)-np.ma.mean(control['hwd'],axis=0)
+cints = np.arange(-4,5,1)
+subplot_aus(nina_diff,lons,lats,sig,axes[1][1])
+axes[1][1].set_title('e)',loc='left')
+ts, pv = stats.ttest_ind(lanina['hwa'],control['hwa'],equal_var=False,nan_policy='omit')
+sig = pv<threshold
+nina_diff = np.ma.mean(lanina['hwa'],axis=0)-np.ma.mean(control['hwa'],axis=0)
+cints = np.arange(-10,12,2)
+subplot_aus(nina_diff,lons,lats,sig,axes[1][2])
+axes[1][2].set_title('f)',loc='left')
+ts, pv = stats.ttest_ind(elnino['hwf'],lanina['hwf'],equal_var=False,nan_policy='omit')
+sig = pv<threshold
+nino_diff = np.ma.mean(elnino['hwf'],axis=0)-np.ma.mean(lanina['hwf'],axis=0)
+cints = np.arange(-9,10,3)
+mpa,sh = subplot_aus(nino_diff,lons,lats,sig,axes[2][0])
+axes[2][0].set_title('g)',loc='left')
+mpa.colorbar(sh,location='bottom',ticks=cints)
+ts, pv = stats.ttest_ind(elnino['hwd'],lanina['hwd'],equal_var=False,nan_policy='omit')
+sig = pv<threshold
+nino_diff = np.ma.mean(elnino['hwd'],axis=0)-np.ma.mean(lanina['hwd'],axis=0)
+cints = np.arange(-4,5,1)
+mpa,sh = subplot_aus(nino_diff,lons,lats,sig,axes[2][1])
+mpa.colorbar(sh,location='bottom',ticks=cints)
+axes[2][1].set_title('h)',loc='left')
+ts, pv = stats.ttest_ind(elnino['hwa'],lanina['hwa'],equal_var=False,nan_policy='omit')
+sig = pv<threshold
+nino_diff = np.ma.mean(elnino['hwa'],axis=0)-np.ma.mean(lanina['hwa'],axis=0)
+cints = np.arange(-10,12,2)
+mps,sh = subplot_aus(nino_diff,lons,lats,sig,axes[2][2])
+axes[2][2].set_title('i)',loc='left')
+mps.colorbar(sh,location='bottom',ticks=cints)
+plt.show()
+  
+    
 # Nino diff
 #for aspect in control:
 #    print aspect
@@ -654,7 +738,7 @@ sig = pv<threshold
 nino_diff = np.ma.mean(elnino['hwf'], axis=0)-np.ma.mean(control['hwf'], axis=0)
 data = np.ma.array(nino_diff,mask=np.isnan(nino_diff))
 shade = map_axes.pcolormesh(px,py,data,cmap='bwr',vmin=cints[0],vmax=cints[-1])
-map_axes.contourf(x,y,sig, 1, colors='none', hatches=[None,'xxx'])
+map_axes.contourf(x,y,sig, 1, colors='none', hatches=[None,'xx'])
 cont = map_axes.contour(x,y,data,levels=cints,colors='k',linewidths=0.5)
 for c in cont.collections:
     if c.get_linestyle() == [(None, None)]:
