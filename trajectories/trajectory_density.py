@@ -54,11 +54,11 @@ dxy = 2.
 dlats = np.arange(-70.,1.,dxy)
 dlons = np.arange(40.,201.,dxy)
 # Create an array for the parcel density
-def create_density(ibox):
+def create_density(ibox, ilons, ilats):
     density = np.zeros((ntimes,len(dlats),len(dlons)))
     for t in xrange(ntimes):
-        tlons = lons[ibox,t]
-        tlats = lats[ibox,t]
+        tlons = ilons[ibox,t]
+        tlats = ilats[ibox,t]
         for y,dlat in enumerate(dlats):
             for x,dlon in enumerate(dlons):
                 density[t,y,x] = ((tlons>=dlon)&
@@ -149,8 +149,8 @@ def plot_density(ddata, ntraj=0, outname='show', dots=False, dot_lons=False, dot
     fig = plt.figure()
     xx,yy = np.meshgrid(dlons+1,dlats+1)
     m = Basemap(projection='mill',
-                llcrnrlon=80.,llcrnrlat=-60.,
-                urcrnrlon=200.,urcrnrlat=0.,
+                llcrnrlon=110.,llcrnrlat=-60.,
+                urcrnrlon=180.,urcrnrlat=0.,
                 resolution='l')
     xxx,yyy=m(xx,yy)
     #shade = m.pcolormesh(xxx,yyy,ddata,vmin=dens_levs[0],vmax=dens_levs[-1],cmap='viridis_r')
@@ -160,7 +160,7 @@ def plot_density(ddata, ntraj=0, outname='show', dots=False, dot_lons=False, dot
                       cmap='viridis_r',
                       #extend='max',
                       corner_mask=False)
-    levels = [-1, 0.1]
+    levels = [-1, 0.01]
     plt.contourf(xxx, yyy, ddata, levels=levels, colors='w')
     m.colorbar(cont)
     if dots:
@@ -267,27 +267,47 @@ regions = [(129.,-12),(139.,-18),(145.5,-24),(141,-31),(115,-27)]
 for i,ur_box in enumerate(regions):
     ibox = make_ibox(ur_box,size, lons, lats)
     num = ibox.sum()
-    plot_theta(theta[ibox,2::6], 
-               ntraj=num, 
-               outname=rnames[i]+'_theta_'+phase+'.eps')
-    plot_levs(levs[ibox,2::6]/100., 
-              ntraj=num, 
-              outname=rnames[i]+'levs'+phase+'.eps')
-    prob = create_density(ibox)
+    #plot_theta(theta[ibox,2::6], 
+    #           ntraj=num, 
+    #           outname=rnames[i]+'_theta_'+phase+'.eps')
+    #plot_levs(levs[ibox,2::6]/100., 
+    #          ntraj=num, 
+    #          outname=rnames[i]+'levs'+phase+'.eps')
+    prob = create_density(ibox, lons, lats)
     dens_levs = np.arange(0,11,1)
     for hour in [1,24,48,72]:
         dens_levs = np.arange(0,prob[hour,...].max(),1)
         plot_density(prob[hour,...], 
                      ntraj=num, 
-                     outname=rnames[i]+'_'+phase+'_'+str(hour)+'.eps', 
+                     outname=rnames[i]+'_elnino_'+str(hour)+'.eps', 
                      dots=False)#, dot_lons=lons[:,hour], dot_lats=lats[:,hour])
     track = create_track_density(ibox)
     dens_levs = np.arange(0,track.max()+10,10)
     plot_density_wide(track, 
                  ntraj=num, 
-                 outname='track_'+rnames[i]+'_'+phase+'.eps', 
+                 outname='track_'+rnames[i]+'_elnino.eps', 
                  dots=False)
-                 
+
+
+for i,ur_box in enumerate(regions):
+    ibox = make_ibox(ur_box, size, alons, alats)
+    num = ibox.sum()
+    prob = create_density(ibox, alons, alats)
+    dens_levs = np.arange(0,11,1)
+    for hour in [1,24,48,72]:
+        dens_levs = np.arange(0,prob[hour,...].max(),1)
+        plot_density(prob[hour,...], 
+                     ntraj=num, 
+                     outname=rnames[i]+'_lanina_'+str(hour)+'.eps', 
+                     dots=False)#, dot_lons=lons[:,hour], dot_lats=lats[:,hour])
+    track = create_track_density(ibox)
+    dens_levs = np.arange(0,track.max()+10,10)
+    plot_density_wide(track, 
+                 ntraj=num, 
+                 outname='track_'+rnames[i]+'_lanina.eps', 
+                 dots=False)
+
+
 for i,ur_box in enumerate(regions):
     print rnames[i]
     ibox = make_ibox(ur_box,size, lons, lats)
@@ -321,8 +341,45 @@ for i,ur_box in enumerate(regions):
     axes.set_yticklabels(['1000','900','800','600','400','200'])
     axes.set_ylim([1000,600])
     #plt.show()
-    plt.savefig(rnames[i]+'_levels.svg',format='svg')
+    plt.savefig(rnames[i]+'_levels.png',format='png',dpi=300)
     plt.close()
+
+for i,ur_box in enumerate(regions):
+    print rnames[i]
+    ibox = make_ibox(ur_box,size, lons, lats)
+    ibox2 = make_ibox(ur_box,size, alons, alats)
+    num = ibox.sum()
+    anum = ibox2.sum() 
+    #rnlons, rnlats, rnlevs, rntemp, rnq = random_traj(ibox, ibox2)
+    #_, thsig = mannwhitneyu_2d(theta[ibox,2::6],atheta[ibox2,2::6])
+    #_, levsig = mannwhitneyu_2d(levs[ibox,2::6],alevs[ibox2,2::6])
+    #print thsig<0.05
+    #print levsig<0.05
+    median = np.median(theta[ibox,2::6],axis=0)
+    amedian = np.median(atheta[ibox2,2::6],axis=0)
+    ninolci,ninouci = bootstrap_medians(theta[ibox,2::6])
+    ninalci,ninauci = bootstrap_medians(atheta[ibox2,2::6])
+    fig = plt.figure()
+    axes = fig.gca()
+    h1, = plt.plot(np.arange(0,40,1), median,color='r', label='El Nino n='+str(num))
+    h2, = plt.plot(np.arange(0,40,1), amedian,color='b', label='La Nina n='+str(anum))
+    plt.fill_between(np.arange(0,40,1), ninouci, ninolci, facecolor='coral',linewidth=0.0,alpha=1)
+    plt.fill_between(np.arange(0,40,1), ninauci, ninalci, facecolor='cyan',linewidth=0.0,alpha=0.3)
+    plt.legend(handles=[h1, h2])
+    axes.set_xticks(np.arange(4,41,4))
+    axes.set_xticklabels(np.arange(1,11,1))
+    plt.xlabel('Days before heatwave')
+    plt.ylabel(r'$\theta$(K)')
+    #axes.invert_yaxis()
+    axes.invert_xaxis()
+    #axes.set_yscale('log')
+    #axes.set_yticks(np.array((1000,900,800,600)))
+    #axes.set_yticklabels(['1000','900','800','600','400','200'])
+    axes.set_ylim([290,330])
+    #plt.show()
+    plt.savefig(rnames[i]+'_theta.png',format='png',dpi=300)
+    plt.close()
+
 
 # Plot all the trajectory points for animation
 #for i in xrange(lons.shape[1]):
