@@ -7,14 +7,12 @@ Created on Fri Jun 16 16:47:36 2017
 Investigation of El Nino ensemble members that have very few heatwaves in 
 the northeast of asutralia.
 """
-import glob
 import netCDF4 as nc
-import pyclimate
 import numpy as np
-from pyclimate import svdeofs
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import sys
+from pyclimate import svdeofs
 
 nino_few = ['vaoqa','vaoqd','vaoqe','vaoqf','vaoqg','vaoql','vaoqm','vaoqn',
             'vaoqt','vaoqu','vaoqv']
@@ -118,8 +116,8 @@ lanina = ['vamre','vamrf','vamrg','vamrh','vamri','vamrj','vamrk','vamrl',
 #    sam_nina[j,:] = pcs_ens[:,0]
 #    print ens, ' DJF SAM: ', sam_nina[j,11:14].mean()
 #print 'Nina DJF SAM mean: ', sam_nina[:,11:14].mean()
-
-# Validate using the pressure difference index AOI.
+#
+## Validate using the pressure difference index AOI.
 #print "Repeat using the difference based SAM index of Gong & Wang (1999)"
 #sam_nino = np.ones((30,24))*np.nan
 #ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/elnino/'
@@ -149,7 +147,10 @@ lanina = ['vamre','vamrf','vamrg','vamrh','vamri','vamrj','vamrk','vamrl',
 #    print ens, ' DJF SAM: ', sam_nina[j,11:14].mean()
 #print 'Nina DJF SAM mean: ', sam_nina[:,11:14].mean()
 
-# Soil moisture means for each experiment.
+################################
+# Soil mousture & surface fluxes
+################################
+
 spindir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/vamrb/'
 monthlync = nc.MFDataset(spindir+'vamrba.pa*')
 lons = monthlync.variables['longitude'][:]
@@ -157,25 +158,72 @@ lats = monthlync.variables['latitude'][:]
 tunits = monthlync.variables['t'].units
 times = monthlync.variables['t'][:]
 dates = nc.num2date(times,units=tunits)
-sm_spin = monthlync.variables['sm'][-30*12:,0,...]
 monthlync.close()
 djfi = np.array([1,1,0,0,0,0,0,0,0,0,0,1])
 for i in xrange(29): djfi = np.concatenate((djfi,np.array([1,1,0,0,0,0,0,0,0,0,0,1])))
-sm_control = sm_spin[djfi.astype('bool'),...].mean(axis=0)
-sm_control = sm_control[(lats<-7)&(lats>-47),:]
-sm_control = sm_control[:,(lons<155)&(lons>110)]
 mlons = lons[(lons<155)&(lons>110)] - 1
 mlats = lats[(lats<-7)&(lats>-47)] - 1
-mp = Basemap(projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
 x,y = np.meshgrid(mlons,mlats)
-xx,yy = mp(x,y)
-mp.pcolormesh(xx,yy,sm_control, cmap='terrain_r')
-cbar = mp.colorbar(location='bottom')
-cbar.set_label('kg/m^2')
-mp.drawcoastlines()
-plt.show()
 
-sm_nino = np.ones((30,)+sm_control.shape)*np.nan
+# Figure for sensible, latent heat flux and surface soil moisture.
+fig, axes = plt.subplots(nrows=3,ncols=1)
+
+sh_nino = np.ones((30,len(mlats),len(mlons)))*np.nan
+ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/elnino/'
+for j,ens in enumerate(nino_few+nino_many):
+    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
+    sh_ens = np.squeeze(ncfile.variables['sh'][:,0,...])
+    sh_ens = sh_ens[11:13,...].mean(axis=0)
+    sh_ens = sh_ens[(lats<-7)&(lats>-47),:]
+    sh_ens = sh_ens[:,(lons<155)&(lons>110)]
+    sh_nino[j,...] = sh_ens
+
+sh_nina = np.ones((30,len(mlats),len(mlons)))*np.nan
+ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/lanina/'
+for j,ens in enumerate(lanina):
+    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
+    sh_ens = np.squeeze(ncfile.variables['sh'][:,0,...])
+    sh_ens = sh_ens[11:13,...].mean(axis=0)
+    sh_ens = sh_ens[(lats<-7)&(lats>-47),:]
+    sh_ens = sh_ens[:,(lons<155)&(lons>110)]
+    sh_nina[j,...] = sh_ens
+mp = Basemap(ax=axes[0],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
+xx,yy = mp(x,y)
+mesh = mp.pcolormesh(xx,yy,sh_nino.mean(axis=0)-sh_nina.mean(axis=0), cmap='bwr',vmin=-25,vmax=25)
+cbar = mp.colorbar(mesh,location='bottom')
+cbar.set_label('W/m^2')
+mp.drawcoastlines()
+
+#-------------------------------------
+lh_nino = np.ones((30,len(mlats),len(mlons)))*np.nan
+ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/elnino/'
+for j,ens in enumerate(nino_few+nino_many):
+    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
+    lh_ens = np.squeeze(ncfile.variables['lh'][:,0,...])
+    lh_ens = lh_ens[11:13,...].mean(axis=0)
+    lh_ens = lh_ens[(lats<-7)&(lats>-47),:]
+    lh_ens = lh_ens[:,(lons<155)&(lons>110)]
+    lh_nino[j,...] = lh_ens
+
+lh_nina = np.ones((30,len(mlats),len(mlons)))*np.nan
+ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/lanina/'
+for j,ens in enumerate(lanina):
+    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
+    lh_ens = np.squeeze(ncfile.variables['lh'][:,0,...])
+    lh_ens = lh_ens[11:13,...].mean(axis=0)
+    lh_ens = lh_ens[(lats<-7)&(lats>-47),:]
+    lh_ens = lh_ens[:,(lons<155)&(lons>110)]
+    lh_nina[j,...] = lh_ens
+mp = Basemap(ax=axes[1],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
+xx,yy = mp(x,y)
+mesh = mp.pcolormesh(xx,yy,sh_nino.mean(axis=0)-sh_nina.mean(axis=0), cmap='BrBG',vmin=-25,vmax=25)
+cbar = mp.colorbar(mesh,location='bottom')
+cbar.set_label('W/m^2')
+mp.drawcoastlines()
+
+#------------------------------------------------------
+
+sm_nino = np.ones((30,len(mlats),len(mlons)))*np.nan
 ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/elnino/'
 for j,ens in enumerate(nino_few+nino_many):
     ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
@@ -183,25 +231,9 @@ for j,ens in enumerate(nino_few+nino_many):
     sm_ens = sm_ens[11:13,...].mean(axis=0)
     sm_ens = sm_ens[(lats<-7)&(lats>-47),:]
     sm_ens = sm_ens[:,(lons<155)&(lons>110)]
-    sm_nino[j,...] = sm_ens - sm_control
+    sm_nino[j,...] = sm_ens
 
-
-mp = Basemap(projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
-xx,yy = mp(x,y)
-mp.pcolormesh(xx,yy,sm_nino[:11].mean(axis=0)-sm_nino[11:].mean(axis=0), cmap='BrBG',vmin=-0.5,vmax=0.5)
-cbar = mp.colorbar(location='bottom')
-cbar.set_label('kg/m^2')
-mp.drawcoastlines()
-plt.show()
-
-#mp = Basemap(projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
-#xx,yy = mp(x,y)
-#mp.pcolormesh(xx,yy,sm_nino.mean(axis=0), cmap='BrBG',vmin=-20,vmax=20)
-#cbar = mp.colorbar(location='bottom')
-#cbar.set_label('W/m^2')
-#mp.drawcoastlines()
-#plt.show()
-sm_nina = np.ones((30,)+sm_control.shape)*np.nan
+sm_nina = np.ones((30,len(mlats),len(mlons)))*np.nan
 ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/lanina/'
 for j,ens in enumerate(lanina):
     ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
@@ -209,11 +241,13 @@ for j,ens in enumerate(lanina):
     sm_ens = sm_ens[11:13,...].mean(axis=0)
     sm_ens = sm_ens[(lats<-7)&(lats>-47),:]
     sm_ens = sm_ens[:,(lons<155)&(lons>110)]
-    sm_nina[j,...] = sm_ens - sm_control
-mp = Basemap(projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
+    sm_nina[j,...] = sm_ens
+mp = Basemap(ax=axes[2],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
 xx,yy = mp(x,y)
-mp.pcolormesh(xx,yy,sm_nino.mean(axis=0)-sm_nina.mean(axis=0), cmap='BrBG',vmin=-2,vmax=2)
-cbar = mp.colorbar(location='bottom')
+mesh = mp.pcolormesh(xx,yy,sm_nino.mean(axis=0)-sm_nina.mean(axis=0), cmap='BrBG',vmin=-2,vmax=2)
+cbar = mp.colorbar(mesh,location='bottom')
 cbar.set_label('kg/m^2')
 mp.drawcoastlines()
+
+
 plt.show()
