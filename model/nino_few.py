@@ -165,8 +165,13 @@ mlons = lons[(lons<155)&(lons>110)] - 1
 mlats = lats[(lats<-7)&(lats>-47)] - 1
 x,y = np.meshgrid(mlons,mlats)
 
+msknc = nc.Dataset('/srv/ccrc/data46/z5032520/modelout/ACCESS/sftlf_fx_ACCESS1-0_historical_r0i0p0.nc','r')
+mask = msknc.variables['sftlf'][...]
+mask = mask[:,(lons<155)&(lons>110)]
+mask = mask[(lats<-7)&(lats>-47),:]
+
 # Figure for sensible, latent heat flux and surface soil moisture.
-fig, axes = plt.subplots(nrows=3,ncols=1)
+fig, axes = plt.subplots(nrows=1,ncols=3, figsize=(11,5))
 
 sh_nino = np.ones((30,len(mlats),len(mlons)))*np.nan
 ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/elnino/'
@@ -178,21 +183,33 @@ for j,ens in enumerate(nino_few+nino_many):
     sh_ens = sh_ens[:,(lons<155)&(lons>110)]
     sh_nino[j,...] = sh_ens
 
-sh_nina = np.ones((30,len(mlats),len(mlons)))*np.nan
-ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/lanina/'
-for j,ens in enumerate(lanina):
-    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
-    sh_ens = np.squeeze(ncfile.variables['sh'][:,0,...])
-    sh_ens = sh_ens[11:13,...].mean(axis=0)
-    sh_ens = sh_ens[(lats<-7)&(lats>-47),:]
-    sh_ens = sh_ens[:,(lons<155)&(lons>110)]
-    sh_nina[j,...] = sh_ens
+#sh_nina = np.ones((30,len(mlats),len(mlons)))*np.nan
+#ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/lanina/'
+#for j,ens in enumerate(lanina):
+#    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
+#    sh_ens = np.squeeze(ncfile.variables['sh'][:,0,...])
+#    sh_ens = sh_ens[11:13,...].mean(axis=0)
+#    sh_ens = sh_ens[(lats<-7)&(lats>-47),:]
+#    sh_ens = sh_ens[:,(lons<155)&(lons>110)]
+#    sh_nina[j,...] = sh_ens
 mp = Basemap(ax=axes[0],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
 xx,yy = mp(x,y)
-mesh = mp.pcolormesh(xx,yy,sh_nino.mean(axis=0)-sh_nina.mean(axis=0), cmap='bwr',vmin=-25,vmax=25)
-cbar = mp.colorbar(mesh,location='bottom')
+dat = sh_nino[:11].mean(axis=0)-sh_nino[11:].mean(axis=0)
+dat[mask==0] = 0
+dat = np.ma.array(dat, mask=mask<50)
+mesh = mp.pcolormesh(xx,yy, dat, cmap='bwr',vmin=-15,vmax=15)
+levels = np.arange(-15,16,5)
+cont = mp.contour(xx,yy,dat,levels=levels,colors='k',linewidths=0.5)
+for c in cont.collections:
+    if c.get_linestyle() == [(None, None)]:
+       continue
+    else:
+        c.set_dashes([(0, (2.0, 2.0))])
+cbar = mp.colorbar(mesh,location='bottom',ticks=levels)
 cbar.set_label('W/m^2')
 mp.drawcoastlines()
+plt.sca(axes[0])
+plt.title('a)',loc='left')
 
 #-------------------------------------
 lh_nino = np.ones((30,len(mlats),len(mlons)))*np.nan
@@ -205,21 +222,32 @@ for j,ens in enumerate(nino_few+nino_many):
     lh_ens = lh_ens[:,(lons<155)&(lons>110)]
     lh_nino[j,...] = lh_ens
 
-lh_nina = np.ones((30,len(mlats),len(mlons)))*np.nan
-ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/lanina/'
-for j,ens in enumerate(lanina):
-    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
-    lh_ens = np.squeeze(ncfile.variables['lh'][:,0,...])
-    lh_ens = lh_ens[11:13,...].mean(axis=0)
-    lh_ens = lh_ens[(lats<-7)&(lats>-47),:]
-    lh_ens = lh_ens[:,(lons<155)&(lons>110)]
-    lh_nina[j,...] = lh_ens
+#lh_nina = np.ones((30,len(mlats),len(mlons)))*np.nan
+#ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/lanina/'
+#for j,ens in enumerate(lanina):
+#    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
+#    lh_ens = np.squeeze(ncfile.variables['lh'][:,0,...])
+#    lh_ens = lh_ens[11:13,...].mean(axis=0)
+#    lh_ens = lh_ens[(lats<-7)&(lats>-47),:]
+#    lh_ens = lh_ens[:,(lons<155)&(lons>110)]
+#    lh_nina[j,...] = lh_ens
 mp = Basemap(ax=axes[1],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
 xx,yy = mp(x,y)
-mesh = mp.pcolormesh(xx,yy,sh_nino.mean(axis=0)-sh_nina.mean(axis=0), cmap='BrBG',vmin=-25,vmax=25)
-cbar = mp.colorbar(mesh,location='bottom')
+dat = lh_nino[:11].mean(axis=0)-lh_nino[11:].mean(axis=0)
+dat[mask==0] = 0
+dat = np.ma.array(dat, mask=mask<50)
+mesh = mp.pcolormesh(xx,yy, dat, cmap='PuOr',vmin=-15,vmax=15)
+cont = mp.contour(xx,yy,dat,levels=levels,colors='k',linewidths=0.5)
+for c in cont.collections:
+    if c.get_linestyle() == [(None, None)]:
+       continue
+    else:
+        c.set_dashes([(0, (2.0, 2.0))])
+cbar = mp.colorbar(mesh,location='bottom',ticks=levels)
 cbar.set_label('W/m^2')
 mp.drawcoastlines()
+plt.sca(axes[1])
+plt.title('b)',loc='left')
 
 #------------------------------------------------------
 
@@ -233,21 +261,34 @@ for j,ens in enumerate(nino_few+nino_many):
     sm_ens = sm_ens[:,(lons<155)&(lons>110)]
     sm_nino[j,...] = sm_ens
 
-sm_nina = np.ones((30,len(mlats),len(mlons)))*np.nan
-ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/lanina/'
-for j,ens in enumerate(lanina):
-    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
-    sm_ens = np.squeeze(ncfile.variables['sm'][:,0,...])
-    sm_ens = sm_ens[11:13,...].mean(axis=0)
-    sm_ens = sm_ens[(lats<-7)&(lats>-47),:]
-    sm_ens = sm_ens[:,(lons<155)&(lons>110)]
-    sm_nina[j,...] = sm_ens
+#sm_nina = np.ones((30,len(mlats),len(mlons)))*np.nan
+#ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/lanina/'
+#for j,ens in enumerate(lanina):
+#    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
+#    sm_ens = np.squeeze(ncfile.variables['sm'][:,0,...])
+#    sm_ens = sm_ens[11:13,...].mean(axis=0)
+#    sm_ens = sm_ens[(lats<-7)&(lats>-47),:]
+#    sm_ens = sm_ens[:,(lons<155)&(lons>110)]
+#    sm_nina[j,...] = sm_ens
 mp = Basemap(ax=axes[2],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
 xx,yy = mp(x,y)
-mesh = mp.pcolormesh(xx,yy,sm_nino.mean(axis=0)-sm_nina.mean(axis=0), cmap='BrBG',vmin=-2,vmax=2)
+dat = sm_nino[:11].mean(axis=0)-sm_nino[11:].mean(axis=0)
+dat[mask==0] = 0
+dat = np.ma.array(dat, mask=mask<50)
+mesh = mp.pcolormesh(xx,yy,dat, cmap='BrBG',vmin=-0.5,vmax=0.5)
+levels = np.arange(-0.5,0.6,0.1)
+dat = np.ma.array(dat, mask=mask<50)
+cont = mp.contour(xx,yy,dat,levels=levels,colors='k',linewidths=0.5)
+for c in cont.collections:
+    if c.get_linestyle() == [(None, None)]:
+       continue
+    else:
+        c.set_dashes([(0, (2.0, 2.0))])
 cbar = mp.colorbar(mesh,location='bottom')
 cbar.set_label('kg/m^2')
+cbar.set_ticks(levels)
 mp.drawcoastlines()
-
-
-plt.show()
+plt.sca(axes[2])
+plt.title('c)',loc='left')
+#plt.show()
+plt.savefig('nino_soil.eps',format='eps')

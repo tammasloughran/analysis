@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import netCDF4 as nc
 import scipy.stats as stats
-
+import sys
 
 # Load an ensemble heatwave data.
 def load_ensemble_hw(filename, hwdefinition='EHF', get_latlon=False):
@@ -204,7 +204,7 @@ for n, ens in enumerate(indpac_ensembles):
 #nea[0,24:26,:] = 0
 #nea = nea[0].astype('bool')
 
-
+sys.exit()
 
 def plotmap_test(data,aspect,test,name,colours='bwr'):
     #fmt = '%1.0f'
@@ -273,7 +273,7 @@ msk = control['hwf'].mask[0,...]
 
 
 # Skewness plots
-def plotmap_skew(data,name,colours='bwr'):
+def plotmap_skew(data,name,aspect,colours='bwr'):
     #fmt = '%1.0f'
     if aspect=='hwf': units = 'Days'
     elif aspect=='hwn': units = 'Heatwaves'
@@ -307,9 +307,9 @@ def plotmap_skew(data,name,colours='bwr'):
 
 
 #for aspect in control:
-#    plotmap_skew(stats.mstats.skew(control[aspect], axis=0), 'skew_'+aspect+'_control.eps', colours='bwr')
-#    plotmap_skew(stats.mstats.skew(elnino[aspect], axis=0), 'skew_'+aspect+'_nino.eps', colours='bwr')
-#    plotmap_skew(stats.mstats.skew(lanina[aspect], axis=0), 'skew_'+aspect+'_nina.eps', colours='bwr')
+#    plotmap_skew(stats.mstats.skew(control[aspect], axis=0), 'skew_'+aspect+'_control.eps', aspect, colours='bwr')
+#    plotmap_skew(stats.mstats.skew(elnino[aspect], axis=0), 'skew_'+aspect+'_nino.eps', aspect, colours='bwr')
+#    plotmap_skew(stats.mstats.skew(lanina[aspect], axis=0), 'skew_'+aspect+'_nina.eps', aspect, colours='bwr')
 
 
 def plot_pdf(control,elnino,lanina,aspect,loca):
@@ -540,64 +540,80 @@ def subplot_aus(data, lons, lats, signif, ax):
     return map_axes, shade
     #map_axes.colorbar(shade,location='bottom',ax=axes[2][i])
 
-fig, axes = plt.subplots(nrows=3,ncols=3,figsize=(9,7),sharex=False,sharey=False)
+fig, axes = plt.subplots(nrows=2,ncols=3,figsize=(9,5),sharex=False,sharey=False)
+
 ts, pv = stats.ttest_ind(elnino['hwf'],control['hwf'],equal_var=False,nan_policy='omit')
 sig = pv<threshold
 nino_diff = np.ma.mean(elnino['hwf'],axis=0)-np.ma.mean(control['hwf'],axis=0)
-cints = np.arange(-9,10,3)
+cints = np.arange(-10,11,2)
 subplot_aus(nino_diff,lons,lats,sig,axes[0][0])
-axes[0][0].set_title('a)',loc='left')
+axes[0][0].set_title('a)         Frequency',loc='left')
+
 ts, pv = stats.ttest_ind(elnino['hwd'],control['hwd'],equal_var=False,nan_policy='omit')
 sig = pv<threshold
 nino_diff = np.ma.mean(elnino['hwd'],axis=0)-np.ma.mean(control['hwd'],axis=0)
 cints = np.arange(-4,5,1)
 subplot_aus(nino_diff,lons,lats,sig,axes[0][1])
-axes[0][1].set_title('b)',loc='left')
+axes[0][1].set_title('b)          Duration',loc='left')
+
 ts, pv = stats.ttest_ind(elnino['hwa'],control['hwa'],equal_var=False,nan_policy='omit')
 sig = pv<threshold
 nino_diff = np.ma.mean(elnino['hwa'],axis=0)-np.ma.mean(control['hwa'],axis=0)
 cints = np.arange(-10,12,2)
 subplot_aus(nino_diff,lons,lats,sig,axes[0][2])
-axes[0][2].set_title('c)',loc='left')
+axes[0][2].set_title('c)         Amplitude',loc='left')
+
 ts, pv = stats.ttest_ind(lanina['hwf'],control['hwf'],equal_var=False,nan_policy='omit')
 sig = pv<threshold
 nina_diff = np.ma.mean(lanina['hwf'],axis=0)-np.ma.mean(control['hwf'],axis=0)
-cints = np.arange(-9,10,3)
-subplot_aus(nina_diff,lons,lats,sig,axes[1][0])
+cints = np.arange(-10,11,2)
+mpa,sh = subplot_aus(nina_diff,lons,lats,sig,axes[1][0])
 axes[1][0].set_title('d)',loc='left')
+cbar = mpa.colorbar(sh,location='bottom',ticks=cints)
+cbar.set_label('Days')
+
 ts, pv = stats.ttest_ind(lanina['hwd'],control['hwd'],equal_var=False,nan_policy='omit')
 sig = pv<threshold
 nina_diff = np.ma.mean(lanina['hwd'],axis=0)-np.ma.mean(control['hwd'],axis=0)
 cints = np.arange(-4,5,1)
-subplot_aus(nina_diff,lons,lats,sig,axes[1][1])
+mpa,sh = subplot_aus(nina_diff,lons,lats,sig,axes[1][1])
 axes[1][1].set_title('e)',loc='left')
+cbar = mpa.colorbar(sh,location='bottom',ticks=cints)
+cbar.set_label('Days')
+
 ts, pv = stats.ttest_ind(lanina['hwa'],control['hwa'],equal_var=False,nan_policy='omit')
 sig = pv<threshold
 nina_diff = np.ma.mean(lanina['hwa'],axis=0)-np.ma.mean(control['hwa'],axis=0)
 cints = np.arange(-10,12,2)
-subplot_aus(nina_diff,lons,lats,sig,axes[1][2])
+mpa,sh = subplot_aus(nina_diff,lons,lats,sig,axes[1][2])
 axes[1][2].set_title('f)',loc='left')
-ts, pv = stats.ttest_ind(elnino['hwf'],lanina['hwf'],equal_var=False,nan_policy='omit')
-sig = pv<threshold
-nino_diff = np.ma.mean(elnino['hwf'],axis=0)-np.ma.mean(lanina['hwf'],axis=0)
-cints = np.arange(-9,10,3)
-mpa,sh = subplot_aus(nino_diff,lons,lats,sig,axes[2][0])
-axes[2][0].set_title('g)',loc='left')
-mpa.colorbar(sh,location='bottom',ticks=cints)
-ts, pv = stats.ttest_ind(elnino['hwd'],lanina['hwd'],equal_var=False,nan_policy='omit')
-sig = pv<threshold
-nino_diff = np.ma.mean(elnino['hwd'],axis=0)-np.ma.mean(lanina['hwd'],axis=0)
-cints = np.arange(-4,5,1)
-mpa,sh = subplot_aus(nino_diff,lons,lats,sig,axes[2][1])
-mpa.colorbar(sh,location='bottom',ticks=cints)
-axes[2][1].set_title('h)',loc='left')
-ts, pv = stats.ttest_ind(elnino['hwa'],lanina['hwa'],equal_var=False,nan_policy='omit')
-sig = pv<threshold
-nino_diff = np.ma.mean(elnino['hwa'],axis=0)-np.ma.mean(lanina['hwa'],axis=0)
-cints = np.arange(-10,12,2)
-mps,sh = subplot_aus(nino_diff,lons,lats,sig,axes[2][2])
-axes[2][2].set_title('i)',loc='left')
-mps.colorbar(sh,location='bottom',ticks=cints)
+cbar = mpa.colorbar(sh,location='bottom',ticks=cints)
+cbar.set_label('C$^{\circ2}$')
+
+#ts, pv = stats.ttest_ind(elnino['hwf'],lanina['hwf'],equal_var=False,nan_policy='omit')
+#sig = pv<threshold
+#nino_diff = np.ma.mean(elnino['hwf'],axis=0)-np.ma.mean(lanina['hwf'],axis=0)
+#cints = np.arange(-9,10,3)
+#mpa,sh = subplot_aus(nino_diff,lons,lats,sig,axes[2][0])
+#axes[2][0].set_title('g)',loc='left')
+#mpa.colorbar(sh,location='bottom',ticks=cints)
+#
+#ts, pv = stats.ttest_ind(elnino['hwd'],lanina['hwd'],equal_var=False,nan_policy='omit')
+#sig = pv<threshold
+#nino_diff = np.ma.mean(elnino['hwd'],axis=0)-np.ma.mean(lanina['hwd'],axis=0)
+#cints = np.arange(-4,5,1)
+#mpa,sh = subplot_aus(nino_diff,lons,lats,sig,axes[2][1])
+#mpa.colorbar(sh,location='bottom',ticks=cints)
+#axes[2][1].set_title('h)',loc='left')
+#
+#ts, pv = stats.ttest_ind(elnino['hwa'],lanina['hwa'],equal_var=False,nan_policy='omit')
+#sig = pv<threshold
+#nino_diff = np.ma.mean(elnino['hwa'],axis=0)-np.ma.mean(lanina['hwa'],axis=0)
+#cints = np.arange(-10,12,2)
+#mps,sh = subplot_aus(nino_diff,lons,lats,sig,axes[2][2])
+#axes[2][2].set_title('i)',loc='left')
+#mps.colorbar(sh,location='bottom',ticks=cints)
+
 plt.show()
   
     

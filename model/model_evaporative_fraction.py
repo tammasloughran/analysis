@@ -10,6 +10,8 @@ import netCDF4 as nc
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import scipy.stats as stats
+import matplotlib
+matplotlib.rcParams['contour.negative_linestyle']= 'dashed'
 
 # Define the ensemble members
 control = ['vamrc','vaowa','vaowb','vaowc','vaowd','vaowe','vaowg','vaowh',
@@ -33,59 +35,88 @@ lsmnc.close()
 group = 'control'
 print group
 #Load the EF data from the control
-cEF = np.empty((0,145,192))
-for ens in control:
-    print ens
-    for month in ['11','12','01','02','03']:
-        if month=='11' or month=='12': 
-            year = '2000'
-        else:
-            year = '2001'
-        ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
-        qnc = nc.Dataset(ncfile,'r')
-        Qe = qnc.variables['lh'][:]
-        Qh = qnc.variables['sh'][:]
-        cEF = np.append(cEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
-        qnc.close()
+#cEF = np.empty((0,145,192))
+#cQe = np.empty((0,145,192))
+#cQh = np.empty((0,145,192))
+#for ens in control:
+#    print ens
+#    for month in ['11','12','01','02','03']:
+#        if month=='11' or month=='12': 
+#            year = '2000'
+#        else:
+#            year = '2001'
+#        ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
+#        qnc = nc.Dataset(ncfile,'r')
+#        Qe = qnc.variables['lh'][:]
+#        Qh = qnc.variables['sh'][:]
+#        cEF = np.append(cEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+#        cQe = np.append(cQe, np.squeeze(Qe), axis=0)
+#        cQh = np.append(cQh, np.squeeze(Qh), axis=0)
+#        qnc.close()
+cEF = np.load('cEF.npy')
 cEF_clim = cEF.mean(axis=0)
+cQe = np.load('cQe.npy')
+cQe_clim = cQe.mean(axis=0)
+cQh = np.load('cQh.npy')
+cQh_clim = cQh.mean(axis=0)
 
 group = 'elnino'
 print group
 #Load the EF data from the control
-oEF = np.empty((0,145,192))
-for ens in elnino:
-    print ens
-    for month in ['11','12','01','02','03']:
-        if month=='11' or month=='12': 
-            year = '2000'
-        else:
-            year = '2001'
-        ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
-        qnc = nc.Dataset(ncfile,'r')
-        Qe = qnc.variables['lh'][:]
-        Qh = qnc.variables['sh'][:]
-        oEF = np.append(oEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
-        qnc.close()
+#oEF = np.empty((0,145,192))
+#oQe = np.empty((0,145,192))
+#oQh = np.empty((0,145,192))
+#for ens in elnino:
+#    print ens
+#    for month in ['11','12','01','02','03']:
+#        if month=='11' or month=='12': 
+#            year = '2000'
+#        else:
+#            year = '2001'
+#        ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
+#        qnc = nc.Dataset(ncfile,'r')
+#        Qe = qnc.variables['lh'][:]
+#        Qh = qnc.variables['sh'][:]
+#        oEF = np.append(oEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+#        oQe = np.append(oQe, np.squeeze(Qe), axis=0)
+#        oQh = np.append(oQh, np.squeeze(Qh), axis=0)
+#        qnc.close()
+oEF = np.load('oEF.npy')
 oEF_clim = oEF.mean(axis=0)
+oQe = np.load('oQe.npy')
+oQe_clim = oQe.mean(axis=0)
+oQh = np.load('oQh.npy')
+oQh_clim = oQh.mean(axis=0)
 
 group = 'lanina'
 print group
 #Load the EF data from the control
-aEF = np.empty((0,145,192))
-for ens in lanina:
-    print ens
-    for month in ['11','12','01','02','03']:
-        if month=='11' or month=='12': 
-            year = '2000'
-        else:
-            year = '2001'
-        ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
-        qnc = nc.Dataset(ncfile,'r')
-        Qe = qnc.variables['lh'][:]
-        Qh = qnc.variables['sh'][:]
-        aEF = np.append(aEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
-        qnc.close()
+#aEF = np.empty((0,145,192))
+#aQe = np.empty((0,145,192))
+#aQh = np.empty((0,145,192))
+#for ens in lanina:
+#    print ens
+#    for month in ['11','12','01','02','03']:
+#        if month=='11' or month=='12': 
+#            year = '2000'
+#        else:
+#            year = '2001'
+#        ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
+#        qnc = nc.Dataset(ncfile,'r')
+#        Qe = qnc.variables['lh'][:]
+#        Qh = qnc.variables['sh'][:]
+#        aEF = np.append(aEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
+#        aQe = np.append(aQe, np.squeeze(Qe), axis=0)
+#        aQh = np.append(aQh, np.squeeze(Qh), axis=0)
+#        qnc.close()
+aEF = np.load('aEF.npy')
 aEF_clim = aEF.mean(axis=0)
+aQe = np.load('aQe.npy')
+aQe_clim = aQe.mean(axis=0)
+aQh = np.load('aQh.npy')
+aQh_clim = aQh.mean(axis=0)
+
+
 
 hwnc = nc.Dataset(hwdir+'vamrd/EHF_heatwaves_ACCESS1.3_vamrd_daily.nc')
 lats = hwnc.variables['lat'][:]
@@ -98,48 +129,128 @@ hwnc.close()
 #             urcrnrlon=157.,urcrnrlat=-5.)
 #lns,lts = np.meshgrid(lons,lats)
 #x,y = mp(lns-1,lts-1)
-data = oEF_clim-aEF_clim
-data[lsm<50] = 0
+EFdiff = oEF_clim-aEF_clim
+EFdiff[lsm<50] = 0
+Qediff = oQe_clim-aQe_clim
+Qediff = np.ma.array(Qediff,mask=lsm<50)
+Qhdiff = oQh_clim-aQh_clim
+Qhdiff = np.ma.array(Qhdiff,mask=lsm<50)
 #_, p = stats.ttest_ind(oEF, aEF, axis=0,equal_var=False)
 #sig = p<0.05
 #sig[lsm<50] = 1
 #mp.contour(x,y,sig,levels=[1],colors='k')
 #shade = mp.pcolormesh(x,y,data,vmin=-.3,vmax=0.3,cmap='BrBG')
 #mp.drawcoastlines()
-#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
-#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linestyle='none')
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linestyle='none')
 #mp.colorbar(shade)
 #plt.show()
 
-f, axes = plt.subplots(nrows=2, ncols=1,figsize=(6,8))
-mp = Basemap(ax=axes[0],projection='mill',
+f, axes = plt.subplots(nrows=2, ncols=3,figsize=(16,8))
+## The Evaporative fraction clim
+mp = Basemap(ax=axes[0,0],projection='mill',
              llcrnrlon=110.,llcrnrlat=-48.,
              urcrnrlon=157.,urcrnrlat=-5.)
 lns,lts = np.meshgrid(lons,lats)
 x,y = mp(lns-1,lts-1)
-shade = mp.pcolormesh(x,y,np.ma.array(cEF_clim, mask=lsm<50),vmin=0,vmax=1,cmap='terrain_r')
+xc,yc = mp(lns,lts)
+z = np.ma.array(cEF_clim, mask=lsm<50)
+shade = mp.pcolormesh(x,y,z,vmin=0,vmax=1,cmap='terrain_r')
 levels = np.arange(0,1,0.1)
-mp.contour(x,y,np.ma.array(cEF_clim, mask=lsm<50),colors='k',levels=levels,linewidths=0.3)
+mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.3)
 mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linestyle='none')
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linestyle='none')
 mp.colorbar(shade)
-axes[0].set_title('a) Control Climatology',loc='left')
-mp = Basemap(ax=axes[1],projection='mill',
+axes[0,0].set_title('a) EF Control Climatology',loc='left')
+# Evaporative fraction difference
+mp = Basemap(ax=axes[1,0],projection='mill',
              llcrnrlon=110.,llcrnrlat=-48.,
              urcrnrlon=157.,urcrnrlat=-5.)
 lns,lts = np.meshgrid(lons,lats)
 x,y = mp(lns-1,lts-1)
+xc,yc = mp(lns,lts)
 #mp.contour(x,y,sig,levels=[1],colors='k')
-shade = mp.pcolormesh(x,y,data,vmin=-.3,vmax=0.3,cmap='BrBG')
-levels = np.arange(-1,1,0.06)
-mp.contour(x,y,data,colors='k',levels=levels,linewidths=0.3)
+shade = mp.pcolormesh(x,y,EFdiff,vmin=-.3,vmax=0.3,cmap='BrBG')
+levels = np.arange(-0.3,0.35,0.06)
+mp.contour(xc,yc,EFdiff,colors='k',levels=levels,linewidths=0.3)
 mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
-mp.colorbar(shade)
-axes[1].set_title('b) El Nino - La Nina',loc='left')
-plt.savefig('EF_alldays.eps',format='eps')
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linestyle='none')
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linestyle='none')
+cbar = mp.colorbar(shade)
+axes[1,0].set_title('d) EF El Nino - La Nina',loc='left')
+# Sensible heat clim
+mp = Basemap(ax=axes[0,1],projection='mill',
+             llcrnrlon=110.,llcrnrlat=-48.,
+             urcrnrlon=157.,urcrnrlat=-5.)
+lns,lts = np.meshgrid(lons,lats)
+x,y = mp(lns-1,lts-1)
+xc,yc = mp(lns,lts)
+zm = cQh_clim
+z = np.ma.array(cQh_clim, mask=lsm<50)
+shade = mp.pcolormesh(x,y,z,vmin=0,vmax=135,cmap='YlOrRd')
+levels = np.arange(0,135,15)
+mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.3)
+mp.drawcoastlines()
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linestyle='none')
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linestyle='none')
+cbar = mp.colorbar(shade)
+cbar.set_label('$Wm^{-2}$')
+axes[0,1].set_title('b) Qh Control Climatology',loc='left')
+# Sensible heat diff
+mp = Basemap(ax=axes[1,1],projection='mill',
+             llcrnrlon=110.,llcrnrlat=-48.,
+             urcrnrlon=157.,urcrnrlat=-5.)
+lns,lts = np.meshgrid(lons,lats)
+x,y = mp(lns-1,lts-1)
+xc,yc = mp(lns,lts)
+z = np.ma.array(Qhdiff, mask=lsm<50)
+shade = mp.pcolormesh(x,y,z,vmin=-30,vmax=30,cmap='bwr')
+levels = np.arange(-30,30,5)
+mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.3)
+mp.drawcoastlines()
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linestyle='none')
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linestyle='none')
+cbar = mp.colorbar(shade)
+cbar.set_label('$Wm^{-2}$')
+axes[1,1].set_title('e) Qh El Nino - La Nina',loc='left')
+# latent heat clim
+mp = Basemap(ax=axes[0,2],projection='mill',
+             llcrnrlon=110.,llcrnrlat=-48.,
+             urcrnrlon=157.,urcrnrlat=-5.)
+lns,lts = np.meshgrid(lons,lats)
+x,y = mp(lns-1,lts-1)
+xc,yc = mp(lns,lts)
+z = np.ma.array(cQe_clim, mask=lsm<50)
+shade = mp.pcolormesh(x,y,z,vmin=0,vmax=135,cmap='YlGnBu')
+levels = np.arange(0,135,15)
+mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.3)
+mp.drawcoastlines()
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linestyle='none')
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linestyle='none')
+cbar = mp.colorbar(shade)
+cbar.set_label('$Wm^{-2}$')
+axes[0,2].set_title('c) Qe Control Climatology',loc='left')
+# Latent heat diff
+mp = Basemap(ax=axes[1,2],projection='mill',
+             llcrnrlon=110.,llcrnrlat=-48.,
+             urcrnrlon=157.,urcrnrlat=-5.)
+lns,lts = np.meshgrid(lons,lats)
+x,y = mp(lns-1,lts-1)
+xc,yc = mp(lns,lts)
+z = np.ma.array(Qediff, mask=lsm<50)
+shade = mp.pcolormesh(x,y,z,vmin=-20,vmax=20,cmap='BrBG')
+levels = np.arange(-20,20,4)
+mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.3)
+mp.drawcoastlines()
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linestyle='none')
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linestyle='none')
+cbar = mp.colorbar(shade)
+cbar.set_label('$Wm^{-2}$')
+axes[1,2].set_title('f) Qe El Nino - La Nina',loc='left')
+#plt.show()
+plt.savefig('EF_alldays.eps',format='png')
+print 'figure done'
 
 #Load the metadata from the first file
 hwnc = nc.Dataset(hwdir+'vamrd/EHF_heatwaves_ACCESS1.3_vamrd_daily.nc')
@@ -203,8 +314,8 @@ def plot_ef(data,ax,ndays=0):
         else:
             c.set_dashes([(0, (2.0, 2.0))])
     m.drawcoastlines()
-    #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
-    #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])
+    #m.drawparallels(lats,linestyle='none',labels=[1,0,0,1])
+    #m.drawmeridians(lons,linestyle='none',labels=[1,0,0,1])
     return cont
 
 f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75),sharex=True,sharey=True)
@@ -269,6 +380,7 @@ plot_ef(data,axes[0][0])
 ndays=index.sum()
 #ndays = 50
 axes[0][0].set_title('a) n='+str(ndays), loc='left')
+
 
 #Load the metadata from the first file
 hwnc = nc.Dataset(hwdir+'vamre/EHF_heatwaves_ACCESS1.3_vamre_daily.nc')

@@ -58,8 +58,8 @@ dates = nc.num2date(times, hwnc.variables['time'].units)
 years = np.array([i.year for i in dates])
 months = np.array([i.month for i in dates])
 days = np.array([i.day for i in dates])
-nov1 = np.where((years==2000)&(months==11)&(days==1))[0]
-mar31 = np.where((years==2001)&(months==3)&(days==31))[0]
+nov1 = np.where((years==2000)&(months==11)&(days==1))[0][0]
+mar31 = np.where((years==2001)&(months==3)&(days==31))[0][0]
 delta = int(mar31+1-nov1)
 
 # Load the event data
@@ -100,10 +100,10 @@ def plot_pr(data,p,ax,ndays=0):
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
     cont = m.contourf(x,y,data,cmap='bwr',levels=range(-700,800,100),extend='both')
-    m.contourf(x,y,p<0.05,1,colors='none',hatches=[None,'xxx'])
+    m.contourf(x,y,p<0.03,1,colors='none',hatches=[None,'xx'])
     m.drawcoastlines()
-    #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
-    #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])
+    #m.drawparallels(lats,labels=[1,0,0,1])
+    #m.drawmeridians(lons,labels=[1,0,0,1])
     return cont
     
 # define region of interest
@@ -171,8 +171,8 @@ dates = nc.num2date(times, hwnc.variables['time'].units)
 years = np.array([i.year for i in dates])
 months = np.array([i.month for i in dates])
 days = np.array([i.day for i in dates])
-nov1 = np.where((years==2000)&(months==11)&(days==1))[0]
-mar31 = np.where((years==2001)&(months==3)&(days==31))[0]
+nov1 = np.where((years==2000)&(months==11)&(days==1))[0][0]
+mar31 = np.where((years==2001)&(months==3)&(days==31))[0][0]
 delta = int(mar31+1-nov1)
 
 # Load the event data
