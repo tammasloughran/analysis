@@ -9,7 +9,6 @@ import numpy as np
 import netCDF4 as nc
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
-from subprocess import call
 import glob
 import scipy.stats as stats
 
@@ -25,7 +24,7 @@ phase = 'lanina'
 ntimes = 241
 # Load the trajectories
 def get_traj(cphase):
-    trajdir = '/home/nfs/z5032520/traj3d/work/'
+    trajdir = '/srv/ccrc/data35/z5032520/traj3d/work/'
     os.chdir(trajdir+cphase)
     trajfiles = glob.glob('?????_heatwave_trajectories.nc')
     lons = np.ones((1,ntimes))*np.nan
@@ -88,7 +87,7 @@ def make_ibox(ur_box,size, lons, lats):
     ibox = (lons[:,0]>=cnrs[0])&(lons[:,0]<=cnrs[1])&(lats[:,0]<=cnrs[2])&(lats[:,0]>=cnrs[3])
     # Remove stationary trajectories that get stuck
     delta = np.sqrt((lons[:,0]-lons[:,-1])**2 + (lats[:,0]-lats[:,-1])**2)
-    ibox[delta<10] = False
+    ibox[delta<5] = False
     return ibox
 
 
@@ -146,7 +145,7 @@ def plot_levs(levls, ntraj=0, outname='show'):
 
 
 def plot_density(ddata, ntraj=0, outname='show', dots=False, dot_lons=False, dot_lats=False):
-    fig = plt.figure()
+    plt.figure()
     xx,yy = np.meshgrid(dlons+1,dlats+1)
     m = Basemap(projection='mill',
                 llcrnrlon=110.,llcrnrlat=-60.,
@@ -176,7 +175,7 @@ def plot_density(ddata, ntraj=0, outname='show', dots=False, dot_lons=False, dot
 
 
 def plot_density_wide(ddata, ntraj=0, outname='show', dots=False, dot_lons=False, dot_lats=False):
-    fig = plt.figure()
+    plt.figure()
     xx,yy = np.meshgrid(dlons,dlats)
     m = Basemap(projection='mill',
                 llcrnrlon=40.,llcrnrlat=-70.,
@@ -257,7 +256,17 @@ def bootstrap_medians(ad,nsamp=10000):
     lci = np.percentile(medians, 5, axis=0)
     uci = np.percentile(medians, 95, axis=0)
     return lci, uci
-    
+
+def ks_test(data1, data2):
+    """Does a KS two sided test for two 2 dimensional samples. The statistic
+    is calculated for each distribution allong the second axis. Returns 1
+    when the p-value is less than 0.05.
+    """
+    sigout = np.ones(data1.shape[1])*np.nan
+    for i in xrange(len(sigout)):
+        _, sigout[i] = stats.ks_2samp(data1[:,i],data2[:,i])
+    return sigout<0.05
+
 # Run
 os.chdir(cwd)
 
@@ -323,12 +332,14 @@ for i,ur_box in enumerate(regions):
     amedian = np.median(alevs[ibox2,2::6],axis=0)/100.
     ninolci,ninouci = bootstrap_medians(levs[ibox,2::6])
     ninalci,ninauci = bootstrap_medians(alevs[ibox2,2::6])
+    dots = ks_test(levs[ibox,2::6], alevs[ibox2,2::6])
     fig = plt.figure()
     axes = fig.gca()
     h1, = plt.plot(np.arange(0,40,1), median,color='r', label='El Nino n='+str(num))
     h2, = plt.plot(np.arange(0,40,1), amedian,color='b', label='La Nina n='+str(anum))
     plt.fill_between(np.arange(0,40,1), ninouci/100., ninolci/100., facecolor='coral',linewidth=0.0,alpha=1)
     plt.fill_between(np.arange(0,40,1), ninauci/100., ninalci/100., facecolor='cyan',linewidth=0.0,alpha=0.3)
+    plt.scatter(np.arange(0,40,1), dots*median)
     plt.legend(handles=[h1, h2])
     axes.set_xticks(np.arange(4,41,4))
     axes.set_xticklabels(np.arange(1,11,1))
@@ -340,8 +351,8 @@ for i,ur_box in enumerate(regions):
     axes.set_yticks(np.array((1000,900,800,600)))
     axes.set_yticklabels(['1000','900','800','600','400','200'])
     axes.set_ylim([1000,600])
-    #plt.show()
-    plt.savefig(rnames[i]+'_levels.png',format='png',dpi=300)
+    plt.show()
+    #plt.savefig(rnames[i]+'_levels.png',format='png',dpi=300)
     plt.close()
 
 for i,ur_box in enumerate(regions):
@@ -359,12 +370,14 @@ for i,ur_box in enumerate(regions):
     amedian = np.median(atheta[ibox2,2::6],axis=0)
     ninolci,ninouci = bootstrap_medians(theta[ibox,2::6])
     ninalci,ninauci = bootstrap_medians(atheta[ibox2,2::6])
+    dots = ks_test(theta[ibox,2::6], atheta[ibox2,2::6])
     fig = plt.figure()
     axes = fig.gca()
     h1, = plt.plot(np.arange(0,40,1), median,color='r', label='El Nino n='+str(num))
     h2, = plt.plot(np.arange(0,40,1), amedian,color='b', label='La Nina n='+str(anum))
     plt.fill_between(np.arange(0,40,1), ninouci, ninolci, facecolor='coral',linewidth=0.0,alpha=1)
     plt.fill_between(np.arange(0,40,1), ninauci, ninalci, facecolor='cyan',linewidth=0.0,alpha=0.3)
+    plt.scatter(np.arange(0,40,1), dots*median)
     plt.legend(handles=[h1, h2])
     axes.set_xticks(np.arange(4,41,4))
     axes.set_xticklabels(np.arange(1,11,1))
@@ -376,8 +389,8 @@ for i,ur_box in enumerate(regions):
     #axes.set_yticks(np.array((1000,900,800,600)))
     #axes.set_yticklabels(['1000','900','800','600','400','200'])
     axes.set_ylim([290,330])
-    #plt.show()
-    plt.savefig(rnames[i]+'_theta.png',format='png',dpi=300)
+    plt.show()
+    #plt.savefig(rnames[i]+'_theta.png',format='png',dpi=300)
     plt.close()
 
 

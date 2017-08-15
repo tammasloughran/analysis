@@ -9,7 +9,7 @@ import numpy as np
 import netCDF4 as nc
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap, shiftgrid
-import scipy.stats as stats
+#import scipy.stats as stats
 
 # define the ensembles
 control = ['vamrc','vaowa','vaowb','vaowc','vaowd','vaowe','vaowg','vaowh',
@@ -41,7 +41,7 @@ for ens in control:
         uvfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
         uvnc = nc.Dataset(uvfile,'r')
         u = np.append(u, np.squeeze(uvnc.variables['u'][:]).mean(axis=0)[None,...], axis=0)
-        v = np.append(u, np.squeeze(uvnc.variables['v'][:]).mean(axis=0)[None,...], axis=0)
+        v = np.append(v, np.squeeze(uvnc.variables['v'][:]).mean(axis=0)[None,...], axis=0)
 uc = u
 vc = v
 ucclim = np.ones((5,)+u.shape[1:])*np.nan
@@ -98,10 +98,9 @@ for ens in elnino:
             year = '2001'
         uvfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
         uvnc = nc.Dataset(uvfile,'r')
-        u = np.append(u, np.squeeze(uvnc.variables['u'][:]-uclim[i]), axis=0)
-        v = np.append(v, np.squeeze(uvnc.variables['v'][:]-vclim[i]), axis=0)
+        u = np.append(u, np.squeeze(uvnc.variables['u'][:]),axis=0)#-uclim[i]), axis=0)
+        v = np.append(v, np.squeeze(uvnc.variables['v'][:]),axis=0)#-vclim[i]), axis=0)
         uvnc.close()
-
 
 def plot_pr(u,v,ax,ndays=0):
     m = Basemap(ax=ax,projection='merc',
@@ -225,8 +224,8 @@ for ens in lanina:
             year = '2001'
         uvfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
         uvnc = nc.Dataset(uvfile,'r')
-        u = np.append(u, np.squeeze(uvnc.variables['u'][:]-uclim[i]), axis=0)
-        v = np.append(v, np.squeeze(uvnc.variables['v'][:]-vclim[i]), axis=0)
+        u = np.append(u, np.squeeze(uvnc.variables['u'][:]),axis=0)#-uclim[i]), axis=0)
+        v = np.append(v, np.squeeze(uvnc.variables['v'][:]),axis=0)#-vclim[i]), axis=0)
         uvnc.close()
 
 # define region of interest
@@ -281,5 +280,5 @@ vcomp = v[index,...].mean(axis=0)
 plot_pr(ucomp,vcomp,axes[0][1])
 ndays=index.sum()
 axes[0][1].set_title('a) n='+str(ndays), loc='left')
-
+#plt.show()
 plt.savefig('winds_composites.eps',format='eps')
