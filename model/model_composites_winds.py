@@ -104,13 +104,13 @@ for ens in elnino:
 
 def plot_pr(u,v,ax,ndays=0):
     m = Basemap(ax=ax,projection='merc',
-            llcrnrlon=100.,llcrnrlat=-60.,
-            urcrnrlon=200.,urcrnrlat=20.)
+            llcrnrlon=85.,llcrnrlat=-60.,
+            urcrnrlon=215.,urcrnrlat=20.)
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
     ugrid,newlons = shiftgrid(180.,ucomp,lons,start=False)
     vgrid,newlons = shiftgrid(180.,vcomp,lons,start=False)
-    uproj,vproj,xx,yy = m.transform_vector(ugrid,vgrid,newlons,lats,20,20,returnxy=True)
+    uproj,vproj,xx,yy = m.transform_vector(ugrid,vgrid,newlons,lats,35,20,returnxy=True)
     Q = m.quiver(xx,yy,uproj,vproj,scale=100)
     #m.contourf(x,y,p<0.03,1,colors='none',hatches=[None,'xx'])
     m.drawcoastlines()

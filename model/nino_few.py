@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import sys
 from pyclimate import svdeofs
-
+import scipy.stats as stats
 nino_few = ['vaoqa','vaoqd','vaoqe','vaoqf','vaoqg','vaoql','vaoqm','vaoqn',
             'vaoqt','vaoqu','vaoqv']
 nino_many = ['vamrd','vaoqb','vaoqc','vaoqh','vaoqi','vaoqj','vaoqk','vaoqo',
@@ -205,6 +205,8 @@ for c in cont.collections:
        continue
     else:
         c.set_dashes([(0, (2.0, 2.0))])
+#_, p = stats.ttest_ind(sh_nino[:11], sh_nino[11:], axis=0, equal_var=False)
+#mp.contourf(xx,yy,p<0.05,1,colors='none',hatches=[None,'xx'])
 cbar = mp.colorbar(mesh,location='bottom',ticks=levels)
 cbar.set_label('W/m^2')
 mp.drawcoastlines()
@@ -243,6 +245,8 @@ for c in cont.collections:
        continue
     else:
         c.set_dashes([(0, (2.0, 2.0))])
+#_, p = stats.ttest_ind(lh_nino[:11], lh_nino[11:], axis=0, equal_var=False)
+#mp.contourf(xx,yy,p<0.05,1,colors='none',hatches=[None,'xx'])
 cbar = mp.colorbar(mesh,location='bottom',ticks=levels)
 cbar.set_label('W/m^2')
 mp.drawcoastlines()
@@ -284,6 +288,8 @@ for c in cont.collections:
        continue
     else:
         c.set_dashes([(0, (2.0, 2.0))])
+#_, p = stats.ttest_ind(np.ma.array(sm_nino[:11], mask=mask<50), np.ma.array(sm_nino[11:], mask=mask<50), axis=0, equal_var=False)
+#mp.contourf(xx,yy,p<0.05,1,colors='none',hatches=[None,'xx'])
 cbar = mp.colorbar(mesh,location='bottom')
 cbar.set_label('kg/m^2')
 cbar.set_ticks(levels)

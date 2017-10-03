@@ -204,7 +204,6 @@ for n, ens in enumerate(indpac_ensembles):
 #nea[0,24:26,:] = 0
 #nea = nea[0].astype('bool')
 
-sys.exit()
 
 def plotmap_test(data,aspect,test,name,colours='bwr'):
     #fmt = '%1.0f'
