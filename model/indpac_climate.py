@@ -81,12 +81,13 @@ lons = controlnc.variables['longitude'][:]
 
 # Function to loop and mean for all ensembles
 def get_data(experiment_ens):
-    mslp = np.zeros((30,)+mslp_summer_clim.shape)
-    temp = np.zeros((30,)+temp_summer_clim.shape)
-    rain = np.zeros((30,)+rain_summer_clim.shape)
-    #u = np.zeros((30,)+u_summer_clim.shape)
-    #v = np.zeros((30,)+v_summer_clim.shape)
-    hgt = np.zeros((30,)+hgt_summer_clim.shape)
+    nens = len(experiment_ens)
+    mslp = np.zeros((nens,)+mslp_summer_clim.shape)
+    temp = np.zeros((nens,)+temp_summer_clim.shape)
+    rain = np.zeros((nens,)+rain_summer_clim.shape)
+    #u = np.zeros((nens,)+u_summer_clim.shape)
+    #v = np.zeros((nens,)+v_summer_clim.shape)
+    hgt = np.zeros((nens,)+hgt_summer_clim.shape)
     for n,ens in enumerate(experiment_ens):
         print ens
         summer_files = glob.glob(ens+'/*.pa2000-12.nc') # December
@@ -177,7 +178,7 @@ def signif(data1,data2):
 print "Meaning Pacific El nino"
 mslp, temp, rain, hgt = get_data(pacnino_ens)
 sig = signif(mslp, mslp_ctrl)
-plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',pl,'mslp_pacnino_ensmean.png')
+plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',300,'mslp_pacnino_ensmean.png')
 sig = signif(temp, temp_ctrl)
 plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_pacnino_ensmean.png')
 sig = signif(rain, rain_ctrl)
@@ -189,11 +190,11 @@ plot_map(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 80,'hgt_pacnino_en
 print "Meaning Pacific La nina"
 mslp, temp, rain, hgt = get_data(pacnina_ens)
 sig = signif(mslp, mslp_ctrl)
-plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',pl,'mslp_pacnina_ensmean.png')
+plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',300,'mslp_pacnina_ensmean.png')
 sig = signif(temp, temp_ctrl)
 plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_pacnina_ensmean.png')
 sig = signif(rain, rain_ctrl)
-plot_map(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 7,'rain_pacnina_ensmean.png')
+plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 7,'rain_pacnina_ensmean.png')
 #plot_stream(u.mean(axis=0),v.mean(axis=0),sig,lats1,lons,'$ms^{-1}$',12,'winds_pacnina_ensmean.png')
 sig = signif(hgt, hgt_ctrl)
 plot_map(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 80,'hgt_pacnina_ensmean.png')
@@ -201,11 +202,11 @@ plot_map(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 80,'hgt_pacnina_en
 print "Meaning Indian PIOD"
 mslp, temp, rain, hgt = get_data(indpiod_ens)
 sig = signif(mslp, mslp_ctrl)
-plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',pl,'mslp_indpiod_ensmean.png')
+plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',300,'mslp_indpiod_ensmean.png')
 sig = signif(temp, temp_ctrl)
 plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_indpiod_ensmean.png')
 sig = signif(rain, rain_ctrl)
-plot_map(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 7,'rain_indpiod_ensmean.png')
+plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 7,'rain_indpiod_ensmean.png')
 #plot_stream(u_piodmean,v_piodmean,sig,lats1,lons,'$ms^{-1}$',12,'winds_indpiod_ensmean.png')
 sig = signif(hgt, hgt_ctrl)
 plot_map(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 80,'hgt_indpiod_ensmean.png')
@@ -213,11 +214,11 @@ plot_map(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 80,'hgt_indpiod_en
 print "Meaning Indian NIOD"
 mslp, temp, rain, hgt = get_data(indniod_ens)
 sig = signif(mslp, mslp_ctrl)
-plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',pl,'mslp_indniod_ensmean.png')
+plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',300,'mslp_indniod_ensmean.png')
 sig = signif(temp, temp_ctrl)
 plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_indniod_ensmean.png')
 sig = signif(rain, rain_ctrl)
-plot_map(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 7,'rain_indniod_ensmean.png')
+plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 7,'rain_indniod_ensmean.png')
 #plot_stream(u.mean(axis=0),v.mean(axis=0),sig,lats1,lons,'$ms^{-1}$',12,'winds_indniod_ensmean.png')
 sig = signif(hgt, hgt_ctrl)
 plot_map(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 80,'hgt_indniod_ensmean.png')
@@ -225,11 +226,11 @@ plot_map(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 80,'hgt_indniod_en
 print "Meaning Indpac Nino"
 mslp, temp, rain, hgt = get_data(indpac_ens)
 sig = signif(mslp, mslp_ctrl)
-plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',pl,'mslp_indpac_ensmean.png')
+plot_map(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',300,'mslp_indpac_ensmean.png')
 sig = signif(temp, temp_ctrl)
 plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_indpac_ensmean.png')
 sig = signif(rain, rain_ctrl)
-plot_map(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 7,'rain_indpac_ensmean.png')
+plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 7,'rain_indpac_ensmean.png')
 #plot_stream(u.mean(axis=0),v.mean(axis=0),sig,lats1,lons,'$ms^{-1}$',12,'winds_indpac_ensmean.png')
 sig = signif(hgt, hgt_ctrl)
 plot_map(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 80,'hgt_indpac_ensmean.png')
