@@ -11,6 +11,7 @@ import netCDF4 as nc
 import glob
 import pandas as pd
 import warnings
+import matplotlib.pyplot as plt
 warnings.filterwarnings("ignore")
 
 # Define directory and ensembles
@@ -158,3 +159,12 @@ print(pacnina_field30_1_ave.mean())
 print(indpiod_field30_1_ave.mean())
 print(indniod_field30_1_ave.mean())
 print(indpac_field30_1_ave.mean())
+
+plt.figure()
+data = np.array([control_temp_ave, pacnino_temp_ave, pacnina_temp_ave, indpiod_temp_ave, indniod_temp_ave, indpac_temp_ave]).T
+labels = ['Control', 'El Nino', 'La Nina', '+IOD', '-IOD', 'El Nino +IOD']
+plt.boxplot(data, labels=labels, showmeans=True, notch=True, bootstrap=1000, whis='range')
+plt.ylabel('Temperature (K)')
+plt.title('Global mean DJF 1.5m temperature')
+#plt.plot(np.ones(30),data[0,...],'k+',)
+plt.savefig('global_box.png')
