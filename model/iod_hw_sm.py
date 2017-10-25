@@ -37,7 +37,7 @@ dates = nc.num2date(times,units=controlnc.variables['t'].units)
 date_range = pd.period_range(dates[0],dates[-1], freq='M')
 summer = (date_range.month==12)|(date_range.month==1)|(date_range.month==2)
 # Soil moisture
-sm_hold = np.squeeze(controlnc.variables['sm'][:,0,...])
+sm_hold = np.squeeze(controlnc.variables['sm'][:,0:3,...].sum(axis=1))
 sm_hold = sm_hold[summer]
 sm_hold = sm_hold[:,(lats<-10.)&(lats>-44.),:][:,:,(lons<156.)&(lons>112.)]
 ctrl_sm = np.zeros((30,)+sm_hold.shape[1:])
@@ -61,7 +61,7 @@ def get_ens(experiment_ens):
         summer_files += glob.glob(ens+'/*.pa2001-01.nc') # Janurary
         summer_files += glob.glob(ens+'/*.pa2001-02.nc') # February
         summernc = nc.MFDataset(summer_files)
-        sm[n,...] = np.squeeze(np.mean(summernc.variables['sm'][:,0,...],axis=0))
+        sm[n,...] = np.squeeze(np.mean(summernc.variables['sm'][:,0:3,...].sum(axis=1),axis=0))
         summernc.close()
     sm = sm[:,(lats<-10.)&(lats>-44.),:][:,:,(lons<156.)&(lons>112.)]
     sm = np.ma.array(sm,mask=sm==0)
@@ -298,7 +298,7 @@ plt.scatter(indpac_neaus_sm,indpac_neaus_hwf,c='brown',marker='o',label='El Nino
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'c')
 #sl,inter,_,_ = stats.theilslopes(indpac_neaus_hwf,indpac_neaus_sm)
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'brown')
-plt.xlabel('Top layer soil moisture ($kg/m^{2}$)')
+plt.xlabel('Soil moisture ($kg/m^{2}$)')
 plt.ylabel('HWF (days)')
 plt.title('Northeast Australia')
 plt.legend()
@@ -323,7 +323,7 @@ plt.scatter(indpac_naus_sm,indpac_naus_hwf,c='brown',marker='o',label='El Nino +
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'c')
 #sl,inter,_,_ = stats.theilslopes(indpac_naus_hwf,indpac_naus_sm)
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'brown')
-plt.xlabel('Top layer soil moisture ($kg/m^{2}$)')
+plt.xlabel('Soil moisture ($kg/m^{2}$)')
 plt.ylabel('HWF (days)')
 plt.title('North Australia')
 plt.legend()
@@ -348,7 +348,7 @@ plt.scatter(indpac_eaus_sm,indpac_eaus_hwf,c='brown',marker='o',label='El Nino +
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'c')
 #sl,inter,_,_ = stats.theilslopes(indpac_eaus_hwf,indpac_eaus_sm)
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'brown')
-plt.xlabel('Top layer soil moisture ($kg/m^{2}$)')
+plt.xlabel('Soil moisture ($kg/m^{2}$)')
 plt.ylabel('HWF (days)')
 plt.title('East Australia')
 plt.legend()
@@ -373,7 +373,7 @@ plt.scatter(indpac_seaus_sm,indpac_seaus_hwf,c='brown',marker='o',label='El Nino
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'c')
 #sl,inter,_,_ = stats.theilslopes(indpac_seaus_hwf,indpac_seaus_sm)
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'brown')
-plt.xlabel('Top layer soil moisture ($kg/m^{2}$)')
+plt.xlabel('Soil moisture ($kg/m^{2}$)')
 plt.ylabel('HWF (days)')
 plt.title('Southeast Australia')
 plt.legend()
@@ -398,7 +398,7 @@ plt.scatter(indpac_swaus_sm,indpac_swaus_hwf,c='brown',marker='o',label='El Nino
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'c')
 #sl,inter,_,_ = stats.theilslopes(indpac_swaus_hwf,indpac_swaus_sm)
 #plt.plot([1.5,4.5],[sl*1.5+inter,sl*4.5+inter],'brown')
-plt.xlabel('Top layer soil moisture ($kg/m^{2}$)')
+plt.xlabel('Soil moisture ($kg/m^{2}$)')
 plt.ylabel('HWF (days)')
 plt.title('Southwest Australia')
 plt.legend()
