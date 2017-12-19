@@ -220,11 +220,13 @@ def plotmaps(data,signif,name,filename,colours='viridis'):
     else: 
         units = 'stuff'
     plt.figure()
-    #parallels = np.arange(-40., -9., 10.)
-    #meridians = np.arange(120., 160., 10.,)
+    parallels = np.arange(-40., -9., 10.)
+    meridians = np.arange(120., 160., 10.,)
     map_axes = Basemap(projection='cyl',
         llcrnrlat=-44, urcrnrlat=-10,
         llcrnrlon=112, urcrnrlon=156,resolution='l')
+    map_axes.drawparallels(parallels, labels=[True,False,False,False])
+    map_axes.drawmeridians(meridians, labels=[False,False,False,True])
     xx, yy = np.meshgrid(lons, lats)
     x, y = map_axes(xx,yy)
     xx = xx - 0.5 # The data projection is slightly off compared to the coastlines.
@@ -242,8 +244,8 @@ def plotmaps(data,signif,name,filename,colours='viridis'):
     #plt.clabel(cont, fmt=fmt, fontsize=10)
     cb = map_axes.colorbar(shade, location='bottom', pad=0.25, ticks=cints)
     cb.ax.set_xlabel(units)
-    #map_axes.drawparallels(parallels, labels=[True,False,False,False])
-    #map_axes.drawmeridians(meridians, labels=[False,False,False,True])
+    map_axes.drawparallels(parallels, labels=[True,False,False,False])
+    map_axes.drawmeridians(meridians, labels=[False,False,False,True])
     map_axes.drawcoastlines()
     plt.title(name)
     plt.tight_layout()
@@ -406,6 +408,9 @@ for aspect in control:
     sig = pv<threshold
     indpac_diff = np.ma.mean(indpac[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
     plotmaps(indpac_diff, sig, aspect, 'mean_'+aspect+'_indpac_diff.png', 'RdBu_r')
+    
+    sig[...] = 0
+    plotmaps(pacnino_diff+indpiod_diff,sig,aspect,'ninoppiod_'+aspect+'.png','RdBu_r')
 
 
 #    # Difference of medians nino

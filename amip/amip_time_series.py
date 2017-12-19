@@ -19,7 +19,11 @@ aspect = 'HWF'
 # Define some variables
 amipdir = '/srv/ccrc/data48/z5032520/amip/'
 models = os.listdir(amipdir)
-elnino_years = [1982, 1987, 1991, 1997, 2002]
+access = models[1]
+models[1] = models[-1]
+models[-1] = access
+#elnino_years = [1982, 1987, 1991, 1997, 2002]
+elnino_years = [1982, 1987, 1991, 1994, 1997, 2002]
 lanina_years = [1984, 1988, 1998, 1999, 2007]
 
 
@@ -35,13 +39,13 @@ for ayear in lanina_years:
     axes.add_patch(rect)
 
 
-colors = ['darkred','red','yellow','olive','yellowgreen','darkblue','cyan','peru','green','orange','indigo','gray','lightgreen','khaki','teal']
-colors = ['gray','red','gray','gray','gray','gray','gray','gray','gray','gray','gray','gray','gray','gray','gray']
+#colors = ['darkred','red','yellow','olive','yellowgreen','darkblue','cyan','peru','green','orange','indigo','gray','lightgreen','khaki','teal']
+colors = ['gray','gray','gray','gray','gray','gray','gray','gray','gray','gray','gray','gray','gray','gray','green','gray']
 nyears = 29
 mmm = np.zeros(nyears)
 all_series = np.ones((len(models),nyears))*np.nan
 for i,model in enumerate(models):
-    print model
+    print(model)
     times = 0
     hwfiles = glob.glob(amipdir+model+'/EHF*yearly*')
     ifile = hwfiles[0]
@@ -88,9 +92,14 @@ plt.ylabel('Days',rotation=0.)
 plt.title('AMIP Australian Heatwave Frequency')
 plt.savefig('amip_hwf.eps',format='eps')
 
+import pdb
+pdb.set_trace()
+errors = all_series - awap
+
+
 fig = plt.figure()
 axes = fig.gca()
-nino_box = [4,9,13,19,24]
+nino_box = [4,9,13,16,19,24,26]
 nina_box = [6,10,20,21,29]
 for oyear in nino_box:
     rect = patches.Rectangle((oyear-.5,0),1,45,color='lightcoral')

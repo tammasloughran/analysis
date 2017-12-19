@@ -82,7 +82,7 @@ plt.plot(nna_series,'k',label='La Nina', linestyle='dotted')
 plt.scatter(np.arange(0,24), nna_series, marker='x',color='k')
 labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 labels.extend(labels)
-plt.xticks(np.arange(0,24), labels, rotation=45)
+plt.xticks(np.arange(0,24), labels, rotation=45, fontsize=9)
 plt.axhline(y=0,color='k')
 plt.xlim(0, 24)
 plt.grid(True)
@@ -107,8 +107,22 @@ m = Basemap(ax=axes[1,1],projection='mill',
             urcrnrlon=155.625,urcrnrlat=-10)
 #regions = [(129.,-12),(139.,-18),(145.5,-24),(141,-31),(115,-27)]
 regions = [(129.,-12),(139.,-18),(145.5,-24),(141,-31)]
+m.drawmeridians([120,130,140,150],labels=[True,False,False,True],fontsize=9,linewidth=0.2)
+m.drawparallels([-10,-20,-30,-40],labels=[True,False,False,True],fontsize=9,linewidth=0.2)
 for i in xrange(len(regions)):
     plotbox_onmap(regions[i][1],regions[i][1]-7.5,regions[i][0],regions[i][0]+7.5,m)
+x,y = m(132,-15)
+axes[1,1].text(x,y,'N')
+x,y = m(142,-21)
+axes[1,1].text(x,y,'NE')
+x,y = m(148.5,-27)
+axes[1,1].text(x,y,'E')
+x,y = m(144,-34)
+axes[1,1].text(x,y,'SE')
+
+
+
+
 plt.sca(axes[1,1])
 plt.title('d)', loc='left')
 plt.subplots_adjust(hspace=0.4,wspace=0.3)

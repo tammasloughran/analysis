@@ -17,7 +17,7 @@ from mpl_toolkits.basemap import Basemap
 
 # User. Manually select the aspect and enso phase
 aspect = 'HWF'
-phase = 'ep'
+phase = 'elnino'
 
 # Define some variables
 cwd = os.getcwd()
@@ -27,7 +27,7 @@ models = ['ACCESS1-0','ACCESS1-3','BNU-ESM','CCSM4','CMCC-CM','CNRM-CM5',
           'CSIRO-Mk3-6-0','GFDL-CM3','HadGEM2-A','IPSL-CM5A-LR','MIROC5',
           'MPI-ESM-MR','MRI-CGCM3','NorESM1-M','inmcm4']
 #models = ['IPSL-CM5A-LR','MIROC5','MPI-ESM-MR','MRI-CGCM3','NorESM1-M','inmcm4']
-elnino_years = [1982, 1987, 1991, 1997, 2002]
+elnino_years = [1982, 1987, 1991, 1994, 1997, 2002]
 lanina_years = [1984, 1988, 1998, 1999, 2007]
 modoki_years = [1986, 1990, 1991, 1992, 1994, 2002, 2004]
 ep_years = [1982, 1987, 1997, 2006]
@@ -73,8 +73,8 @@ def plot_map(flons, flats, data, title='unknown'):
     #    else:
     #        c.set_dashes([(0, (2.0, 2.0))])
     m.drawcoastlines()
-    m.drawmeridians(meridians, linewidth=0, labels=[False,False,False,True])
-    m.drawparallels(parallels, linewidth=0, labels=[True,False,False,False])
+    m.drawmeridians(meridians, linewidth=0.01, labels=[False,False,False,True])
+    m.drawparallels(parallels, linewidth=0.01, labels=[True,False,False,False])
     plt.title(title)
     m.colorbar(shade)
     plt.savefig(title+'.eps', format='eps')

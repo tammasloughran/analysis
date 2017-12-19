@@ -127,10 +127,10 @@ def plot_map(data,sig,lats,lons,units,rng,fname):
     cb = mp.colorbar(clrmsh, location='bottom', pad=0.3, ticks=levels)
     cb.set_label(units)
     mp.drawcoastlines()
-    #pll = mp.drawparallels([-80,-40,-60,-20,0,20,40,60,80],labels=[1, 0, 0, 0],linewidth=0.01)
-    #for line in pll.iteritems(): line[1][0].pop(0)
-    #mer = mp.drawmeridians([0,80,160,240,320],labels=[0, 0, 0, 1],linewidth=0.01)
-    #for line in mer.iteritems(): line[1][0].pop(0)
+    pll = mp.drawparallels([-80,-40,-60,-20,0,20,40,60,80],labels=[1, 0, 0, 0],linewidth=0.01)
+    for line in pll.iteritems(): line[1][0].pop(0)
+    mer = mp.drawmeridians([0,80,160,240,320],labels=[0, 0, 0, 1],linewidth=0.01)
+    for line in mer.iteritems(): line[1][0].pop(0)
     plt.savefig(fname,format='png',dpi=250)
 
 def plot_fill(data,sig,lats,lons,units,rng,fname):
