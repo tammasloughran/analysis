@@ -126,8 +126,8 @@ shade = mp.pcolormesh(x,y,z,vmin=0,vmax=140,cmap='YlGnBu')
 levels = np.arange(0,141,15)
 mp.contour(x,y,z,colors='k',levels=levels,linewidths=0.3)
 mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
+mp.drawmeridians([120,130,140,150],labels=[0,0,0,1],linewidth=0.03)
+mp.drawparallels([-10,-20,-30,-40],labels=[1,0,0,0],linewidth=0.03)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
 axes[0].set_title('a) Control Climatology',loc='left')
@@ -141,8 +141,8 @@ shade = mp.pcolormesh(x,y,data,vmin=-20,vmax=20,cmap='BrBG')
 levels = np.arange(-20,21,4)
 mp.contour(x,y,data,colors='k',levels=levels,linewidths=0.3)
 mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0)
+mp.drawmeridians([120,130,140,150],labels=[0,0,0,1],linewidth=0.03)
+mp.drawparallels([-10,-20,-30,-40],labels=[1,0,0,0],linewidth=0.03)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
 axes[1].set_title('b) El Nino - La Nina',loc='left')
@@ -158,11 +158,14 @@ dates = nc.num2date(times, hwnc.variables['time'].units)
 years = np.array([i.year for i in dates])
 months = np.array([i.month for i in dates])
 days = np.array([i.day for i in dates])
-nov1 = np.where((years==2000)&(months==11)&(days==1))[0]
-mar31 = np.where((years==2001)&(months==3)&(days==31))[0]
+nov1 = np.where((years==2000)&(months==11)&(days==1))[0][0]
+mar31 = np.where((years==2001)&(months==3)&(days==31))[0][0]
 delta = int(mar31+1-nov1)
 
 # Load the event data
+print(nov1)
+print(mar31+1)
+print(hwnc.variables['ends'].shape)
 event = hwnc.variables['ends'][nov1:mar31+1,...]
 for ens in elnino[1:]:
     hwnc = nc.Dataset(hwdir+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_daily.nc')
@@ -209,8 +212,8 @@ def plot_ef(data,ax,ndays=0):
         else:
             c.set_dashes([(0, (2.0, 2.0))])
     m.drawcoastlines()
-    #m.drawparallels(lats,linewidth=0,labels=[1,0,0,1])
-    #m.drawmeridians(lons,linewidth=0,labels=[1,0,0,1])
+    m.drawparallels([120,130,140,150],linewidth=0.03,labels=[1,0,0,1],fontsize=9)
+    m.drawmeridians([-10,-20,-30,-40],linewidth=0.03,labels=[1,0,0,1],fontsize=9)
     return cont
 
 f, axes = plt.subplots(nrows=4, ncols=2,figsize=(6,7))
@@ -265,8 +268,8 @@ dates = nc.num2date(times, hwnc.variables['time'].units)
 years = np.array([i.year for i in dates])
 months = np.array([i.month for i in dates])
 days = np.array([i.day for i in dates])
-nov1 = np.where((years==2000)&(months==11)&(days==1))[0]
-mar31 = np.where((years==2001)&(months==3)&(days==31))[0]
+nov1 = np.where((years==2000)&(months==11)&(days==1))[0][0]
+mar31 = np.where((years==2001)&(months==3)&(days==31))[0][0]
 delta = int(mar31+1-nov1)
 
 # Load the event data

@@ -521,6 +521,8 @@ def subplot_aus(data, lons, lats, signif, ax):
     map_axes = Basemap(ax=ax, projection='cyl',
         llcrnrlat=-44, urcrnrlat=-10,
         llcrnrlon=112, urcrnrlon=156,resolution='l')
+    map_axes.drawmeridians([120,130,140,150],labels=[True,False,False,True],linewidth=0.03,fontsize=9)
+    map_axes.drawparallels([-10,-20,-30,-40],labels=[True,False,False,True],linewidth=0.03,fontsize=9)
     xx, yy = np.meshgrid(lons, lats)
     x, y = map_axes(xx,yy)
     xx = xx - 0.5 # The data projection is slightly off compared to the coastlines.
@@ -568,7 +570,7 @@ nina_diff = np.ma.mean(lanina['hwf'],axis=0)-np.ma.mean(control['hwf'],axis=0)
 cints = np.arange(-10,11,2)
 mpa,sh = subplot_aus(nina_diff,lons,lats,sig,axes[1][0])
 axes[1][0].set_title('d)',loc='left')
-cbar = mpa.colorbar(sh,location='bottom',ticks=cints)
+cbar = mpa.colorbar(sh,location='bottom',ticks=cints,pad=0.2)
 cbar.set_label('Days')
 
 ts, pv = stats.ttest_ind(lanina['hwd'],control['hwd'],equal_var=False,nan_policy='omit')
@@ -577,7 +579,7 @@ nina_diff = np.ma.mean(lanina['hwd'],axis=0)-np.ma.mean(control['hwd'],axis=0)
 cints = np.arange(-4,5,1)
 mpa,sh = subplot_aus(nina_diff,lons,lats,sig,axes[1][1])
 axes[1][1].set_title('e)',loc='left')
-cbar = mpa.colorbar(sh,location='bottom',ticks=cints)
+cbar = mpa.colorbar(sh,location='bottom',ticks=cints,pad=0.2)
 cbar.set_label('Days')
 
 ts, pv = stats.ttest_ind(lanina['hwa'],control['hwa'],equal_var=False,nan_policy='omit')
@@ -586,7 +588,7 @@ nina_diff = np.ma.mean(lanina['hwa'],axis=0)-np.ma.mean(control['hwa'],axis=0)
 cints = np.arange(-10,12,2)
 mpa,sh = subplot_aus(nina_diff,lons,lats,sig,axes[1][2])
 axes[1][2].set_title('f)',loc='left')
-cbar = mpa.colorbar(sh,location='bottom',ticks=cints)
+cbar = mpa.colorbar(sh,location='bottom',ticks=cints,pad=0.2)
 cbar.set_label('C$^{\circ2}$')
 
 #ts, pv = stats.ttest_ind(elnino['hwf'],lanina['hwf'],equal_var=False,nan_policy='omit')
@@ -614,7 +616,7 @@ cbar.set_label('C$^{\circ2}$')
 #mps.colorbar(sh,location='bottom',ticks=cints)
 
 plt.show()
-  
+sys.exit() 
     
 # Nino diff
 #for aspect in control:

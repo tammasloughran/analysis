@@ -200,6 +200,8 @@ def plot_ef(data,ax,ndays=0):
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
     cont = m.pcolormesh(x,y,data,cmap='PuOr',vmin=-50,vmax=50)
+    m.drawmeridians([110,130,150,170],labels=[1,0,0,1],linewidth=0.03,fontsize=8)
+    m.drawparallels([-10,-20,-30,-40],labels=[1,0,0,1],linewidth=0.03,fontsize=8)
     m.contourf(x,y,sig<0.05, 1, colors='none', hatches=[None,'xxx'])
     levels = np.arange(-50,51,10)
     cnt = m.contour(x,y,data,colors='k',linewidths=0.3,levels=levels)

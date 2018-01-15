@@ -34,14 +34,17 @@ def plot_tracks(ax, lons, lats, levs):
                 llcrnrlon=40.,llcrnrlat=-70.,
                 urcrnrlon=200.,urcrnrlat=0.,
                 resolution='l')
+    mp.drawmeridians([60,90,120,150,180],labels=[1,0,0,1],fontsize=8,linewidth=0.03)
+    mp.drawparallels([-10,-30,-50,-70],labels=[1,0,0,1],fontsize=8,linewidth=0.03)
     lons[lons<40] = -9999
     for traj in xrange(lats.shape[0]):
         x,y = mp(lons[traj],lats[traj])
-        lc = colorline(x, y, levs[traj]/100000., linewidth=1)
+        lc = colorline(x, y, levs[traj]/100000., linewidth=1)#, cmap='nipy_spectral')
         ax.add_collection(lc)
     cbar = mp.colorbar(lc, location='right')
     cbar.set_label('hPa')
-    cbar.ax.set_yticklabels([0,100,200,300,400,500,600,700,800,900,1000])
+    #cbar.ax.set_yticklabels([0,100,200,300,400,500,600,700,800,900,1000])
+    #cbar.ax.set_yticklabels([1000,900,800,700,600,500])
     cbar.ax.invert_yaxis()
     mp.drawcoastlines()
 
