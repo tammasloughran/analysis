@@ -29,24 +29,25 @@ def colorline(x, y,
                               linewidth=linewidth, alpha=alpha)
     return lc
 
-def plot_tracks(ax, lons, lats, levs):
+def plot_tracks(ax, lons, lats, levs, lab=[1,0,0,1]):
     mp = Basemap(ax=ax,projection='mill',
                 llcrnrlon=40.,llcrnrlat=-70.,
                 urcrnrlon=200.,urcrnrlat=0.,
                 resolution='l')
-    mp.drawmeridians([60,90,120,150,180],labels=[1,0,0,1],fontsize=8,linewidth=0.03)
-    mp.drawparallels([-10,-30,-50,-70],labels=[1,0,0,1],fontsize=8,linewidth=0.03)
+    mp.drawmeridians([60,90,120,150,180],labels=lab,fontsize=8,linewidth=0.03)
+    mp.drawparallels([-10,-30,-50,-70],labels=lab,fontsize=8,linewidth=0.03)
     lons[lons<40] = -9999
     for traj in xrange(lats.shape[0]):
         x,y = mp(lons[traj],lats[traj])
-        lc = colorline(x, y, levs[traj]/100000., linewidth=1)#, cmap='nipy_spectral')
+        lc = colorline(x, y, levs[traj]/100., norm=None, linewidth=1, cmap='nipy_spectral')
         ax.add_collection(lc)
-    cbar = mp.colorbar(lc, location='right')
-    cbar.set_label('hPa')
+    #cbar = mp.colorbar(lc, location='right')
+    #cbar.set_label('hPa')
     #cbar.ax.set_yticklabels([0,100,200,300,400,500,600,700,800,900,1000])
     #cbar.ax.set_yticklabels([1000,900,800,700,600,500])
-    cbar.ax.invert_yaxis()
+    #cbar.ax.invert_yaxis()
     mp.drawcoastlines()
+    return lc
 
 
 def make_ibox(ur_box,size, lons, lats):
@@ -82,22 +83,76 @@ def get_traj(cphase):
 
 lons, lats, levs, temp, q = get_traj('elnino')
 alons, alats, alevs, atemp, aq = get_traj('lanina')
+levs[:,0] = 45000.
+levs[:,1] = 100000.
+alevs[:,0] = 45000.
+alevs[:,1] = 100000.
+
 
 os.chdir(cwd)
 
 size = 7.5
 rnames = ['North','Northeast','Central-East','Southeast']
 regions = [(129.,-12),(139.,-18),(145.5,-24),(141,-31)]
-f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75),sharex=True,sharey=True)
-for i,ur_box in enumerate(regions):
-    ibox = make_ibox(ur_box,size, lons, lats)
-    aibox = make_ibox(ur_box,size, alons, alats)
-    num = ibox.sum()
-    anum = aibox.sum()
-    lab = [['a','b'],['c','d'],['e','f'],['g','h']]
-    plot_tracks(axes[i][0],lons[ibox],lats[ibox],levs[ibox])
-    axes[i][0].set_title(lab[i][0]+')', loc='left')
-    plot_tracks(axes[i][1],alons[aibox],alats[aibox],alevs[aibox])
-    axes[i][1].set_title(lab[i][1]+')', loc='left')
-#plt.savefig('tracks.eps',format='eps')
-plt.show()
+f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75))
+#for i,ur_box in enumerate(regions):
+#    ibox = make_ibox(ur_box,size, lons, lats)
+#    aibox = make_ibox(ur_box,size, alons, alats)
+#    num = ibox.sum()
+#    anum = aibox.sum()
+#    lab = [['a','b'],['c','d'],['e','f'],['g','h']]
+#    plot_tracks(axes[i][0],lons[ibox],lats[ibox],levs[ibox])
+#    axes[i][0].set_title(lab[i][0]+')', loc='left')
+#    plot_tracks(axes[i][1],alons[aibox],alats[aibox],alevs[aibox])
+#    axes[i][1].set_title(lab[i][1]+')', loc='left')
+# a)
+ibox = make_ibox(regions[0],size,lons,lats)
+num = ibox.sum()
+plot_tracks(axes[0][0],lons[ibox],lats[ibox],levs[ibox],lab=[1,0,0,0])
+axes[0][0].set_title('a)', loc='left')
+# b)
+aibox = make_ibox(regions[0],size,alons,alats)
+anum = aibox.sum()
+plot_tracks(axes[0][1],alons[aibox],alats[aibox],alevs[aibox],lab=[0,0,0,0])
+axes[0][1].set_title('b)', loc='left')
+# c)
+ibox = make_ibox(regions[1],size,lons,lats)
+num = ibox.sum()
+plot_tracks(axes[1][0],lons[ibox],lats[ibox],levs[ibox],lab=[1,0,0,0])
+axes[1][0].set_title('c)', loc='left')
+# d)
+aibox = make_ibox(regions[1],size,alons,alats)
+anum = aibox.sum()
+plot_tracks(axes[1][1],alons[aibox],alats[aibox],alevs[aibox],lab=[0,0,0,0])
+axes[1][1].set_title('d)', loc='left')
+# e)
+ibox = make_ibox(regions[2],size,lons,lats)
+num = ibox.sum()
+plot_tracks(axes[2][0],lons[ibox],lats[ibox],levs[ibox],lab=[1,0,0,0])
+axes[2][0].set_title('e)', loc='left')
+# f)
+aibox = make_ibox(regions[2],size,alons,alats)
+anum = aibox.sum()
+plot_tracks(axes[2][1],alons[aibox],alats[aibox],alevs[aibox],lab=[0,0,0,0])
+axes[2][1].set_title('f)', loc='left')
+# g)
+ibox = make_ibox(regions[3],size,lons,lats)
+num = ibox.sum()
+plot_tracks(axes[3][0],lons[ibox],lats[ibox],levs[ibox],lab=[1,0,0,1])
+axes[3][0].set_title('g)', loc='left')
+# h)
+aibox = make_ibox(regions[3],size,alons,alats)
+anum = aibox.sum()
+lc = plot_tracks(axes[3][1],alons[aibox],alats[aibox],alevs[aibox],lab=[0,0,0,1])
+axes[3][1].set_title('h)', loc='left')
+
+axes[0][0].annotate('El Nino               La Nina',(0.19,0.92),textcoords='figure fraction',fontsize=20)
+
+f.subplots_adjust(bottom=0.1)
+cbar_ax = f.add_axes([0.12, 0.06, 0.78, 0.02])
+cbar = plt.colorbar(lc,cax=cbar_ax, orientation='horizontal')
+cbar.set_label('hPa')
+cbar.ax.invert_xaxis()
+plt.savefig('tracks.eps',format='eps')
+#plt.show()
+
