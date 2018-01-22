@@ -43,10 +43,10 @@ for ens in control:
             year = '2001'
         ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
         qnc = nc.Dataset(ncfile,'r')
-        Qe = qnc.variables['lh'][:]
-        #Qh = qnc.variables['sh'][:]
+        #Qe = qnc.variables['lh'][:]
+        Qh = qnc.variables['sh'][:]
         #cEF = np.append(cEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
-        cEF = np.append(cEF, np.squeeze(Qe), axis=0)
+        cEF = np.append(cEF, np.squeeze(Qh), axis=0)
         qnc.close()
 cEF_clim = cEF.mean(axis=0)
 
@@ -63,9 +63,9 @@ for ens in elnino:
             year = '2001'
         ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
         qnc = nc.Dataset(ncfile,'r')
-        Qe = qnc.variables['lh'][:]
-        #Qh = qnc.variables['sh'][:]
-        oEF = np.append(oEF, np.squeeze(Qe), axis=0)
+        #Qe = qnc.variables['lh'][:]
+        Qh = qnc.variables['sh'][:]
+        oEF = np.append(oEF, np.squeeze(Qh), axis=0)
         #oEF = np.append(oEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
         qnc.close()
 oEF_clim = oEF.mean(axis=0)
@@ -83,9 +83,9 @@ for ens in lanina:
             year = '2001'
         ncfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
         qnc = nc.Dataset(ncfile,'r')
-        Qe = qnc.variables['lh'][:]
-        #Qh = qnc.variables['sh'][:]
-        aEF = np.append(aEF, np.squeeze(Qe), axis=0)
+        #Qe = qnc.variables['lh'][:]
+        Qh = qnc.variables['sh'][:]
+        aEF = np.append(aEF, np.squeeze(Qh), axis=0)
         #aEF = np.append(aEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
         qnc.close()
 aEF_clim = aEF.mean(axis=0)
@@ -199,7 +199,7 @@ def plot_ef(data,ax,ndays=0):
                 urcrnrlon=157.,urcrnrlat=-5.)
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
-    cont = m.pcolormesh(x,y,data,cmap='PuOr',vmin=-50,vmax=50)
+    cont = m.pcolormesh(x,y,data,cmap='bwr',vmin=-50,vmax=50)
     m.contourf(x,y,sig<0.05, 1, colors='none', hatches=[None,'xxx'])
     levels = np.arange(-50,51,10)
     cnt = m.contour(x,y,data,colors='k',linewidths=0.3,levels=levels)
@@ -356,6 +356,6 @@ cbar = plt.colorbar(mesh,cax=cax,orientation='horizontal',ticks=np.arange(-50,51
 cbar.set_label('$Wm^{-2}$')
 f.suptitle('El Nino            La Nina', fontsize=20)
 plt.subplots_adjust(hspace=0.25,wspace=0.1)
-plt.savefig('LHF_composites.eps',format='eps')
+plt.savefig('SHF_composites.eps',format='eps')
 #plt.show()
 print 'done'
