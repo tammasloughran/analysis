@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue May  9 14:45:42 2017
+Created on Wed January  17 14:45:42 2017
 
 @author: Tammas Loughran
 """
@@ -30,17 +30,20 @@ lsm = lsmnc.variables['lsm'][:]
 lsmnc.close()
 
 # Define El Nino and La Nina years. year is year containing December
-elninoyears = [1911,1913,1914,1918,1925,1930,1941,1951,1957,1965,1969,1972,1976,1982,1987,1997,2006]
-laninayears = [1909,1915,1920,1933,1942,1949,1950,1955,1970,1973,1975,1984,1988,1998,1999,2007,2010]
+#elninoyears = [1911,1913,1914,1918,1925,1930,1941,1951,1957,1965,1969,1972,1976,1982,1987,1997,2006]
+#laninayears = [1909,1915,1920,1933,1942,1949,1950,1955,1970,1973,1975,1984,1988,1998,1999,2007,2010]
+elninoyears = [1972,1976,1982,1987,1997,2006]
+laninayears = [1970,1973,1975,1984,1988,1998,1999,2007,2010]
+
 
 # Load the lhtfl data
-lhtfldir = '/srv/ccrc/data48/z5032520/20crv2/shtfl'
-ncfile = nc.MFDataset(lhtfldir+'/shtfl.*.nc','r')
+lhtfldir = '/srv/ccrc/data48/z5032520/20crv2/lhtfl'
+ncfile = nc.MFDataset(lhtfldir+'/lhtfl.*.nc','r')
 dates = nc.num2date(ncfile.variables['time'][:],ncfile.variables['time'].units)
 years = np.array([i.year for i in dates])
-lhtfl = ncfile.variables['shtfl'][years>1900,...]
-dates = dates[years>1900]
-years = years[years>1900]
+lhtfl = ncfile.variables['lhtfl'][years>=1970,...]
+dates = dates[years>=1970]
+years = years[years>=1970]
 months = np.array([d.month for d in dates])
 novmar = (months==11)|(months==12)|(months==1)|(months==2)|(months==3)
 clim = lhtfl[novmar,...].mean(axis=0)
@@ -64,19 +67,11 @@ def select_region(lon, lat):
 #(129.,-12),(139.,-18),(145.5,-24),(141,-31),(115,-27)
 
 # Create el nino arrays
-shape = (0,)+(ncfile.variables['shtfl'].shape[1:])
+shape = (0,)+(ncfile.variables['lhtfl'].shape[1:])
 seaus_o = np.ones(shape)
 neaus_o = seaus_o.copy()
 naus_o = seaus_o.copy()
 eaus_o = seaus_o.copy()
-
-#def anomalise(data,pclim):
-#    data[0:30,...] = data[0:30,...] - pclim[0,...]
-#    data[30:61,...] = data[30:61,...] - pclim[1,...]
-#    data[61:92,...] = data[61:92,...] - pclim[2,...]
-#    data[92:120,...] = data[92:120,...] - pclim[3,...]
-#    data[120:151,...] = data[120:151,...] - pclim[4,...]
-#    return data
 
 print('Looping el nino')
 #loop over el nino years
@@ -104,7 +99,7 @@ for year in elninoyears:
     eaus_o = np.append(eaus_o, htfl[eaus,...],axis=0)
 
 # Create la nina arrays
-shape = (0,)+(ncfile.variables['shtfl'].shape[1:])
+shape = (0,)+(ncfile.variables['lhtfl'].shape[1:])
 seaus_a = np.ones(shape)
 neaus_a = seaus_a.copy()
 naus_a = seaus_a.copy()
@@ -139,12 +134,12 @@ for year in laninayears:
 def plot_Q(data,ax,ndays=0):
     data = np.ma.array(data, mask=np.logical_not(lsm))
     m = Basemap(ax=ax,projection='mill',
-                llcrnrlon=110.,llcrnrlat=-48.,
-                urcrnrlon=157.,urcrnrlat=-5.)
+                llcrnrlon=105.,llcrnrlat=-45.,
+                urcrnrlon=160.,urcrnrlat=-5.)
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
     levels = np.arange(-50,51,10)
-    cont = m.pcolormesh(x,y,data,cmap='bwr',vmin=-50,vmax=50)
+    cont = m.pcolormesh(x,y,data,cmap='PuOr',vmin=-50,vmax=50)
     cnt = m.contour(x,y,data,colors='k',linewidths=0.3,levels=levels)
     for c in cnt.collections:
         if c.get_linestyle() == [(None, None)]: continue
@@ -153,44 +148,44 @@ def plot_Q(data,ax,ndays=0):
     m.drawcoastlines()
     return cont, m
 
-f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75))
+f, axes = plt.subplots(nrows=4, ncols=2,figsize=(6,7.75))
 # El nino
 # Express as anomaly ignificance and plot 
 data = seaus_o.mean(axis=0) - clim
 t, sig = stats.ttest_ind(seaus_o, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[3][0])
-m.drawmeridians([90,110,130,150,170],labels=[1,0,0,1],linewidth=0.03,fontsize=8)
-m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],linewidth=0.03,fontsize=8)
+m.drawmeridians([90,110,130,150,170],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
 ndays = seaus_o.shape[0]
-axes[3][0].set_title('g) n='+str(ndays), loc='left')
+axes[3][0].set_title('g) SE n='+str(ndays), loc='left')
 
 data = eaus_o.mean(axis=0) - clim
 t, sig = stats.ttest_ind(eaus_o, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[2][0])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],linewidth=0.03,fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
+m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = eaus_o.shape[0]
-axes[2][0].set_title('g) n='+str(ndays), loc='left')
+axes[2][0].set_title('e) E n='+str(ndays), loc='left')
 
 data = neaus_o.mean(axis=0) - clim
 t, sig = stats.ttest_ind(neaus_o, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[1][0])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],linewidth=0.03,fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
+m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = neaus_o.shape[0]
-axes[1][0].set_title('g) n='+str(ndays), loc='left')
+axes[1][0].set_title('c) NE n='+str(ndays), loc='left')
 
 data = naus_o.mean(axis=0) - clim
 t, sig = stats.ttest_ind(naus_o, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[0][0])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],linewidth=0.03,fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
+m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = naus_o.shape[0]
-axes[0][0].set_title('g) n='+str(ndays), loc='left')
+axes[0][0].set_title('a) N n='+str(ndays), loc='left')
 
 
 # La Nina
@@ -198,43 +193,43 @@ data = seaus_a.mean(axis=0) - clim
 t, sig = stats.ttest_ind(seaus_a,lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[3][1])
-m.drawmeridians([90,110,130,150,170],labels=[1,0,0,1],linewidth=0.03,fontsize=8)
-m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
+m.drawmeridians([90,110,130,150,170],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = seaus_a.shape[0]
-axes[3][1].set_title('g) n='+str(ndays), loc='left')
+axes[3][1].set_title('h) SE n='+str(ndays), loc='left')
 
 data = eaus_a.mean(axis=0) - clim
 t, sig = stats.ttest_ind(eaus_a,lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[2][1])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
+m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
+m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = eaus_a.shape[0]
-axes[2][1].set_title('g) n='+str(ndays), loc='left')
+axes[2][1].set_title('f) E n='+str(ndays), loc='left')
 
 data = neaus_a.mean(axis=0) - clim
 t, sig = stats.ttest_ind(neaus_a, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[1][1])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
+m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
+m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = neaus_a.shape[0]
-axes[1][1].set_title('g) n='+str(ndays), loc='left')
+axes[1][1].set_title('d) NE n='+str(ndays), loc='left')
 
 data = naus_a.mean(axis=0) - clim
 t, sig = stats.ttest_ind(naus_a, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 contours, m = plot_Q(data,axes[0][1])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],linewidth=0.03,fontsize=8)
+m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
+m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = naus_a.shape[0]
-axes[0][1].set_title('g) n='+str(ndays), loc='left')
+axes[0][1].set_title('b) N n='+str(ndays), loc='left')
 
 
 cax = f.add_axes([0.1,0.07,0.8,0.02])
 cbar = plt.colorbar(contours,cax=cax,orientation='horizontal',ticks=np.arange(-50,51,10))
 cbar.set_label('$Wm^{-2}$')
 f.suptitle('El Nino            La Nina', fontsize=20)
-plt.savefig('shtfl_hwdays_composites.eps',format='eps')
+plt.savefig('lhtfl1970_hwdays_composites.eps',format='eps')
 #plt.show()
 print 'done'
