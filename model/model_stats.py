@@ -521,8 +521,8 @@ def subplot_aus(data, lons, lats, signif, ax):
     map_axes = Basemap(ax=ax, projection='cyl',
         llcrnrlat=-44, urcrnrlat=-10,
         llcrnrlon=112, urcrnrlon=156,resolution='l')
-    map_axes.drawmeridians([120,130,140,150],labels=[True,False,False,True],linewidth=0.03,fontsize=9)
-    map_axes.drawparallels([-10,-20,-30,-40],labels=[True,False,False,True],linewidth=0.03,fontsize=9)
+    map_axes.drawmeridians([120,130,140,150],labels=[1,0,0,1],dashes=[5,700],fontsize=9)
+    map_axes.drawparallels([-10,-20,-30,-40],labels=[1,0,0,1],dashes=[5,700],fontsize=9)
     xx, yy = np.meshgrid(lons, lats)
     x, y = map_axes(xx,yy)
     xx = xx - 0.5 # The data projection is slightly off compared to the coastlines.

@@ -193,8 +193,8 @@ for j,ens in enumerate(nino_few+nino_many):
 #    sh_ens = sh_ens[:,(lons<155)&(lons>110)]
 #    sh_nina[j,...] = sh_ens
 mp = Basemap(ax=axes[0],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
-#mp.drawmeridians([120,130,140,150],labels=[1,0,0,1],linewidth=0.03,fontsize=9)
-#mp.drawparallels([-10,-20,-30,-40],lables=[1,0,0,1],linewidth=0.03,fontsize=9)
+mp.drawmeridians([120,130,140,150],labels=[1,0,0,1],dashes=[5,700],fontsize=9)
+mp.drawparallels([-10,-20,-30,-40],lables=[1,0,0,1],dashes=[5,700],fontsize=9)
 xx,yy = mp(x,y)
 dat = sh_nino[:11].mean(axis=0)-sh_nino[11:].mean(axis=0)
 dat[mask==0] = 0
@@ -210,10 +210,10 @@ for c in cont.collections:
 #_, p = stats.ttest_ind(sh_nino[:11], sh_nino[11:], axis=0, equal_var=False)
 #mp.contourf(xx,yy,p<0.05,1,colors='none',hatches=[None,'xx'])
 cbar = mp.colorbar(mesh,location='bottom',ticks=levels,pad=0.2)
-cbar.set_label('W/m^2')
+cbar.set_label('Wm$^{-2}$')
 mp.drawcoastlines()
 plt.sca(axes[0])
-plt.title('a)',loc='left')
+plt.title('a) Q$_{H}$',loc='left')
 
 #-------------------------------------
 lh_nino = np.ones((30,len(mlats),len(mlons)))*np.nan
@@ -236,8 +236,7 @@ for j,ens in enumerate(nino_few+nino_many):
 #    lh_ens = lh_ens[:,(lons<155)&(lons>110)]
 #    lh_nina[j,...] = lh_ens
 mp = Basemap(ax=axes[1],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
-#mp.drawmeridians([120,130,140,150],labels=[1,0,0,1],linewidth=0.03,fontsize=9)
-#mp.drawparallels([-10,-20,-30,-40],lables=[1,0,0,1],linewidth=0.03,fontsize=9)
+mp.drawmeridians([120,130,140,150],labels=[1,0,0,1],dashes=[5,700],fontsize=9)
 xx,yy = mp(x,y)
 dat = lh_nino[:11].mean(axis=0)-lh_nino[11:].mean(axis=0)
 dat[mask==0] = 0
@@ -252,10 +251,10 @@ for c in cont.collections:
 #_, p = stats.ttest_ind(lh_nino[:11], lh_nino[11:], axis=0, equal_var=False)
 #mp.contourf(xx,yy,p<0.05,1,colors='none',hatches=[None,'xx'])
 cbar = mp.colorbar(mesh,location='bottom',ticks=levels,pad=0.2)
-cbar.set_label('W/m^2')
+cbar.set_label('Wm$^{-2}$')
 mp.drawcoastlines()
 plt.sca(axes[1])
-plt.title('b)',loc='left')
+plt.title('b) Q$_{E}$',loc='left')
 
 #------------------------------------------------------
 
@@ -279,13 +278,13 @@ for j,ens in enumerate(nino_few+nino_many):
 #    sm_ens = sm_ens[:,(lons<155)&(lons>110)]
 #    sm_nina[j,...] = sm_ens
 mp = Basemap(ax=axes[2],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
-#mp.drawmeridians([120,130,140,150],labels=[1,0,0,1],linewidth=0.03,fontsize=9)
+mp.drawmeridians([120,130,140,150],labels=[1,0,0,1],dashes=[5,700],fontsize=9)
 xx,yy = mp(x,y)
 dat = sm_nino[:11].mean(axis=0)-sm_nino[11:].mean(axis=0)
 dat[mask==0] = 0
 dat = np.ma.array(dat, mask=mask<50)
 mesh = mp.pcolormesh(xx,yy,dat, cmap='BrBG',vmin=-0.5,vmax=0.5)
-levels = np.arange(-0.5,0.6,0.1)
+levels = np.arange(-0.5,0.6,0.2)
 dat = np.ma.array(dat, mask=mask<50)
 cont = mp.contour(xx,yy,dat,levels=levels,colors='k',linewidths=0.5)
 for c in cont.collections:
@@ -296,11 +295,11 @@ for c in cont.collections:
 #_, p = stats.ttest_ind(np.ma.array(sm_nino[:11], mask=mask<50), np.ma.array(sm_nino[11:], mask=mask<50), axis=0, equal_var=False)
 #mp.contourf(xx,yy,p<0.05,1,colors='none',hatches=[None,'xx'])
 cbar = mp.colorbar(mesh,location='bottom',pad=0.2)
-cbar.set_label('kg/m^2')
+cbar.set_label('kgm$^{-2}$')
 cbar.set_ticks(levels)
 mp.drawcoastlines()
 #mp.drawparallels([-10,-20,-30,-40],lables=[1,0,0,1],linewidth=0.03,fontsize=10)
 plt.sca(axes[2])
-plt.title('c)',loc='left')
+plt.title('c) Soil Moisture',loc='left')
 #plt.show()
 plt.savefig('nino_soil.png',dpi=250,format='png')

@@ -147,41 +147,41 @@ Qhdiff = np.ma.array(Qhdiff,mask=lsm<50)
 #mp.colorbar(shade)
 #plt.show()
 
-f, axes = plt.subplots(nrows=2, ncols=3,figsize=(16,8))
+f, axes = plt.subplots(nrows=2, ncols=2,figsize=(8,8))
 ## The Evaporative fraction clim
-mp = Basemap(ax=axes[0,0],projection='mill',
-             llcrnrlon=110.,llcrnrlat=-48.,
-             urcrnrlon=157.,urcrnrlat=-5.)
-lns,lts = np.meshgrid(lons,lats)
-x,y = mp(lns-1,lts-1)
-xc,yc = mp(lns,lts)
-z = np.ma.array(cEF_clim, mask=lsm<50)
-shade = mp.pcolormesh(x,y,z,vmin=0,vmax=1,cmap='terrain_r')
-levels = np.arange(0,1,0.1)
-mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.6)
-mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0.03,fontsize=9)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0.03,fontsize=9)
-mp.colorbar(shade)
-axes[0,0].set_title('a) EF Control Climatology',loc='left')
+#mp = Basemap(ax=axes[0,0],projection='mill',
+#             llcrnrlon=110.,llcrnrlat=-48.,
+#             urcrnrlon=157.,urcrnrlat=-5.)
+#lns,lts = np.meshgrid(lons,lats)
+#x,y = mp(lns-1,lts-1)
+#xc,yc = mp(lns,lts)
+#z = np.ma.array(cEF_clim, mask=lsm<50)
+#shade = mp.pcolormesh(x,y,z,vmin=0,vmax=1,cmap='terrain_r')
+#levels = np.arange(0,1,0.1)
+#mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.6)
+#mp.drawcoastlines()
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],dashes=[5,700],fontsize=9)
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
+#mp.colorbar(shade)
+#axes[0,0].set_title('a) EF Control Climatology',loc='left')
 # Evaporative fraction difference
-mp = Basemap(ax=axes[1,0],projection='mill',
-             llcrnrlon=110.,llcrnrlat=-48.,
-             urcrnrlon=157.,urcrnrlat=-5.)
-lns,lts = np.meshgrid(lons,lats)
-x,y = mp(lns-1,lts-1)
-xc,yc = mp(lns,lts)
+#mp = Basemap(ax=axes[1,0],projection='mill',
+#             llcrnrlon=110.,llcrnrlat=-48.,
+#             urcrnrlon=157.,urcrnrlat=-5.)
+#lns,lts = np.meshgrid(lons,lats)
+#x,y = mp(lns-1,lts-1)
+#xc,yc = mp(lns,lts)
 #mp.contour(x,y,sig,levels=[1],colors='k')
-shade = mp.pcolormesh(x,y,EFdiff,vmin=-.3,vmax=0.3,cmap='BrBG')
-levels = np.arange(-0.3,0.35,0.06)
-mp.contour(xc,yc,EFdiff,colors='k',levels=levels,linewidths=0.6)
-mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0.03,fontsize=9)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0.03,fontsize=9)
-cbar = mp.colorbar(shade)
-axes[1,0].set_title('d) EF El Nino - La Nina',loc='left')
+#shade = mp.pcolormesh(x,y,EFdiff,vmin=-.3,vmax=0.3,cmap='BrBG')
+#levels = np.arange(-0.3,0.35,0.06)
+#mp.contour(xc,yc,EFdiff,colors='k',levels=levels,linewidths=0.6)
+#mp.drawcoastlines()
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],dashes=[5,700],fontsize=9)
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
+#cbar = mp.colorbar(shade)
+#axes[1,0].set_title('d) EF El Nino - La Nina',loc='left')
 # Sensible heat clim
-mp = Basemap(ax=axes[0,1],projection='mill',
+mp = Basemap(ax=axes[0,0],projection='cyl',
              llcrnrlon=110.,llcrnrlat=-48.,
              urcrnrlon=157.,urcrnrlat=-5.)
 lns,lts = np.meshgrid(lons,lats)
@@ -193,13 +193,13 @@ shade = mp.pcolormesh(x,y,z,vmin=0,vmax=135,cmap='YlOrRd')
 levels = np.arange(0,135,15)
 mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.6)
 mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0.03,fontsize=9)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0.03,fontsize=9)
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],dashes=[5,700],fontsize=9)
+mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
-axes[0,1].set_title('b) Qh Control Climatology',loc='left')
+axes[0,0].set_title('a) Qh Control Climatology',loc='left')
 # Sensible heat diff
-mp = Basemap(ax=axes[1,1],projection='mill',
+mp = Basemap(ax=axes[1,0],projection='cyl',
              llcrnrlon=110.,llcrnrlat=-48.,
              urcrnrlon=157.,urcrnrlat=-5.)
 lns,lts = np.meshgrid(lons,lats)
@@ -210,13 +210,13 @@ shade = mp.pcolormesh(x,y,z,vmin=-30,vmax=30,cmap='bwr')
 levels = np.arange(-30,30,5)
 mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.6)
 mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0.03,fontsize=9)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0.03,fontsize=9)
+mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],dashes=[5,700],fontsize=9)
+mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
-axes[1,1].set_title('e) Qh El Nino - La Nina',loc='left')
+axes[1,0].set_title('c) Qh El Nino - La Nina',loc='left')
 # latent heat clim
-mp = Basemap(ax=axes[0,2],projection='mill',
+mp = Basemap(ax=axes[0,1],projection='cyl',
              llcrnrlon=110.,llcrnrlat=-48.,
              urcrnrlon=157.,urcrnrlat=-5.)
 lns,lts = np.meshgrid(lons,lats)
@@ -227,13 +227,13 @@ shade = mp.pcolormesh(x,y,z,vmin=0,vmax=135,cmap='YlGnBu')
 levels = np.arange(0,135,15)
 mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.6)
 mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0.03,fontsize=9)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0.03,fontsize=9)
+#mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],dashes=[5,700],fontsize=9)
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
-axes[0,2].set_title('c) Qe Control Climatology',loc='left')
+axes[0,1].set_title('b) Qe Control Climatology',loc='left')
 # Latent heat diff
-mp = Basemap(ax=axes[1,2],projection='mill',
+mp = Basemap(ax=axes[1,1],projection='cyl',
              llcrnrlon=110.,llcrnrlat=-48.,
              urcrnrlon=157.,urcrnrlat=-5.)
 lns,lts = np.meshgrid(lons,lats)
@@ -246,13 +246,14 @@ mp.contour(xc,yc,z,colors='k',levels=levels,linewidths=0.6)
 #t, sig = stats.ttest_ind(oQe, aQe, axis=0, equal_var=False)
 #mp.contourf(xc,yc,sig<0.05, 1, colors='none', hatches=[None,'xxx'])
 mp.drawcoastlines()
-mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],linewidth=0.03,fontsize=9)
-mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],linewidth=0.03,fontsize=9)
+mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],dashes=[5,700],fontsize=9)
+#mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
-axes[1,2].set_title('f) Qe El Nino - La Nina',loc='left')
+axes[1,1].set_title('d) Qe El Nino - La Nina',loc='left')
+plt.subplots_adjust(hspace=0.01,wspace=0.25)
 #plt.show()
-plt.savefig('EF_alldays.png',format='png',dpi=200)
+plt.savefig('EF_alldays.eps',format='eps')
 print 'figure done'
 sys.exit()
 

@@ -34,8 +34,8 @@ def plot_tracks(ax, lons, lats, levs, lab=[1,0,0,1]):
                 llcrnrlon=40.,llcrnrlat=-70.,
                 urcrnrlon=200.,urcrnrlat=0.,
                 resolution='l')
-    mp.drawmeridians([60,90,120,150,180],labels=lab,fontsize=8,linewidth=0.03)
-    mp.drawparallels([-10,-30,-50,-70],labels=lab,fontsize=8,linewidth=0.03)
+    mp.drawmeridians([60,90,120,150,180],labels=lab,fontsize=8,linewidth=0.03,dashes=[5,10000])
+    mp.drawparallels([-10,-30,-50,-70],labels=lab,fontsize=8,linewidth=0.03,dashes=[5,10000])
     lons[lons<40] = -9999
     for traj in xrange(lats.shape[0]):
         x,y = mp(lons[traj],lats[traj])

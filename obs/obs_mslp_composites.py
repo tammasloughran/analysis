@@ -45,11 +45,12 @@ mlons = monmslpnc.variables['lon'][:]
 dates = nc.num2date(monmslpnc.variables['time'][:],monmslpnc.variables['time'].units)
 years = np.array([i.year for i in dates])
 #months = np.array(d.month for d in dates])
-mmslp = mmslp[years>=1970,...]
+startyear = 1970
+mmslp = mmslp[years>=startyear,...]
 #clim = mmslp
 elclim = np.ones((0,)+(mmslp.shape[1:]))
 for year in elninoyears:
-    index = ((year-1970)*12)+10
+    index = ((year-startyear)*12)+10
     elclim = np.append(elclim, mmslp[index:index+5,...], axis=0)
 elpclim = np.ones((5,)+elclim.shape[1:])*np.nan
 for i in xrange(5):
@@ -58,7 +59,7 @@ elmslp_clim = elclim.mean(axis=0)
 
 laclim = np.ones((0,)+(mmslp.shape[1:]))
 for year in laninayears:
-    index = ((year-1970)*12)+10
+    index = ((year-startyear)*12)+10
     laclim = np.append(laclim, mmslp[index:index+5,...], axis=0)
 lapclim = np.ones((5,)+laclim.shape[1:])*np.nan
 for i in xrange(5):
@@ -68,7 +69,7 @@ lamslp_clim = laclim.mean(axis=0)
 mslp_clim = mmslp.mean(axis=0)
 
 # Load the ncfile for daily mslp data
-files = [obsdir+'prmsl/prmsl.'+str(yr)+'.nc' for yr in range(1970,2013)]
+files = [obsdir+'prmsl/prmsl.'+str(yr)+'.nc' for yr in range(startyear,2013)]
 ncfile = nc.MFDataset(files)
 dates = nc.num2date(ncfile.variables['time'][:],ncfile.variables['time'].units)
 years = np.array([d.year for d in dates])
@@ -167,8 +168,8 @@ for year in laninayears:
 
 def plot_mslp(data,ax,ndays=0):
     m = Basemap(ax=ax,projection='mill',
-                llcrnrlon=80.,llcrnrlat=-50.,
-                urcrnrlon=180.,urcrnrlat=-5.)
+                llcrnrlon=80.,llcrnrlat=-60.,
+                urcrnrlon=220.,urcrnrlat=-5.)
     lns,lts = np.meshgrid(mlons,mlats)
     x,y = m(lns,lts)
     levels = np.arange(-700,800,100)
@@ -183,32 +184,32 @@ f, axes = plt.subplots(nrows=4, ncols=2,figsize=(6,7.75))
 data = seaus_mslp_o.mean(axis=0)
 t, sig = stats.ttest_ind(seaus_mslp_o+elmslp_clim, elclim, axis=0, equal_var=False)
 _, m = plot_mslp(data,axes[3][0])
-m.drawmeridians([90,110,130,150,170],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
-m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawmeridians([100,140,180,220],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawparallels([0,-20,-40,-60],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
 ndays = seaus_mslp_o.shape[0]
 axes[3][0].set_title('g) SE n='+str(ndays), loc='left')
 
 data = eaus_mslp_o.mean(axis=0)
 t, sig = stats.ttest_ind(eaus_mslp_o+elmslp_clim, elclim, axis=0, equal_var=False)
 _, m = plot_mslp(data,axes[2][0])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
+m.drawparallels([0,-20,-40,-60],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawmeridians([100,140,180,220],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = eaus_mslp_o.shape[0]
 axes[2][0].set_title('e) E n='+str(ndays), loc='left')
 
 data = neaus_mslp_o.mean(axis=0)
 t, sig = stats.ttest_ind(neaus_mslp_o+elmslp_clim, elclim, axis=0, equal_var=False)
 _, m = plot_mslp(data,axes[1][0])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
+m.drawparallels([0,-20,-40,-60],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawmeridians([100,140,180,220],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = neaus_mslp_o.shape[0]
 axes[1][0].set_title('c) NE n='+str(ndays), loc='left')
 
 data = naus_mslp_o.mean(axis=0)
 t, sig = stats.ttest_ind(naus_mslp_o+elmslp_clim, elclim, axis=0, equal_var=False)
 _, m = plot_mslp(data,axes[0][0])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
+m.drawparallels([0,-20,-40,-60],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawmeridians([100,140,180,220],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = naus_mslp_o.shape[0]
 axes[0][0].set_title('a) N n='+str(ndays), loc='left')
 
@@ -217,38 +218,32 @@ axes[0][0].set_title('a) N n='+str(ndays), loc='left')
 data = seaus_mslp_a.mean(axis=0)
 t, sig = stats.ttest_ind(seaus_mslp_a+lamslp_clim, laclim, axis=0, equal_var=False)
 _, m = plot_mslp(data,axes[3][1])
-m.drawmeridians([90,110,130,150,170],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
-m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
+m.drawmeridians([100,140,180,220],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
+m.drawparallels([0,-20,-40,-60],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = seaus_mslp_a.shape[0]
 axes[3][1].set_title('h) SE n='+str(ndays), loc='left')
 
 data = eaus_mslp_a.mean(axis=0)
 t, sig = stats.ttest_ind(eaus_mslp_a+lamslp_clim, laclim, axis=0, equal_var=False)
 _, m = plot_mslp(data,axes[2][1])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = eaus_mslp_a.shape[0]
 axes[2][1].set_title('f) E n='+str(ndays), loc='left')
 
 data = neaus_mslp_a.mean(axis=0)
 t, sig = stats.ttest_ind(neaus_mslp_a+lamslp_clim, laclim, axis=0, equal_var=False)
 _, m = plot_mslp(data,axes[1][1])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = neaus_mslp_a.shape[0]
 axes[1][1].set_title('d) NE n='+str(ndays), loc='left')
 
 data = naus_mslp_a.mean(axis=0)
 t, sig = stats.ttest_ind(naus_mslp_a+lamslp_clim, laclim, axis=0, equal_var=False)
 contours, m = plot_mslp(data,axes[0][1])
-m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
-m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = naus_mslp_a.shape[0]
 axes[0][1].set_title('b) N n='+str(ndays), loc='left')
 
 
 cax = f.add_axes([0.1,0.07,0.8,0.02])
-cbar = plt.colorbar(contours,cax=cax,orientation='horizontal',ticks=np.arange(-600,601,200))
+cbar = plt.colorbar(contours,cax=cax,orientation='horizontal',ticks=np.arange(-600,601,200),extend='both')
 cbar.set_label('$Pa$')
 f.suptitle('El Nino            La Nina', fontsize=20)
 plt.savefig('mslp1970_hwdays_composites.eps',format='eps')

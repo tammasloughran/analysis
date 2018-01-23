@@ -102,9 +102,7 @@ def plot_pr(data,p,ax,ndays=0):
     cont = m.contourf(x,y,data,cmap='bwr',levels=range(-700,800,100),extend='both')
     m.contourf(x,y,p<0.03,1,colors='none',hatches=[None,'xx'])
     m.drawcoastlines()
-    #m.drawparallels(lats,labels=[1,0,0,1])
-    #m.drawmeridians(lons,labels=[1,0,0,1])
-    return cont
+    return cont,m
     
 # define region of interest
 def region_mask(lon,lat,size=7.5):
@@ -122,7 +120,7 @@ neaus = region_mask(139.,-18.)
 naus = region_mask(129.,-12)
 eaus = region_mask(145.5,-24)
 
-f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,7.75),sharex=True,sharey=True)
+f, axes = plt.subplots(nrows=4, ncols=2,figsize=(5.5,8))
 
 # create index using the region of interest
 event.mask = np.logical_not(seaus)
@@ -130,7 +128,9 @@ event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
-plot_pr(pr[index,...].mean(axis=0),p,axes[3][0])
+_,m = plot_pr(pr[index,...].mean(axis=0),p,axes[3][0])
+m.drawparallels([0,-20,-40,-60],labels=[1,0,0,1],fontsize=7,dashes=[5,700])
+m.drawmeridians([60,100,140,180,220],labels=[1,0,0,1],fontsize=7,dashes=[5,700])
 ndays=index.sum()
 axes[3][0].set_title('g) n='+str(ndays), loc='left')
 
@@ -139,7 +139,8 @@ event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
-plot_pr(pr[index,...].mean(axis=0),p,axes[2][0])
+_,m = plot_pr(pr[index,...].mean(axis=0),p,axes[2][0])
+m.drawparallels([0,-20,-40,-60],labels=[1,0,0,0],fontsize=7,dashes=[5,700])
 ndays=index.sum()
 axes[2][0].set_title('e) n='+str(ndays), loc='left')
 
@@ -148,7 +149,8 @@ event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
-plot_pr(pr[index,...].mean(axis=0),p,axes[1][0])
+_,m = plot_pr(pr[index,...].mean(axis=0),p,axes[1][0])
+m.drawparallels([0,-20,-40,-60],labels=[1,0,0,0],fontsize=7,dashes=[5,700])
 ndays=index.sum()
 axes[1][0].set_title('c) n='+str(ndays), loc='left')
 
@@ -157,7 +159,8 @@ event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
-plot_pr(pr[index,...].mean(axis=0),p,axes[0][0])
+_,m = plot_pr(pr[index,...].mean(axis=0),p,axes[0][0])
+m.drawparallels([0,-20,-40,-60],labels=[1,0,0,0],fontsize=7,dashes=[5,700])
 ndays=index.sum()
 axes[0][0].set_title('a) n='+str(ndays), loc='left')
 
@@ -217,7 +220,8 @@ event.mask = np.logical_not(seaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
-plot_pr(pr[index,...].mean(axis=0),p,axes[3][1])
+_,m = plot_pr(pr[index,...].mean(axis=0),p,axes[3][1])
+m.drawmeridians([60,100,140,180,220],labels=[0,0,0,1],dashes=[5,700],fontsize=7)
 ndays=index.sum()
 axes[3][1].set_title('h) n='+str(ndays), loc='left')
     
@@ -225,7 +229,7 @@ event.mask = np.logical_not(eaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
-plot_pr(pr[index,...].mean(axis=0),p,axes[2][1])
+_,m = plot_pr(pr[index,...].mean(axis=0),p,axes[2][1])
 ndays=index.sum()
 axes[2][1].set_title('f) n='+str(ndays), loc='left')
 
@@ -233,7 +237,7 @@ event.mask = np.logical_not(neaus)
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
-plot_pr(pr[index,...].mean(axis=0),p,axes[1][1])
+_,m = plot_pr(pr[index,...].mean(axis=0),p,axes[1][1])
 ndays=index.sum()
 axes[1][1].set_title('d) n='+str(ndays), loc='left')
 
@@ -242,7 +246,7 @@ event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
 index = index>9
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
-cont = plot_pr(pr[index,...].mean(axis=0),p,axes[0][1])
+cont,m = plot_pr(pr[index,...].mean(axis=0),p,axes[0][1])
 ndays=index.sum()
 axes[0][1].set_title('b) n='+str(ndays), loc='left')
 
@@ -250,5 +254,5 @@ cax = f.add_axes([0.1,0.07,0.8,0.02])
 plt.colorbar(cont,cax=cax,orientation='horizontal')
 cax.set_xlabel('Pa')
 f.suptitle('El Nino            La Nina', fontsize=20)
-plt.show()
-#plt.savefig('mslp_composites.eps',format='eps')
+#plt.show()
+plt.savefig('mslp_composites.eps',format='eps')
