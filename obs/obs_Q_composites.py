@@ -124,6 +124,7 @@ for year in laninayears:
     neaus = select_region(139.,-18.)
     naus = select_region(129.,-12)
     eaus = select_region(145.5,-24)
+    print(np.where(naus>0))
     # Add to array
     seaus_a = np.append(seaus_a, htfl[seaus,...],axis=0)
     neaus_a = np.append(neaus_a, htfl[neaus,...],axis=0)

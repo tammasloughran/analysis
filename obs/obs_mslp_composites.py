@@ -30,10 +30,10 @@ lsm = lsmnc.variables['lsm'][:]
 lsmnc.close()
 
 # Define El Nino and La Nina years. year is year containing December
-#elninoyears = [1911,1913,1914,1918,1925,1930,1941,1951,1957,1965,1969,1972,1976,1982,1987,1997,2006]
-#laninayears = [1909,1915,1920,1933,1942,1949,1950,1955,1970,1973,1975,1984,1988,1998,1999,2007,2010]
-elninoyears = [1972,1976,1982,1987,1997,2006]
-laninayears = [1970,1973,1975,1984,1988,1998,1999,2007,2010]
+elninoyears = [1911,1913,1914,1918,1925,1930,1941,1951,1957,1965,1969,1972,1976,1982,1987,1997,2006]
+laninayears = [1909,1915,1920,1933,1942,1949,1950,1955,1970,1973,1975,1984,1988,1998,1999,2007,2010]
+#elninoyears = [1972,1976,1982,1987,1997,2006]
+#laninayears = [1970,1973,1975,1984,1988,1998,1999,2007,2010]
 
 
 # Load the MSLP data
@@ -45,7 +45,7 @@ mlons = monmslpnc.variables['lon'][:]
 dates = nc.num2date(monmslpnc.variables['time'][:],monmslpnc.variables['time'].units)
 years = np.array([i.year for i in dates])
 #months = np.array(d.month for d in dates])
-startyear = 1970
+startyear = 1901
 mmslp = mmslp[years>=startyear,...]
 #clim = mmslp
 elclim = np.ones((0,)+(mmslp.shape[1:]))
@@ -173,7 +173,7 @@ def plot_mslp(data,ax,ndays=0):
     lns,lts = np.meshgrid(mlons,mlats)
     x,y = m(lns,lts)
     levels = np.arange(-700,800,100)
-    cont = m.contourf(x,y,data,cmap='seismic', levels=levels)
+    cont = m.contourf(x,y,data,cmap='bwr', levels=levels, extend='both')
     m.contourf(x,y,sig<0.05, 1, colors='none', hatches=[None,'xxx'],linewidth=1)
     m.drawcoastlines()
     return cont, m
@@ -243,9 +243,9 @@ axes[0][1].set_title('b) N n='+str(ndays), loc='left')
 
 
 cax = f.add_axes([0.1,0.07,0.8,0.02])
-cbar = plt.colorbar(contours,cax=cax,orientation='horizontal',ticks=np.arange(-600,601,200),extend='both')
+cbar = plt.colorbar(contours,cax=cax,orientation='horizontal',ticks=np.arange(-600,601,200))
 cbar.set_label('$Pa$')
 f.suptitle('El Nino            La Nina', fontsize=20)
-plt.savefig('mslp1970_hwdays_composites.eps',format='eps')
+plt.savefig('mslp_hwdays_composites.eps',format='eps')
 #plt.show()
 print 'done'
