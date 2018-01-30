@@ -213,7 +213,7 @@ for x,data in zip(ninapos,ninadata):
     if data==[]: continue
     plt.scatter(np.ones(len(data))*x, data, color='b', marker='+', linewidth=0.5)
 
-plt.scatter(2,neaushwf_ctrl.mean(), color='k', marker='o')
+plt.scatter(5,neaushwf_ctrl.mean(), color='k', marker='o')
 
 plt.ylabel('No. heatwave days')
 plt.xticks([1.5,4.5,7.5,10.5])

@@ -169,7 +169,7 @@ for year in laninayears:
 def plot_mslp(data,ax,ndays=0):
     m = Basemap(ax=ax,projection='mill',
                 llcrnrlon=80.,llcrnrlat=-60.,
-                urcrnrlon=220.,urcrnrlat=-5.)
+                urcrnrlon=220.,urcrnrlat=15.)
     lns,lts = np.meshgrid(mlons,mlats)
     x,y = m(lns,lts)
     levels = np.arange(-700,800,100)

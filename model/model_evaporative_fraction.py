@@ -197,7 +197,7 @@ mp.drawcoastlines()
 mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
-axes[0,0].set_title('a) Qh Control Climatology',loc='left')
+axes[0,0].set_title('a) Q$_{H}$ Control Climatology',loc='left')
 # Sensible heat diff
 mp = Basemap(ax=axes[1,0],projection='cyl',
              llcrnrlon=110.,llcrnrlat=-48.,
@@ -214,7 +214,7 @@ mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],dashes=[5,700],fontsize=
 mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
-axes[1,0].set_title('c) Qh El Nino - La Nina',loc='left')
+axes[1,0].set_title('c) Q$_{H}$ El Nino - La Nina',loc='left')
 # latent heat clim
 mp = Basemap(ax=axes[0,1],projection='cyl',
              llcrnrlon=110.,llcrnrlat=-48.,
@@ -231,7 +231,7 @@ mp.drawcoastlines()
 #mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
-axes[0,1].set_title('b) Qe Control Climatology',loc='left')
+axes[0,1].set_title('b) Q$_{E}$ Control Climatology',loc='left')
 # Latent heat diff
 mp = Basemap(ax=axes[1,1],projection='cyl',
              llcrnrlon=110.,llcrnrlat=-48.,
@@ -250,7 +250,7 @@ mp.drawmeridians(np.arange(110,151,10),labels=[0,0,0,1],dashes=[5,700],fontsize=
 #mp.drawparallels(np.arange(-40,-5,10),labels=[1,0,0,0],dashes=[5,700],fontsize=9)
 cbar = mp.colorbar(shade)
 cbar.set_label('$Wm^{-2}$')
-axes[1,1].set_title('d) Qe El Nino - La Nina',loc='left')
+axes[1,1].set_title('d) Q$_{E}$ El Nino - La Nina',loc='left')
 plt.subplots_adjust(hspace=0.01,wspace=0.25)
 #plt.show()
 plt.savefig('EF_alldays.eps',format='eps')
