@@ -171,7 +171,7 @@ mask = mask[:,(lons<155)&(lons>110)]
 mask = mask[(lats<-7)&(lats>-47),:]
 
 # Figure for sensible, latent heat flux and surface soil moisture.
-fig, axes = plt.subplots(nrows=1,ncols=3, figsize=(11,5))
+fig, axes = plt.subplots(nrows=1,ncols=4, figsize=(11,5))
 
 sh_nino = np.ones((30,len(mlats),len(mlons)))*np.nan
 ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/elnino/'
@@ -301,5 +301,43 @@ mp.drawcoastlines()
 #mp.drawparallels([-10,-20,-30,-40],lables=[1,0,0,1],linewidth=0.03,fontsize=10)
 plt.sca(axes[2])
 plt.title('c) Soil Moisture',loc='left')
-#plt.show()
-plt.savefig('nino_soil.png',dpi=250,format='png')
+
+rn_nino = np.ones((30,len(mlats),len(mlons)))*np.nan
+ensdir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/elnino/'
+for j,ens in enumerate(nino_few+nino_many):
+    ncfile = nc.MFDataset(ensdir+ens+'/'+ens+'a.pa2*')
+    rn_ens = np.squeeze(ncfile.variables['precip'][:,0,...])
+    rn_ens = rn_ens[11:13,...].mean(axis=0)
+    rn_ens = rn_ens[(lats<-7)&(lats>-47),:]
+    rn_ens = rn_ens[:,(lons<155)&(lons>110)]
+    rn_nino[j,...] = rn_ens*86400
+
+mp = Basemap(ax=axes[3],projection='cyl',llcrnrlon=110, llcrnrlat=-47, urcrnrlon=155, urcrnrlat=-7)
+mp.drawmeridians([120,130,140,150],labels=[1,0,0,1],dashes=[5,700],fontsize=9)
+xx,yy = mp(x,y)
+dat = rn_nino[:11].mean(axis=0)-rn_nino[11:].mean(axis=0)
+dat[mask==0] = 0
+dat = np.ma.array(dat, mask=mask<50)
+mesh = mp.pcolormesh(xx,yy,dat, cmap='BrBG',vmin=-1.5,vmax=1.5)
+levels = np.arange(-1.5,1.6,.5)
+dat = np.ma.array(dat, mask=mask<50)
+cont = mp.contour(xx,yy,dat,levels=levels,colors='k',linewidths=0.5)
+for c in cont.collections:
+    if c.get_linestyle() == [(None, None)]:
+       continue
+    else:
+        c.set_dashes([(0, (2.0, 2.0))])
+#_, p = stats.ttest_ind(np.ma.array(sm_nino[:11], mask=mask<50), np.ma.array(sm_nino[11:], mask=mask<50), axis=0, equal_var=False)
+#mp.contourf(xx,yy,p<0.05,1,colors='none',hatches=[None,'xx'])
+cbar = mp.colorbar(mesh,location='bottom',pad=0.2)
+cbar.set_label('mm/s')
+cbar.set_ticks(levels)
+mp.drawcoastlines()
+#mp.drawparallels([-10,-20,-30,-40],lables=[1,0,0,1],linewidth=0.03,fontsize=10)
+plt.sca(axes[3])
+plt.title('d) Precipitation',loc='left')
+
+
+
+plt.show()
+#plt.savefig('nino_soil.png',dpi=250,format='png')
