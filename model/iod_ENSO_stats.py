@@ -244,8 +244,54 @@ def plotmaps(data,signif,name,filename,colours='viridis'):
     #plt.clabel(cont, fmt=fmt, fontsize=10)
     cb = map_axes.colorbar(shade, location='bottom', pad=0.25, ticks=cints)
     cb.ax.set_xlabel(units)
-    map_axes.drawparallels(parallels, labels=[True,False,False,False])
-    map_axes.drawmeridians(meridians, labels=[False,False,False,True])
+    map_axes.drawcoastlines()
+    plt.title(name)
+    plt.tight_layout()
+    plt.savefig(filename, format='png', dpi=200)
+    plt.close()
+
+def plotvar(data,name,filename,colours='viridis'):
+    fmt = '%1.0f'
+    if name=='hwf':
+        units = 'Days'
+        cints = np.arange(0,20,2)
+    elif name=='hwd':
+        units = 'Days'
+        cints = np.arange(0,10,1)
+    elif name=='hwn':
+        units = 'Heatwaves'
+        cints = np.arange(0,10,1)
+        fmt = '%1.1f'
+    elif name=='hwa':
+        units = '$^{\circ}C^{2}$'
+        cints = np.arange(0,25,2)
+    elif name=='hwm':
+        units = '$^{\circ}C^{2}$'
+        cints = np.arange(0,10,1)
+    elif name=='hwt':
+        units = 'Days'
+        cints = np.arange(0,25,5)
+    else: 
+        units = 'stuff'
+    plt.figure()
+    parallels = np.arange(-40., -9., 10.)
+    meridians = np.arange(120., 160., 10.,)
+    map_axes = Basemap(projection='cyl',
+        llcrnrlat=-44, urcrnrlat=-10,
+        llcrnrlon=112, urcrnrlon=156,resolution='l')
+    map_axes.drawparallels(parallels, labels=[True,False,False,False],dashes=[5,700])
+    map_axes.drawmeridians(meridians, labels=[False,False,False,True],dashes=[5,700])
+    xx, yy = np.meshgrid(lons, lats)
+    x, y = map_axes(xx,yy)
+    xx = xx - 0.5 # The data projection is slightly off compared to the coastlines.
+    yy = yy - 0.5
+    px, py = map_axes(xx,yy)
+    data = np.ma.array(data,mask=np.isnan(data))
+    #shade = map_axes.pcolormesh(px,py,data,cmap=colours,vmin=cints[0],vmax=cints[-1])
+    #map_axes.contourf(x,y,signif, 1, colors='none', hatches=[None,'x'])
+    cont = map_axes.contourf(x,y,data,levels=cints,cmap=colours)
+    cb = map_axes.colorbar(cont, location='bottom', pad=0.25, ticks=cints)
+    cb.ax.set_xlabel(units)
     map_axes.drawcoastlines()
     plt.title(name)
     plt.tight_layout()
@@ -380,38 +426,45 @@ def mannwhitneyu_3d(ad,bd):
 
 threshold = 0.05
 # Nino diff
-for aspect in control:
+for aspect in ['hwa']:
     print aspect
-    # Differene of means for elnino
-    # pacnino
-    ts, pv = stats.ttest_ind(pacnino[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
-    sig = pv<threshold
-    pacnino_diff = np.ma.mean(pacnino[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
-    plotmaps(pacnino_diff, sig, aspect, 'mean_'+aspect+'_pacnino_diff.png', 'RdBu_r')
-    # pacnina
-    ts, pv = stats.ttest_ind(pacnina[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
-    sig = pv<threshold
-    pacnina_diff = np.ma.mean(pacnina[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
-    plotmaps(pacnina_diff, sig, aspect, 'mean_'+aspect+'_pacnina_diff.png', 'RdBu_r')
+    # Difference of means for elnino
+    ## pacnino
+    #ts, pv = stats.ttest_ind(pacnino[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
+    #sig = pv<threshold
+    #pacnino_diff = np.ma.mean(pacnino[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
+    #plotmaps(pacnino_diff, sig, aspect, 'mean_'+aspect+'_pacnino_diff.png', 'RdBu_r')
+    ## pacnina
+    #ts, pv = stats.ttest_ind(pacnina[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
+    #sig = pv<threshold
+    #pacnina_diff = np.ma.mean(pacnina[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
+    #plotmaps(pacnina_diff, sig, aspect, 'mean_'+aspect+'_pacnina_diff.png', 'RdBu_r')
     # indpiod
-    ts, pv = stats.ttest_ind(indpiod[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
-    sig = pv<threshold
-    indpiod_diff = np.ma.mean(indpiod[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
-    plotmaps(indpiod_diff, sig, aspect, 'mean_'+aspect+'_indpiod_diff.png', 'RdBu_r')
+    #ts, pv = stats.ttest_ind(indpiod[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
+    #sig = pv<threshold
+    #indpiod_diff = np.ma.mean(indpiod[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
+    #plotmaps(indpiod_diff, sig, aspect, 'mean_'+aspect+'_indpiod_diff.png', 'RdBu_r')
     # indniod
-    ts, pv = stats.ttest_ind(indniod[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
-    sig = pv<threshold
-    indniod_diff = np.ma.mean(indniod[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
-    plotmaps(indniod_diff, sig, aspect, 'mean_'+aspect+'_indniod_diff.png', 'RdBu_r')
+    #ts, pv = stats.ttest_ind(indniod[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
+    #sig = pv<threshold
+    #indniod_diff = np.ma.mean(indniod[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
+    #plotmaps(indniod_diff, sig, aspect, 'mean_'+aspect+'_indniod_diff.png', 'RdBu_r')
     # indpac
-    ts, pv = stats.ttest_ind(indpac[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
-    sig = pv<threshold
-    indpac_diff = np.ma.mean(indpac[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
-    plotmaps(indpac_diff, sig, aspect, 'mean_'+aspect+'_indpac_diff.png', 'RdBu_r')
+    #ts, pv = stats.ttest_ind(indpac[aspect],control[aspect],axis=0,equal_var=False, nan_policy='omit')
+    #sig = pv<threshold
+    #indpac_diff = np.ma.mean(indpac[aspect], axis=0)-np.ma.mean(control[aspect], axis=0)
+    #plotmaps(indpac_diff, sig, aspect, 'mean_'+aspect+'_indpac_diff.png', 'RdBu_r')
     
-    sig[...] = 0
-    plotmaps(pacnino_diff+indpiod_diff,sig,aspect,'ninoppiod_'+aspect+'.png','RdBu_r')
-
+    #sig[...] = 0
+    #plotmaps(pacnino_diff+indpiod_diff,sig,aspect,'ninoppiod_'+aspect+'.png','RdBu_r')
+    
+    # Plot the variance
+    plotvar(control[aspect].std(axis=0), aspect, 'var_control_'+aspect+'.png', 'YlOrRd')
+    plotvar(pacnino[aspect].std(axis=0), aspect, 'var_pacnino_'+aspect+'.png', 'YlOrRd')
+    plotvar(pacnina[aspect].std(axis=0), aspect, 'var_pacnina_'+aspect+'.png', 'YlOrRd')
+    plotvar(indpiod[aspect].std(axis=0), aspect, 'var_indpiod_'+aspect+'.png', 'YlOrRd')
+    plotvar(indniod[aspect].std(axis=0), aspect, 'var_indniod_'+aspect+'.png', 'YlOrRd')
+    plotvar(indpac[aspect].std(axis=0), aspect, 'var_indpac_'+aspect+'.png', 'YlOrRd')
 
 #    # Difference of medians nino
 #    # pacnino

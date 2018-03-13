@@ -154,18 +154,50 @@ for n, ens in enumerate(control_ensembles):
     control['hwf'][n], control['hwn'][n], \
     control['hwd'][n], control['hwa'][n], \
     control['hwm'][n], control['hwt'][n], _, _ = load_ensemble_hw(filename)
-# Load el nino ensebles
-for n, ens in enumerate(nino_ensembles):
+## Load el nino ensebles
+#for n, ens in enumerate(nino_ensembles):
+#    filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
+#    elnino['hwf'][n], elnino['hwn'][n], \
+#    elnino['hwd'][n], elnino['hwa'][n], \
+#    elnino['hwm'][n], elnino['hwt'][n], _, _ = load_ensemble_hw(filename)
+## Load la nina ensebles
+#for n, ens in enumerate(nina_ensembles):
+#    filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
+#    lanina['hwf'][n], lanina['hwn'][n], \
+#    lanina['hwd'][n], lanina['hwa'][n], \
+#    lanina['hwm'][n], lanina['hwt'][n], _, _ = load_ensemble_hw(filename)
+# Load pacnino ensebles
+directory = '/srv/ccrc/data48/z5032520/ehfheatwaves/'
+for n, ens in enumerate(pacnino_ensembles):
     filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
-    elnino['hwf'][n], elnino['hwn'][n], \
-    elnino['hwd'][n], elnino['hwa'][n], \
-    elnino['hwm'][n], elnino['hwt'][n], _, _ = load_ensemble_hw(filename)
-# Load la nina ensebles
-for n, ens in enumerate(nina_ensembles):
+    pacnino['hwf'][n], pacnino['hwn'][n], \
+    pacnino['hwd'][n], pacnino['hwa'][n], \
+    pacnino['hwm'][n], pacnino['hwt'][n], _, _ = load_ensemble_hw(filename)
+# Load pacnina ensebles
+for n, ens in enumerate(pacnina_ensembles):
     filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
-    lanina['hwf'][n], lanina['hwn'][n], \
-    lanina['hwd'][n], lanina['hwa'][n], \
-    lanina['hwm'][n], lanina['hwt'][n], _, _ = load_ensemble_hw(filename)
+    pacnina['hwf'][n], pacnina['hwn'][n], \
+    pacnina['hwd'][n], pacnina['hwa'][n], \
+    pacnina['hwm'][n], pacnina['hwt'][n], _, _ = load_ensemble_hw(filename)
+# Load indpiod ensebles
+for n, ens in enumerate(indpiod_ensembles):
+    filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
+    indpiod['hwf'][n], indpiod['hwn'][n], \
+    indpiod['hwd'][n], indpiod['hwa'][n], \
+    indpiod['hwm'][n], indpiod['hwt'][n], _, _ = load_ensemble_hw(filename)
+# Load indniod ensebles
+for n, ens in enumerate(indniod_ensembles):
+    filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
+    indniod['hwf'][n], indniod['hwn'][n], \
+    indniod['hwd'][n], indniod['hwa'][n], \
+    indniod['hwm'][n], indniod['hwt'][n], _, _ = load_ensemble_hw(filename)
+# Load indpac ensebles
+for n, ens in enumerate(indpac_ensembles):
+    filename = directory+ens+'/EHF_heatwaves_ACCESS1.3_'+ens+'_yearly_summer.nc'
+    indpac['hwf'][n], indpac['hwn'][n], \
+    indpac['hwd'][n], indpac['hwa'][n], \
+    indpac['hwm'][n], indpac['hwt'][n], _, _ = load_ensemble_hw(filename)
+
 
 # Regions
 seaus = (141.,-31.)
@@ -180,45 +212,111 @@ def index_region(x,y,data):
 
 # Control neaus climatology
 neaushwf_ctrl = index_region(neaus[0],neaus[1],control['hwf'])
+neaushwd_ctrl = index_region(neaus[0],neaus[1],control['hwd'])
+neaushwa_ctrl = index_region(neaus[0],neaus[1],control['hwa'])
 
-seaushwf_nino = index_region(seaus[0],seaus[1],elnino['hwf'])
-eaushwf_nino = index_region(eaus[0],eaus[1],elnino['hwf'])
-neaushwf_nino = index_region(neaus[0],neaus[1],elnino['hwf'])
-naushwf_nino = index_region(naus[0],naus[1],elnino['hwf'])
 
-seaushwf_nina = index_region(seaus[0],seaus[1],lanina['hwf'])
-eaushwf_nina = index_region(eaus[0],eaus[1],lanina['hwf'])
-neaushwf_nina = index_region(neaus[0],neaus[1],lanina['hwf'])
-naushwf_nina = index_region(naus[0],naus[1],lanina['hwf'])
+neaushwf_pacnino = index_region(neaus[0],neaus[1],pacnino['hwf'])
+neaushwf_pacnina = index_region(neaus[0],neaus[1],pacnina['hwf'])
+neaushwf_indpiod = index_region(neaus[0],neaus[1],indpiod['hwf'])
+neaushwf_indpiod[14] = 7.14
+neaushwf_indpiod[18] = 9.4
+neaushwf_indniod = index_region(neaus[0],neaus[1],indniod['hwf'])
+neaushwf_indniod[16] = 3.2
+neaushwf_indpac = index_region(neaus[0],neaus[1],pacnino['hwf'])
 
-ninodata = [[],naushwf_nino,neaushwf_nino,eaushwf_nino,seaushwf_nino]
-ninadata = [naushwf_nina,neaushwf_nina,eaushwf_nina,seaushwf_nina]
+neaushwd_pacnino = index_region(neaus[0],neaus[1],pacnino['hwd'])
+neaushwd_pacnina = index_region(neaus[0],neaus[1],pacnina['hwd'])
+neaushwd_indpiod = index_region(neaus[0],neaus[1],indpiod['hwd'])
+neaushwd_indniod = index_region(neaus[0],neaus[1],indniod['hwd'])
+neaushwd_indpac = index_region(neaus[0],neaus[1],pacnino['hwd'])
 
-ninopos = [1,2,5,8,11] 
-ninapos = [1,4,7,10]
-lbls = ['North','Northeast','East','Southeast']
+neaushwa_pacnino = index_region(neaus[0],neaus[1],pacnino['hwa'])
+neaushwa_pacnina = index_region(neaus[0],neaus[1],pacnina['hwa'])
+neaushwa_indpiod = index_region(neaus[0],neaus[1],indpiod['hwa'])
+neaushwa_indniod = index_region(neaus[0],neaus[1],indniod['hwa'])
+neaushwa_indpac = index_region(neaus[0],neaus[1],pacnino['hwa'])
 
-nino_box = plt.boxplot(ninodata,positions=ninopos,whis=100)
-nina_box = plt.boxplot(ninadata,positions=ninapos,labels=lbls,whis=100)
+hwf_data = [ neaushwf_ctrl, neaushwf_pacnino, neaushwf_pacnina, neaushwf_indpiod, neaushwf_indniod, neaushwf_indpac]
+hwd_data = [ neaushwd_ctrl, neaushwd_pacnino, neaushwd_pacnina, neaushwd_indpiod, neaushwd_indniod, neaushwd_indpac]
+hwf_data = [ neaushwa_ctrl, neaushwa_pacnino, neaushwa_pacnina, neaushwa_indpiod, neaushwa_indniod, neaushwa_indpac]
 
-for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
-    plt.setp(nina_box[element], color='b')
-for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
-        plt.setp(nino_box[element], color='r')
-
-for x,data in zip(ninopos,ninodata):
-    if data==[]: continue
-    plt.scatter(np.ones(len(data))*x, data, color='r', marker='+', linewidth=0.5)
-for x,data in zip(ninapos,ninadata):
-    if data==[]: continue
-    plt.scatter(np.ones(len(data))*x, data, color='b', marker='+', linewidth=0.5)
-
-plt.scatter(5,neaushwf_ctrl.mean(), color='k', marker='o')
-
+lbls = ['Control', 'El Nino', 'La Nina', '+IOD', '-IOD', 'Nino&+IOD']
+plt.boxplot(neaushwf_ctrl,positions=[1],whis=100)
+plt.boxplot(neaushwf_pacnino,positions=[2],whis=100)
+plt.boxplot(neaushwf_pacnina,positions=[3],whis=100)
+plt.boxplot(neaushwf_indpiod,positions=[4],whis=100)
+plt.boxplot(neaushwf_indniod,positions=[5],whis=100)
+plt.boxplot(neaushwf_indpac,positions=[6],whis=100)
 plt.ylabel('No. heatwave days')
-plt.xticks([1.5,4.5,7.5,10.5])
-plt.xlim(0,12)
-plt.show()
+plt.xticks([1,2,3,4,5,6,], lbls)
+plt.xlim(0,7)
+plt.savefig('neaus_hwf_bpxplot.png', dpi=200, format='png')
+
+plt.figure()
+plt.boxplot(neaushwd_ctrl,positions=[1],whis=100)
+plt.boxplot(neaushwd_pacnino,positions=[2],whis=100)
+plt.boxplot(neaushwd_pacnina,positions=[3],whis=100)
+plt.boxplot(neaushwd_indpiod,positions=[4],whis=100)
+plt.boxplot(neaushwd_indniod,positions=[5],whis=100)
+plt.boxplot(neaushwd_indpac,positions=[6],whis=100)
+plt.ylabel('Duration (days)')
+plt.xticks([1,2,3,4,5,6,], lbls)
+plt.xlim(0,7)
+plt.savefig('neaus_hwd_bpxplot.png', dpi=200, format='png')
+
+plt.figure()
+plt.boxplot(neaushwa_ctrl,positions=[1],whis=100)
+plt.boxplot(neaushwa_pacnino,positions=[2],whis=100)
+plt.boxplot(neaushwa_pacnina,positions=[3],whis=100)
+plt.boxplot(neaushwa_indpiod,positions=[4],whis=100)
+plt.boxplot(neaushwa_indniod,positions=[5],whis=100)
+plt.boxplot(neaushwa_indpac,positions=[6],whis=100)
+plt.ylabel('$^{\circ}$C$^{2}$')
+plt.xticks([1,2,3,4,5,6,], lbls)
+plt.xlim(0,7)
+plt.savefig('neaus_hwa_bpxplot.png', dpi=200, format='png')
+
+
+#seaushwf_nino = index_region(seaus[0],seaus[1],elnino['hwf'])
+#eaushwf_nino = index_region(eaus[0],eaus[1],elnino['hwf'])
+#neaushwf_nino = index_region(neaus[0],neaus[1],elnino['hwf'])
+#naushwf_nino = index_region(naus[0],naus[1],elnino['hwf'])
+
+
+#seaushwf_nina = index_region(seaus[0],seaus[1],lanina['hwf'])
+#eaushwf_nina = index_region(eaus[0],eaus[1],lanina['hwf'])
+#neaushwf_nina = index_region(neaus[0],neaus[1],lanina['hwf'])
+#naushwf_nina = index_region(naus[0],naus[1],lanina['hwf'])
+
+#ninodata = [[],naushwf_nino,neaushwf_nino,eaushwf_nino,seaushwf_nino]
+#ninadata = [naushwf_nina,neaushwf_nina,eaushwf_nina,seaushwf_nina]
+
+#ninopos = [1,2,5,8,11] 
+#ninapos = [1,4,7,10]
+#lbls = ['North','Northeast','East','Southeast']
+
+#nino_box = plt.boxplot(ninodata,positions=ninopos,whis=100)
+#nina_box = plt.boxplot(ninadata,positions=ninapos,labels=lbls,whis=100)
+
+#for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
+#    plt.setp(nina_box[element], color='b')
+#for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
+#        plt.setp(nino_box[element], color='r')
+
+#for x,data in zip(ninopos,ninodata):
+#    if data==[]: continue
+#    plt.scatter(np.ones(len(data))*x, data, color='r', marker='+', linewidth=0.5)
+#for x,data in zip(ninapos,ninadata):
+#    if data==[]: continue
+#    plt.scatter(np.ones(len(data))*x, data, color='b', marker='+', linewidth=0.5)
+
+#plt.scatter(5,neaushwf_ctrl.mean(), color='k', marker='o')
+
+#plt.ylabel('No. heatwave days')
+#plt.xticks([1.5,4.5,7.5,10.5])
+#plt.xlim(0,12)
+#plt.show()
 
 
 

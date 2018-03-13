@@ -273,48 +273,48 @@ os.chdir(cwd)
 size = 7.5
 rnames = ['North','Northeast','Central-East','Southeast','Southwest']
 regions = [(129.,-12),(139.,-18),(145.5,-24),(141,-31),(115,-27)]
-for i,ur_box in enumerate(regions):
-    ibox = make_ibox(ur_box,size, lons, lats)
-    num = ibox.sum()
-    #plot_theta(theta[ibox,2::6], 
-    #           ntraj=num, 
-    #           outname=rnames[i]+'_theta_'+phase+'.eps')
-    #plot_levs(levs[ibox,2::6]/100., 
-    #          ntraj=num, 
-    #          outname=rnames[i]+'levs'+phase+'.eps')
-    prob = create_density(ibox, lons, lats)
-    dens_levs = np.arange(0,11,1)
-    for hour in [1,24,48,72]:
-        dens_levs = np.arange(0,prob[hour,...].max(),1)
-        plot_density(prob[hour,...], 
-                     ntraj=num, 
-                     outname=rnames[i]+'_elnino_'+str(hour)+'.eps', 
-                     dots=False)#, dot_lons=lons[:,hour], dot_lats=lats[:,hour])
-    track = create_track_density(ibox)
-    dens_levs = np.arange(0,track.max()+10,10)
-    plot_density_wide(track, 
-                 ntraj=num, 
-                 outname='track_'+rnames[i]+'_elnino.eps', 
-                 dots=False)
+#for i,ur_box in enumerate(regions):
+#    ibox = make_ibox(ur_box,size, lons, lats)
+#    num = ibox.sum()
+#    #plot_theta(theta[ibox,2::6], 
+#    #           ntraj=num, 
+#    #           outname=rnames[i]+'_theta_'+phase+'.eps')
+#    #plot_levs(levs[ibox,2::6]/100., 
+#    #          ntraj=num, 
+#    #          outname=rnames[i]+'levs'+phase+'.eps')
+#    prob = create_density(ibox, lons, lats)
+#    dens_levs = np.arange(0,11,1)
+#    for hour in [1,24,48,72]:
+#        dens_levs = np.arange(0,prob[hour,...].max(),1)
+#        plot_density(prob[hour,...], 
+#                     ntraj=num, 
+#                     outname=rnames[i]+'_elnino_'+str(hour)+'.eps', 
+#                     dots=False)#, dot_lons=lons[:,hour], dot_lats=lats[:,hour])
+#    track = create_track_density(ibox)
+#    dens_levs = np.arange(0,track.max()+10,10)
+#    plot_density_wide(track, 
+#                 ntraj=num, 
+#                 outname='track_'+rnames[i]+'_elnino.eps', 
+#                 dots=False)
 
 
-for i,ur_box in enumerate(regions):
-    ibox = make_ibox(ur_box, size, alons, alats)
-    num = ibox.sum()
-    prob = create_density(ibox, alons, alats)
-    dens_levs = np.arange(0,11,1)
-    for hour in [1,24,48,72]:
-        dens_levs = np.arange(0,prob[hour,...].max(),1)
-        plot_density(prob[hour,...], 
-                     ntraj=num, 
-                     outname=rnames[i]+'_lanina_'+str(hour)+'.eps', 
-                     dots=False)#, dot_lons=lons[:,hour], dot_lats=lats[:,hour])
-    track = create_track_density(ibox)
-    dens_levs = np.arange(0,track.max()+10,10)
-    plot_density_wide(track, 
-                 ntraj=num, 
-                 outname='track_'+rnames[i]+'_lanina.eps', 
-                 dots=False)
+#for i,ur_box in enumerate(regions):
+#    ibox = make_ibox(ur_box, size, alons, alats)
+#    num = ibox.sum()
+#    prob = create_density(ibox, alons, alats)
+#    dens_levs = np.arange(0,11,1)
+#    for hour in [1,24,48,72]:
+#        dens_levs = np.arange(0,prob[hour,...].max(),1)
+#        plot_density(prob[hour,...], 
+#                     ntraj=num, 
+#                     outname=rnames[i]+'_lanina_'+str(hour)+'.eps', 
+#                     dots=False)#, dot_lons=lons[:,hour], dot_lats=lats[:,hour])
+#    track = create_track_density(ibox)
+#    dens_levs = np.arange(0,track.max()+10,10)
+#    plot_density_wide(track, 
+#                 ntraj=num, 
+#                 outname='track_'+rnames[i]+'_lanina.eps', 
+#                 dots=False)
 
 
 for i,ur_box in enumerate(regions):
@@ -339,20 +339,21 @@ for i,ur_box in enumerate(regions):
     h2, = plt.plot(np.arange(0,40,1), amedian,color='b', label='La Nina n='+str(anum))
     plt.fill_between(np.arange(0,40,1), ninouci/100., ninolci/100., facecolor='coral',linewidth=0.0,alpha=1)
     plt.fill_between(np.arange(0,40,1), ninauci/100., ninalci/100., facecolor='cyan',linewidth=0.0,alpha=0.3)
-    plt.scatter(np.arange(0,40,1), dots*median)
-    plt.legend(handles=[h1, h2])
-    axes.set_xticks(np.arange(4,41,4))
-    axes.set_xticklabels(np.arange(1,11,1))
+#    plt.scatter(np.arange(0,40,1), dots*median)
+    plt.legend(handles=[h1,h2])
+    axes.set_xticks(np.arange(0,41,4))
+    axes.set_xticklabels(np.arange(0,11,1))
+    axes.set_xlim([0,41])
+    axes.invert_xaxis()
     plt.xlabel('Days before heatwave')
     plt.ylabel(r'(hPa)')
-    axes.invert_yaxis()
-    axes.invert_xaxis()
-    axes.set_yscale('log')
+    #axes.set_yscale('log')
     axes.set_yticks(np.array((1000,900,800,600)))
+    #axes.invert_yaxis()
     axes.set_yticklabels(['1000','900','800','600','400','200'])
     axes.set_ylim([1000,600])
-    plt.show()
-    #plt.savefig(rnames[i]+'_levels.png',format='png',dpi=300)
+    #plt.show()
+    plt.savefig(rnames[i]+'_levels.png',format='png',dpi=300)
     plt.close()
 
 for i,ur_box in enumerate(regions):
@@ -377,20 +378,21 @@ for i,ur_box in enumerate(regions):
     h2, = plt.plot(np.arange(0,40,1), amedian,color='b', label='La Nina n='+str(anum))
     plt.fill_between(np.arange(0,40,1), ninouci, ninolci, facecolor='coral',linewidth=0.0,alpha=1)
     plt.fill_between(np.arange(0,40,1), ninauci, ninalci, facecolor='cyan',linewidth=0.0,alpha=0.3)
-    plt.scatter(np.arange(0,40,1), dots*median)
+    #plt.scatter(np.arange(0,40,1), dots*median)
     plt.legend(handles=[h1, h2])
-    axes.set_xticks(np.arange(4,41,4))
-    axes.set_xticklabels(np.arange(1,11,1))
+    axes.set_xticks(np.arange(0,41,4))
+    axes.set_xticklabels(np.arange(0,11,1))
     plt.xlabel('Days before heatwave')
     plt.ylabel(r'$\theta$(K)')
     #axes.invert_yaxis()
+    axes.set_xlim([0,41])
     axes.invert_xaxis()
     #axes.set_yscale('log')
     #axes.set_yticks(np.array((1000,900,800,600)))
     #axes.set_yticklabels(['1000','900','800','600','400','200'])
     axes.set_ylim([290,330])
-    plt.show()
-    #plt.savefig(rnames[i]+'_theta.png',format='png',dpi=300)
+    #plt.show()
+    plt.savefig(rnames[i]+'_theta.png',format='png',dpi=300)
     plt.close()
 
 

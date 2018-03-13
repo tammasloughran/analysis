@@ -27,6 +27,7 @@ indniod_ens = glob.glob('/srv/ccrc/data48/z5032520/modelout/ACCESS/ind_niod/va*'
 indpac_ens = glob.glob('/srv/ccrc/data48/z5032520/modelout/ACCESS/indpac_nino/va*')
 control = []
 for year in xrange(1969,2000):
+    print year
     for month in xrange(1,13):
         control += [data_directory+'vamrb/vamrba.pa'+str(year)+'-'+"%02d"%(month,)+'.nc']
 
@@ -133,6 +134,38 @@ def plot_map(data,sig,lats,lons,units,rng,fname):
     for line in mer.iteritems(): line[1][0].pop(0)
     plt.savefig(fname,format='png',dpi=250)
 
+def plotstd_map(data,lats,lons,units,rng,fname):
+    plt.clf()
+    mp = Basemap(projection='robin', lon_0=180)
+    x,y = np.meshgrid(lons,lats)
+    xx,yy = mp(x,y)
+    colours = 'Greens'
+    levels=np.arange(0,rng+1,50)
+    cont = mp.contourf(xx,yy,data,cmap=colours,levels=levels)
+    cb = mp.colorbar(cont, location='bottom', pad=0.3, ticks=levels)
+    cb.set_label(units)
+    mp.drawcoastlines()
+    pll = mp.drawparallels([-80,-40,-60,-20,0,20,40,60,80],labels=[1, 0, 0, 0],dashes=[5,100000])
+    mer = mp.drawmeridians([0,80,160,240,320],labels=[0, 0, 0, 1],dashes=[5,1000000])
+    plt.savefig(fname,format='png',dpi=250)
+
+def plotstd_map2(data,lats,lons,units,rng,fname):
+    plt.clf()
+    mp = Basemap(projection='robin', lon_0=180)
+    x,y = np.meshgrid(lons,lats)
+    xx,yy = mp(x,y)
+    colours = 'Purples'
+    levels=np.arange(0,rng+1,10)
+    cont = mp.contourf(xx,yy,data,cmap=colours,levels=levels)
+    cb = mp.colorbar(cont, location='bottom', pad=0.3, ticks=levels)
+    cb.set_label(units)
+    mp.drawcoastlines()
+    pll = mp.drawparallels([-80,-40,-60,-20,0,20,40,60,80],labels=[1, 0, 0, 0],dashes=[5,100000])
+    mer = mp.drawmeridians([0,80,160,240,320],labels=[0, 0, 0, 1],dashes=[5,1000000])
+    plt.savefig(fname,format='png',dpi=250)
+
+
+
 def plot_fill(data,sig,lats,lons,units,rng,fname):
     plt.clf()
     mp = Basemap(projection='robin', lon_0=180)
@@ -174,6 +207,30 @@ def plot_aus(data,sig,lats,lons,units,rng,fname):
     mp.drawcoastlines()
     plt.savefig(fname,format='png',dpi=250)
 
+def plotstd_aus(data,lats,lons,units,rng,fname):
+    plt.clf()
+    mp = Basemap(projection='mill',
+             llcrnrlon=110.,llcrnrlat=-48.,
+             urcrnrlon=157.,urcrnrlat=-5.)
+    x,y = np.meshgrid(lons,lats)
+    xx,yy = mp(x,y)
+    if units!='$mm/day$':
+        colours = 'Purples'
+    else: 
+        colours = 'BuGn'
+    levels = np.arange(0,rng+1,1)
+    clrmsh = mp.contourf(xx,yy,data.squeeze(),cmap=colours, levels=levels)
+    cb = mp.colorbar(clrmsh, location='bottom', pad=0.3, ticks=levels)
+    cb.set_label(units)
+    parallels = np.arange(-40., -9., 10.)
+    meridians = np.arange(120., 160., 10.,)
+    mp.drawparallels(parallels, labels=[True,False,False,False],dashes=[5,700])
+    mp.drawmeridians(meridians, labels=[False,False,False,True],dashes=[5,700])
+    mp.drawcoastlines()
+    plt.savefig(fname,format='png',dpi=250)
+
+
+
 def plot_stream(u,v,lats,lons,units,rng,fname):
     plt.clf()
     mp = Basemap(projection='cyl', lon_0=180.)
@@ -189,66 +246,121 @@ def plot_stream(u,v,lats,lons,units,rng,fname):
     cb.set_label(units)
     plt.savefig(fname,format='png',dpi=250)
 
+neaus = (139.,-18.)
+eaus = (145.5,-24)
+naus = (129.,-12)
+
+def index_region(x,y,data):
+    ys = (lats>=y-7.5)&(lats<=y)
+    xs = (lons<=x+7.5)&(lons>=x)
+    return data[:,ys,:][:,:,xs].mean(axis=1).mean(axis=1)
+
 def signif(data1,data2):
     _, p = stats.ttest_ind(data1, data2, axis=0, equal_var=False, nan_policy='propagate')
     return np.squeeze(p<0.05)
 
+neausrain_ctrl = index_region(neaus[0],neaus[1],rain_ctrl)
+
+#plotstd_aus(rain_ctrl.std(axis=0),lats,lons,'$mm/day$', 10,'std_rain_control.png')
+#plotstd_map(mslp_ctrl.std(axis=0), lats,lons,'Pa',650,'std_mslp_control.png')
+plotstd_map2(hgt_ctrl.std(axis=0), lats1,lons,'Pa',120,'std_hgt_control.png')
+
 print "Meaning Pacific El nino"
 mslp, temp, rain, hgt = get_data(pacnino_ens)
-sig = signif(mslp, mslp_ctrl)
-plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_pacnino_ensmean.png')
-sig = signif(temp, temp_ctrl)
-plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_pacnino_ensmean.png')
-sig = signif(rain, rain_ctrl)
-plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_pacnino_ensmean.png')
+#sig = signif(mslp, mslp_ctrl)
+#plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_pacnino_ensmean.png')
+#sig = signif(temp, temp_ctrl)
+#plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_pacnino_ensmean.png')
+#sig = signif(rain, rain_ctrl)
+#plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_pacnino_ensmean.png')
+#plotstd_aus(rain.std(axis=0),lats,lons,'$mm/day$', 10,'std_rain_pacnino.png')
+#plotstd_map(mslp.std(axis=0), lats,lons,'Pa',650,'std_mslp_pacnino.png')
 #plot_stream(u.mean(axis=0),v.mean(axis=0),sig,lats1,lons,'$ms^{-1}$',12,'winds_pacnino_ensmean.png')
-sig = signif(hgt, hgt_ctrl)
-plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_pacnino_ensmean.png')
+plotstd_map2(hgt.std(axis=0),lats1,lons,'Pa',120,'std_hgt_pacnino.png')
+#sig = signif(hgt, hgt_ctrl)
+#plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_pacnino_ensmean.png')
+
+neausrain_pacnino = index_region(neaus[0],neaus[1],rain)
+
 
 print "Meaning Pacific La nina"
 mslp, temp, rain, hgt = get_data(pacnina_ens)
-sig = signif(mslp, mslp_ctrl)
-plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_pacnina_ensmean.png')
-sig = signif(temp, temp_ctrl)
-plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_pacnina_ensmean.png')
-sig = signif(rain, rain_ctrl)
-plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_pacnina_ensmean.png')
+#sig = signif(mslp, mslp_ctrl)
+#plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_pacnina_ensmean.png')
+#sig = signif(temp, temp_ctrl)
+#plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_pacnina_ensmean.png')
+#sig = signif(rain, rain_ctrl)
+#plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_pacnina_ensmean.png')
+#plotstd_aus(rain.std(axis=0),lats,lons,'$mm/day$', 10,'std_rain_pacnina.png')
+#plotstd_map(mslp.std(axis=0), lats,lons,'Pa',650,'std_mslp_pacnina.png')
+plotstd_map2(hgt.std(axis=0),lats1,lons,'Pa',120,'std_hgt_pacnina.png')
 #plot_stream(u.mean(axis=0),v.mean(axis=0),sig,lats1,lons,'$ms^{-1}$',12,'winds_pacnina_ensmean.png')
-sig = signif(hgt, hgt_ctrl)
-plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_pacnina_ensmean.png')
+#sig = signif(hgt, hgt_ctrl)
+#plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_pacnina_ensmean.png')
+
+neausrain_pacnina = index_region(neaus[0],neaus[1],rain)
 
 print "Meaning Indian PIOD"
 mslp, temp, rain, hgt = get_data(indpiod_ens)
-sig = signif(mslp, mslp_ctrl)
-plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_indpiod_ensmean.png')
-sig = signif(temp, temp_ctrl)
-plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_indpiod_ensmean.png')
-sig = signif(rain, rain_ctrl)
-plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_indpiod_ensmean.png')
+#sig = signif(mslp, mslp_ctrl)
+#plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_indpiod_ensmean.png')
+#sig = signif(temp, temp_ctrl)
+#plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_indpiod_ensmean.png')
+#sig = signif(rain, rain_ctrl)
+#plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_indpiod_ensmean.png')
+#plotstd_aus(rain.std(axis=0),lats,lons,'$mm/day$', 10,'std_rain_indpiod.png')
+#plotstd_map(mslp.std(axis=0), lats,lons,'Pa',650,'std_mslp_indpiod.png')
+plotstd_map2(hgt.std(axis=0),lats1,lons,'Pa',120,'std_hgt_indpiod.png')
 #plot_stream(u_piodmean,v_piodmean,sig,lats1,lons,'$ms^{-1}$',12,'winds_indpiod_ensmean.png')
-sig = signif(hgt, hgt_ctrl)
-plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_indpiod_ensmean.png')
+#sig = signif(hgt, hgt_ctrl)
+#plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_indpiod_ensmean.png')
+
+neausrain_indpiod = index_region(neaus[0],neaus[1],rain)
 
 print "Meaning Indian NIOD"
 mslp, temp, rain, hgt = get_data(indniod_ens)
-sig = signif(mslp, mslp_ctrl)
-plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_indniod_ensmean.png')
-sig = signif(temp, temp_ctrl)
-plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_indniod_ensmean.png')
-sig = signif(rain, rain_ctrl)
-plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_indniod_ensmean.png')
+#sig = signif(mslp, mslp_ctrl)
+#plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_indniod_ensmean.png')
+#sig = signif(temp, temp_ctrl)
+#plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_indniod_ensmean.png')
+#sig = signif(rain, rain_ctrl)
+#plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_indniod_ensmean.png')
+#plotstd_aus(rain.std(axis=0),lats,lons,'$mm/day$', 10,'std_rain_indniod.png')
+#plotstd_map(mslp.std(axis=0), lats,lons,'Pa',650,'std_mslp_indniod.png')
+plotstd_map2(hgt.std(axis=0),lats1,lons,'Pa',120,'std_hgt_indniod.png')
 #plot_stream(u.mean(axis=0),v.mean(axis=0),sig,lats1,lons,'$ms^{-1}$',12,'winds_indniod_ensmean.png')
-sig = signif(hgt, hgt_ctrl)
-plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_indniod_ensmean.png')
+#sig = signif(hgt, hgt_ctrl)
+#plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_indniod_ensmean.png')
+
+neausrain_indniod = index_region(neaus[0],neaus[1],rain)
 
 print "Meaning Indpac Nino"
 mslp, temp, rain, hgt = get_data(indpac_ens)
-sig = signif(mslp, mslp_ctrl)
-plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_indpac_ensmean.png')
-sig = signif(temp, temp_ctrl)
-plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_indpac_ensmean.png')
-sig = signif(rain, rain_ctrl)
-plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_indpac_ensmean.png')
+#sig = signif(mslp, mslp_ctrl)
+#plot_fill(mslp.mean(axis=0)-mslp_summer_clim,sig,lats,lons,'Pa',400,'mslp_indpac_ensmean.png')
+#sig = signif(temp, temp_ctrl)
+#plot_map(temp.mean(axis=0)-temp_summer_clim,sig,lats,lons,'${}^{\circ}C$',3,'temp_indpac_ensmean.png')
+#sig = signif(rain, rain_ctrl)
+#plot_aus(rain.mean(axis=0)-rain_summer_clim,sig,lats,lons,'$mm/day$', 5,'rain_indpac_ensmean.png')
+#plotstd_aus(rain.std(axis=0),lats,lons,'$mm/day$', 10,'std_rain_indpac.png')
+#plotstd_map(mslp.std(axis=0), lats,lons,'Pa',650,'std_mslp_indpac.png')
+plotstd_map2(hgt.std(axis=0),lats1,lons,'Pa',120,'std_hgt_indpac.png')
 #plot_stream(u.mean(axis=0),v.mean(axis=0),sig,lats1,lons,'$ms^{-1}$',12,'winds_indpac_ensmean.png')
-sig = signif(hgt, hgt_ctrl)
-plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_indpac_ensmean.png')
+#sig = signif(hgt, hgt_ctrl)
+#plot_fill(hgt.mean(axis=0)-hgt_summer_clim,sig,lats1,lons,'m', 90,'hgt_indpac_ensmean.png')
+
+neausrain_indpac = index_region(neaus[0],neaus[1],rain)
+
+plt.figure()
+lbls = ['Control', 'El Nino', 'La Nina', '+IOD', '-IOD', 'Nino&+IOD']
+plt.boxplot(neausrain_ctrl,positions=[1],whis=100)
+plt.boxplot(neausrain_pacnino,positions=[2],whis=100)
+plt.boxplot(neausrain_pacnina,positions=[3],whis=100)
+plt.boxplot(neausrain_indpiod,positions=[4],whis=100)
+plt.boxplot(neausrain_indniod,positions=[5],whis=100)
+plt.boxplot(neausrain_indpac,positions=[6],whis=100)
+plt.ylabel('mm/day')
+plt.xticks([1,2,3,4,5,6,], lbls)
+plt.xlim(0,7)
+plt.savefig('neaus_rain_bpxplot.png', dpi=200, format='png')
+
