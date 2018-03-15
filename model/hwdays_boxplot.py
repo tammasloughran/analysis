@@ -219,23 +219,20 @@ neaushwa_ctrl = index_region(neaus[0],neaus[1],control['hwa'])
 neaushwf_pacnino = index_region(neaus[0],neaus[1],pacnino['hwf'])
 neaushwf_pacnina = index_region(neaus[0],neaus[1],pacnina['hwf'])
 neaushwf_indpiod = index_region(neaus[0],neaus[1],indpiod['hwf'])
-neaushwf_indpiod[14] = 7.14
-neaushwf_indpiod[18] = 9.4
 neaushwf_indniod = index_region(neaus[0],neaus[1],indniod['hwf'])
-neaushwf_indniod[16] = 3.2
-neaushwf_indpac = index_region(neaus[0],neaus[1],pacnino['hwf'])
+neaushwf_indpac = index_region(neaus[0],neaus[1],indpac['hwf'])
 
 neaushwd_pacnino = index_region(neaus[0],neaus[1],pacnino['hwd'])
 neaushwd_pacnina = index_region(neaus[0],neaus[1],pacnina['hwd'])
 neaushwd_indpiod = index_region(neaus[0],neaus[1],indpiod['hwd'])
 neaushwd_indniod = index_region(neaus[0],neaus[1],indniod['hwd'])
-neaushwd_indpac = index_region(neaus[0],neaus[1],pacnino['hwd'])
+neaushwd_indpac = index_region(neaus[0],neaus[1],indpac['hwd'])
 
 neaushwa_pacnino = index_region(neaus[0],neaus[1],pacnino['hwa'])
 neaushwa_pacnina = index_region(neaus[0],neaus[1],pacnina['hwa'])
 neaushwa_indpiod = index_region(neaus[0],neaus[1],indpiod['hwa'])
 neaushwa_indniod = index_region(neaus[0],neaus[1],indniod['hwa'])
-neaushwa_indpac = index_region(neaus[0],neaus[1],pacnino['hwa'])
+neaushwa_indpac = index_region(neaus[0],neaus[1],indpac['hwa'])
 
 hwf_data = [ neaushwf_ctrl, neaushwf_pacnino, neaushwf_pacnina, neaushwf_indpiod, neaushwf_indniod, neaushwf_indpac]
 hwd_data = [ neaushwd_ctrl, neaushwd_pacnino, neaushwd_pacnina, neaushwd_indpiod, neaushwd_indniod, neaushwd_indpac]
@@ -251,7 +248,7 @@ plt.boxplot(neaushwf_indpac,positions=[6],whis=100)
 plt.ylabel('No. heatwave days')
 plt.xticks([1,2,3,4,5,6,], lbls)
 plt.xlim(0,7)
-plt.savefig('neaus_hwf_bpxplot.png', dpi=200, format='png')
+plt.savefig('neaus_hwf_boxplot.png', dpi=200, format='png')
 
 plt.figure()
 plt.boxplot(neaushwd_ctrl,positions=[1],whis=100)
@@ -263,7 +260,7 @@ plt.boxplot(neaushwd_indpac,positions=[6],whis=100)
 plt.ylabel('Duration (days)')
 plt.xticks([1,2,3,4,5,6,], lbls)
 plt.xlim(0,7)
-plt.savefig('neaus_hwd_bpxplot.png', dpi=200, format='png')
+plt.savefig('neaus_hwd_boxplot.png', dpi=200, format='png')
 
 plt.figure()
 plt.boxplot(neaushwa_ctrl,positions=[1],whis=100)
@@ -275,7 +272,7 @@ plt.boxplot(neaushwa_indpac,positions=[6],whis=100)
 plt.ylabel('$^{\circ}$C$^{2}$')
 plt.xticks([1,2,3,4,5,6,], lbls)
 plt.xlim(0,7)
-plt.savefig('neaus_hwa_bpxplot.png', dpi=200, format='png')
+plt.savefig('neaus_hwa_boxplot.png', dpi=200, format='png')
 
 
 #seaushwf_nino = index_region(seaus[0],seaus[1],elnino['hwf'])
