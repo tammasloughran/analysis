@@ -10,9 +10,13 @@ import netCDF4 as nc
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import scipy.stats as stats
+import pdb
 
+## USER
+vname = 'shtfl'
 
 # Load the heatwave file
+print('Loading data')
 hwfile = '/srv/ccrc/data48/z5032520/20crv2/EHF_heatwaves_20crv2_1901-2012_daily.nc'
 hwnc = nc.Dataset(hwfile,'r')
 hwevents = hwnc.variables['event'][:] 
@@ -30,23 +34,34 @@ lsm = lsmnc.variables['lsm'][:]
 lsmnc.close()
 
 # Define El Nino and La Nina years. year is year containing December
-#elninoyears = [1911,1913,1914,1918,1925,1930,1941,1951,1957,1965,1969,1972,1976,1982,1987,1997,2006]
-#laninayears = [1909,1915,1920,1933,1942,1949,1950,1955,1970,1973,1975,1984,1988,1998,1999,2007,2010]
-elninoyears = [1972,1976,1982,1987,1997,2006]
-laninayears = [1970,1973,1975,1984,1988,1998,1999,2007,2010]
+elninoyears = [1911,1913,1914,1918,1925,1930,1941,1951,1957,1965,1969,1972,1976,1982,1987,1997,2006]
+laninayears = [1909,1915,1920,1933,1942,1949,1950,1955,1970,1973,1975,1984,1988,1998,1999,2007,2010]
+#elninoyears = [1972,1976,1982,1987,1997,2006]
+#laninayears = [1970,1973,1975,1984,1988,1998,1999,2007,2010]
 
 
 # Load the lhtfl data
-lhtfldir = '/srv/ccrc/data48/z5032520/20crv2/lhtfl'
-ncfile = nc.MFDataset(lhtfldir+'/lhtfl.*.nc','r')
+lhtfldir = '/srv/ccrc/data48/z5032520/20crv2/'+vname
+ncfile = nc.MFDataset(lhtfldir+'/'+vname+'.*.nc','r')
 dates = nc.num2date(ncfile.variables['time'][:],ncfile.variables['time'].units)
 years = np.array([i.year for i in dates])
-lhtfl = ncfile.variables['lhtfl'][years>=1970,...]
-dates = dates[years>=1970]
-years = years[years>=1970]
+lhtfl = ncfile.variables[vname][...]
+#lhtfl = ncfile.variables['lhtfl'][years>=1970,...]
+#dates = dates[years>=1970]
+#years = years[years>=1970]
 months = np.array([d.month for d in dates])
 novmar = (months==11)|(months==12)|(months==1)|(months==2)|(months==3)
-clim = lhtfl[novmar,...].mean(axis=0)
+# The climatology should be subtracted from the data for each month.
+clim1 = np.ones((5,)+lhtfl.shape[1:])*np.nan
+for i,m in enumerate([11,12,1,2,3]):
+    clim1[i,...] = lhtfl[months==m,...].mean(axis=0)
+clim = np.ones((151,)+lhtfl.shape[1:])*np.nan
+clim[0:30,...] = clim1[0]
+clim[30:61,...] = clim1[1]
+clim[61:92,...] = clim1[2]
+clim[92:120,...] = clim1[3]
+clim[120:151,...] = clim1[4] # This constructs a climatology to be subtracted from a nov-mar chunck of data.
+#clim = lhtfl[novmar,...].mean(axis=0) # This was the old climatology. I think it's shit.
 lats = ncfile.variables['lat'][:]
 lons = ncfile.variables['lon'][:]
 
@@ -67,11 +82,12 @@ def select_region(lon, lat):
 #(129.,-12),(139.,-18),(145.5,-24),(141,-31),(115,-27)
 
 # Create el nino arrays
-shape = (0,)+(ncfile.variables['lhtfl'].shape[1:])
-seaus_o = np.ones(shape)
+shape = (0,)+(ncfile.variables[vname].shape[1:])
+seaus_o = np.ones(shape)*np.nan
 neaus_o = seaus_o.copy()
 naus_o = seaus_o.copy()
 eaus_o = seaus_o.copy()
+obstso = np.ones((0,))*np.nan
 
 print('Looping el nino')
 #loop over el nino years
@@ -83,7 +99,7 @@ for year in elninoyears:
         htfl = np.delete(htfl,59,axis=0)
     if (year+1)%4==0:
         htfl = np.delete(htfl,424,axis=0)
-    htfl = htfl[nov1:mar31+1,...]
+    htfl = htfl[nov1:mar31+1,...] - clim
     # Select the heatwave data for this year
     hwdata = hwevents[(hwyears==year)|(hwyears==year+1),...]
     hwdata = hwdata[nov1:mar31+1,...]
@@ -97,13 +113,18 @@ for year in elninoyears:
     neaus_o = np.append(neaus_o, htfl[neaus,...],axis=0)
     naus_o = np.append(naus_o, htfl[naus,...],axis=0)
     eaus_o = np.append(eaus_o, htfl[eaus,...],axis=0)
+    if not neaus.any():
+        obstso = np.append(obstso, np.nan)
+    else:
+        obstso = np.append(obstso, htfl[neaus,31,79].mean(axis=0))
 
 # Create la nina arrays
-shape = (0,)+(ncfile.variables['lhtfl'].shape[1:])
-seaus_a = np.ones(shape)
+shape = (0,)+(ncfile.variables[vname].shape[1:])
+seaus_a = np.ones(shape)*np.nan
 neaus_a = seaus_a.copy()
 naus_a = seaus_a.copy()
 eaus_a = seaus_a.copy()
+obstsa = np.ones((0,))
 
 print('Looping la nina')
 # Loop over all la nina years
@@ -115,7 +136,7 @@ for year in laninayears:
         htfl = np.delete(htfl,59,axis=0)
     if (year+1)%4==0:
         htfl = np.delete(htfl,424,axis=0)
-    htfl = htfl[nov1:mar31+1,...]
+    htfl = htfl[nov1:mar31+1,...] - clim
     # Select the heatwave data for this year
     hwdata = hwevents[(hwyears==year)|(hwyears==year+1),...]
     hwdata = hwdata[nov1:mar31+1,...]
@@ -124,15 +145,22 @@ for year in laninayears:
     neaus = select_region(139.,-18.)
     naus = select_region(129.,-12)
     eaus = select_region(145.5,-24)
-    print(np.where(naus>0))
+    #print(np.where(naus>0))
     # Add to array
     seaus_a = np.append(seaus_a, htfl[seaus,...],axis=0)
     neaus_a = np.append(neaus_a, htfl[neaus,...],axis=0)
     naus_a = np.append(naus_a, htfl[naus,...],axis=0)
     eaus_a = np.append(eaus_a, htfl[eaus,...],axis=0)
-
+    if not neaus.any():
+        obstsa = np.append(obstsa, np.nan)
+    else:
+        obstsa = np.append(obstsa, htfl[neaus,31,79].mean(axis=0))
 
 def plot_Q(data,ax,ndays=0):
+    if vname=='lhtfl':
+        colors = 'PuOr'
+    elif vname=='shtfl':
+        colors = 'bwr'
     data = np.ma.array(data, mask=np.logical_not(lsm))
     m = Basemap(ax=ax,projection='mill',
                 llcrnrlon=105.,llcrnrlat=-45.,
@@ -140,7 +168,7 @@ def plot_Q(data,ax,ndays=0):
     lns,lts = np.meshgrid(lons,lats)
     x,y = m(lns,lts)
     levels = np.arange(-50,51,10)
-    cont = m.pcolormesh(x,y,data,cmap='PuOr',vmin=-50,vmax=50)
+    cont = m.pcolormesh(x,y,data,cmap=colors,vmin=-50,vmax=50)
     cnt = m.contour(x,y,data,colors='k',linewidths=0.3,levels=levels)
     for c in cnt.collections:
         if c.get_linestyle() == [(None, None)]: continue
@@ -149,10 +177,14 @@ def plot_Q(data,ax,ndays=0):
     m.drawcoastlines()
     return cont, m
 
+# This converts november to march months to anomalies
+for i,m in enumerate([11,12,1,2,3]):
+    lhtfl[months==m] = lhtfl[months==m] - clim1[i]
+
 f, axes = plt.subplots(nrows=4, ncols=2,figsize=(6,7.75))
 # El nino
-# Express as anomaly ignificance and plot 
-data = seaus_o.mean(axis=0) - clim
+# Express as anomaly significance and plot 
+data = seaus_o.mean(axis=0)# - clim
 t, sig = stats.ttest_ind(seaus_o, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[3][0])
@@ -161,7 +193,7 @@ m.drawparallels([-10,-20,-30,-40,-50],labels=[1,0,0,1],dashes=[5,700],fontsize=8
 ndays = seaus_o.shape[0]
 axes[3][0].set_title('g) SE n='+str(ndays), loc='left')
 
-data = eaus_o.mean(axis=0) - clim
+data = eaus_o.mean(axis=0)# - clim
 t, sig = stats.ttest_ind(eaus_o, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[2][0])
@@ -170,7 +202,7 @@ m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = eaus_o.shape[0]
 axes[2][0].set_title('e) E n='+str(ndays), loc='left')
 
-data = neaus_o.mean(axis=0) - clim
+data = neaus_o.mean(axis=0)# - clim
 t, sig = stats.ttest_ind(neaus_o, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[1][0])
@@ -179,7 +211,7 @@ m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = neaus_o.shape[0]
 axes[1][0].set_title('c) NE n='+str(ndays), loc='left')
 
-data = naus_o.mean(axis=0) - clim
+data = naus_o.mean(axis=0)# - clim
 t, sig = stats.ttest_ind(naus_o, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[0][0])
@@ -190,7 +222,7 @@ axes[0][0].set_title('a) N n='+str(ndays), loc='left')
 
 
 # La Nina
-data = seaus_a.mean(axis=0) - clim
+data = seaus_a.mean(axis=0)# - clim
 t, sig = stats.ttest_ind(seaus_a,lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[3][1])
@@ -199,8 +231,8 @@ m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8
 ndays = seaus_a.shape[0]
 axes[3][1].set_title('h) SE n='+str(ndays), loc='left')
 
-data = eaus_a.mean(axis=0) - clim
-t, sig = stats.ttest_ind(eaus_a,lhtfl[novmar,...], axis=0, equal_var=False)
+data = eaus_a.mean(axis=0)# - clim
+t, sig = stats.ttest_ind(eaus_a, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[2][1])
 m.drawparallels([-10,-20,-30,-40,-50],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
@@ -208,7 +240,7 @@ m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = eaus_a.shape[0]
 axes[2][1].set_title('f) E n='+str(ndays), loc='left')
 
-data = neaus_a.mean(axis=0) - clim
+data = neaus_a.mean(axis=0)# - clim
 t, sig = stats.ttest_ind(neaus_a, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 _, m = plot_Q(data,axes[1][1])
@@ -217,7 +249,7 @@ m.drawmeridians([90,110,130,150,170],labels=[0,0,0,0],dashes=[5,700],fontsize=8)
 ndays = neaus_a.shape[0]
 axes[1][1].set_title('d) NE n='+str(ndays), loc='left')
 
-data = naus_a.mean(axis=0) - clim
+data = naus_a.mean(axis=0)# - clim
 t, sig = stats.ttest_ind(naus_a, lhtfl[novmar,...], axis=0, equal_var=False)
 sig = np.ma.array(sig, mask=np.logical_not(lsm))
 contours, m = plot_Q(data,axes[0][1])
@@ -231,6 +263,16 @@ cax = f.add_axes([0.1,0.07,0.8,0.02])
 cbar = plt.colorbar(contours,cax=cax,orientation='horizontal',ticks=np.arange(-50,51,10))
 cbar.set_label('$Wm^{-2}$')
 f.suptitle('El Nino            La Nina', fontsize=20)
-plt.savefig('lhtfl1970_hwdays_composites.eps',format='eps')
+plt.savefig(vname+'_hwdays_composites.eps',format='eps')
 #plt.show()
+
+#Example gridpoint
+plt.figure()
+plt.scatter(laninayears, obstsa)
+plt.scatter(elninoyears, obstso)
+plt.ylabel('$W/m^{2}$')
+plt.xlabel('year')
+plt.legend(['La Nina','El Nino'])
+plt.savefig('gridpoint_scatter_'+vname+'.eps',format='eps')
+
 print 'done'
