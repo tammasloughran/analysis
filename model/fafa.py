@@ -46,9 +46,10 @@ for ens in control:
         Qe = qnc.variables['lh'][:]
         #Qh = qnc.variables['sh'][:]
         #cEF = np.append(cEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
-        cEF = np.append(cEF, np.squeeze(Qe), axis=0)
+        cEF = np.append(cEF, Qe[:,0,...], axis=0)
         qnc.close()
 cEF_clim = cEF.mean(axis=0)
+
 
 group = 'elnino'
 print group
@@ -65,7 +66,7 @@ for ens in elnino:
         qnc = nc.Dataset(ncfile,'r')
         Qe = qnc.variables['lh'][:]
         #Qh = qnc.variables['sh'][:]
-        oEF = np.append(oEF, np.squeeze(Qe), axis=0)
+        oEF = np.append(oEF, Qe[:,0,...], axis=0)
         #oEF = np.append(oEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
         qnc.close()
 oEF_clim = oEF.mean(axis=0)
@@ -85,7 +86,7 @@ for ens in lanina:
         qnc = nc.Dataset(ncfile,'r')
         Qe = qnc.variables['lh'][:]
         #Qh = qnc.variables['sh'][:]
-        aEF = np.append(aEF, np.squeeze(Qe), axis=0)
+        aEF = np.append(aEF, Qe[:,0,...], axis=0)
         #aEF = np.append(aEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
         qnc.close()
 aEF_clim = aEF.mean(axis=0)
@@ -191,6 +192,8 @@ neaus = region_mask(139.,-18.)
 naus = region_mask(129.,-12)
 eaus = region_mask(145.5,-24)
 
+# E(49,79), NE(55,77), SE(44,77), N(55,74)
+yy,xx = 44,77
 
 def plot_ef(data,ax,ndays=0):
     data = np.ma.array(data, mask=lsm<50)
@@ -228,6 +231,13 @@ m.drawmeridians([110,130,150,170],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
 m.drawparallels([-10,-20,-30,-40],labels=[1,0,0,1],dashes=[5,700],fontsize=8)
 ndays = index.sum()
 axes[3][0].set_title('g) SE n='+str(ndays), loc='left')
+#--------------------------------
+tmpry = oEF.copy() -cEF_clim
+tmpry[index!=True] = np.nan
+modeltso = np.array([np.nanmean(tmpry[i*151:i*151+151,yy,xx]) for i in range(0,30)])
+modeltso = np.random.permutation(modeltso)
+#--------------------------------
+
 
 event.mask = np.logical_not(eaus)
 event.mask[event<0] = 1
@@ -313,10 +323,15 @@ m.drawmeridians([110,130,150,170],labels=[0,0,0,1],dashes=[5,700],fontsize=8)
 m.drawparallels([-10,-20,-30,-40],labels=[0,0,0,1],dashes=[5,700],fontsize=8)
 ndays = index.sum()
 axes[3][1].set_title('h) SE n='+str(ndays), loc='left')
-    
+#-----------------------------
+tmpry = aEF.copy() - cEF_clim
+tmpry[index!=True] = np.nan
+modeltsa = np.array([np.nanmean(tmpry[i*151:i*151+151,yy,xx]) for i in range(0,30)])
+#-----------------------------
+
 event.mask = np.logical_not(eaus)
 index = event.sum(axis=1).sum(axis=1)
-index = index>9
+index = index>10
 abs_data = aEF[index,...]
 data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
@@ -328,7 +343,7 @@ axes[2][1].set_title('f) E n='+str(ndays), loc='left')
 
 event.mask = np.logical_not(neaus)
 index = event.sum(axis=1).sum(axis=1)
-index = index>9
+index = index>10
 abs_data = aEF[index,...]
 data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
@@ -341,7 +356,7 @@ axes[1][1].set_title('d) NE n='+str(ndays), loc='left')
 event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
-index = index>9
+index = index>10
 abs_data = aEF[index,...]
 data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
@@ -359,3 +374,13 @@ plt.subplots_adjust(hspace=0.25,wspace=0.1)
 plt.savefig('LHF_composites.eps',format='eps')
 #plt.show()
 print 'done'
+
+plt.figure()
+plt.axhline(y=np.nanmean(modeltsa),color='b')
+plt.axhline(y=np.nanmean(modeltso),color='r')
+plt.scatter(range(1,31), modeltsa)
+plt.scatter(range(1,31), modeltso)
+plt.ylabel('$W/m^{2}$')
+plt.xlabel('ensemble')
+plt.legend(['La Nina','El Nino'])
+plt.savefig('gridpoint_scatter_model_lhtfl_SE.eps',format='eps')

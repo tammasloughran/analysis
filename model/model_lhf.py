@@ -10,6 +10,8 @@ import netCDF4 as nc
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import scipy.stats as stats
+import pdb
+
 
 # Define the ensemble members
 control = ['vamrc','vaowa','vaowb','vaowc','vaowd','vaowe','vaowg','vaowh',
@@ -50,6 +52,7 @@ for ens in control:
         qnc.close()
 cEF_clim = cEF.mean(axis=0)
 
+
 group = 'elnino'
 print group
 #Load the EF data from the control
@@ -70,6 +73,7 @@ for ens in elnino:
         qnc.close()
 oEF_clim = oEF.mean(axis=0)
 
+
 group = 'lanina'
 print group
 #Load the EF data from the control
@@ -89,6 +93,9 @@ for ens in lanina:
         #aEF = np.append(aEF, np.squeeze(Qe/(Qe+Qh)), axis=0)
         qnc.close()
 aEF_clim = aEF.mean(axis=0)
+
+aEF_yearly = np.array([aEF[i:151*i+151,52,78].mean(axis=0) for i in range(0,30)]) - cEF_clim[52,78]
+oEF_yearly = np.array([oEF[i:151*i+151,52,78].mean(axis=0) for i in range(0,30)]) - cEF_clim[52,78]
 
 hwnc = nc.Dataset(hwdir+'vamrd/EHF_heatwaves_ACCESS1.3_vamrd_daily.nc')
 lats = hwnc.variables['lat'][:]
@@ -215,6 +222,8 @@ def plot_ef(data,ax,ndays=0):
     m.drawparallels([120,130,140,150],linewidth=0.03,labels=[1,0,0,1],fontsize=9)
     m.drawmeridians([-10,-20,-30,-40],linewidth=0.03,labels=[1,0,0,1],fontsize=9)
     return cont
+#import pdb
+#pdb.set_trace()
 
 f, axes = plt.subplots(nrows=4, ncols=2,figsize=(6,7))
 

@@ -11,8 +11,9 @@ import pandas as pd
 import datetime as dt
 import netCDF4 as nc
 import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+from mpl_toolkits.basemap import Basemap, shiftgrid
 import scipy.stats as stats
+
 
 # define the ensembles
 control = ['vamrc','vaowa','vaowb','vaowc','vaowd','vaowe','vaowg','vaowh',
@@ -92,6 +93,24 @@ for ens in elnino:
         pr = np.append(pr, np.squeeze(prnc.variables['p_1'][:]-pclim[i]), axis=0)
         prnc.close()
 
+# Load the wind data
+modeldir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/'
+group = 'elnino'
+u = np.empty((0,144,192))
+v = np.empty((0,144,192))
+for ens in elnino:
+    print ens
+    for i,month in enumerate(['11','12','01','02','03']):
+        if month=='11' or month=='12':
+            year = '2000'
+        else:
+            year = '2001'
+        uvfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
+        uvnc = nc.Dataset(uvfile,'r')
+        u = np.append(u, np.squeeze(uvnc.variables['u'][:]),axis=0)
+        v = np.append(v, np.squeeze(uvnc.variables['v'][:]),axis=0)
+        uvnc.close()
+
 
 def plot_pr(data,p,ax,ndays=0):
     m = Basemap(ax=ax,projection='mill',
@@ -103,6 +122,16 @@ def plot_pr(data,p,ax,ndays=0):
     m.contourf(x,y,p<0.03,1,colors='none',hatches=[None,'xx'])
     m.drawcoastlines()
     return cont,m
+
+def plot_uv(u,v,m):
+    lns,lts = np.meshgrid(lons,lats)
+    x,y = m(lns,lts)
+    ugrid,newlons = shiftgrid(180.,ucomp,lons,start=False)
+    vgrid,newlons = shiftgrid(180.,vcomp,lons,start=False)
+    uproj,vproj,xx,yy = m.transform_vector(ugrid,vgrid,newlons,lats,35,20,returnxy=True)
+    Q = m.quiver(xx,yy,uproj,vproj,scale=100, linewidth=0.3)
+    return Q
+
     
 # define region of interest
 def region_mask(lon,lat,size=7.5):
@@ -129,6 +158,9 @@ index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 _,m = plot_pr(pr[index,...].mean(axis=0),p,axes[3][0])
+ucomp = u[index,...].mean(axis=0)
+vcomp = v[index,...].mean(axis=0)
+quivers = plot_uv(ucomp,vcomp,m)
 m.drawparallels([0,-20,-40,-60],labels=[1,0,0,1],fontsize=7,dashes=[5,700])
 m.drawmeridians([60,100,140,180,220],labels=[1,0,0,1],fontsize=7,dashes=[5,700])
 ndays=index.sum()
@@ -140,6 +172,9 @@ index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 _,m = plot_pr(pr[index,...].mean(axis=0),p,axes[2][0])
+ucomp = u[index,...].mean(axis=0)
+vcomp = v[index,...].mean(axis=0)
+quivers = plot_uv(ucomp,vcomp,m)
 m.drawparallels([0,-20,-40,-60],labels=[1,0,0,0],fontsize=7,dashes=[5,700])
 ndays=index.sum()
 axes[2][0].set_title('e) n='+str(ndays), loc='left')
@@ -150,6 +185,9 @@ index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 _,m = plot_pr(pr[index,...].mean(axis=0),p,axes[1][0])
+ucomp = u[index,...].mean(axis=0)
+vcomp = v[index,...].mean(axis=0)
+quivers = plot_uv(ucomp,vcomp,m)
 m.drawparallels([0,-20,-40,-60],labels=[1,0,0,0],fontsize=7,dashes=[5,700])
 ndays=index.sum()
 axes[1][0].set_title('c) n='+str(ndays), loc='left')
@@ -160,6 +198,9 @@ index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 _,m = plot_pr(pr[index,...].mean(axis=0),p,axes[0][0])
+ucomp = u[index,...].mean(axis=0)
+vcomp = v[index,...].mean(axis=0)
+quivers = plot_uv(ucomp,vcomp,m)
 m.drawparallels([0,-20,-40,-60],labels=[1,0,0,0],fontsize=7,dashes=[5,700])
 ndays=index.sum()
 axes[0][0].set_title('a) n='+str(ndays), loc='left')
@@ -208,6 +249,25 @@ for ens in lanina:
         pr = np.append(pr, np.squeeze(prnc.variables['p_1'][:]-pclim[i]), axis=0)
         prnc.close()
 
+# Load the wind data
+modeldir = '/srv/ccrc/data46/z5032520/modelout/ACCESS/'
+group = 'lanina'
+u = np.empty((0,144,192))
+v = np.empty((0,144,192))
+for ens in lanina:
+    print ens
+    for i,month in enumerate(['11','12','01','02','03']):
+        if month=='11' or month=='12':
+            year = '2000'
+        else:
+            year = '2001'
+        uvfile = modeldir+group+'/'+ens+'/'+ens+'a.pe'+year+'-'+month+'.nc'
+        uvnc = nc.Dataset(uvfile,'r')
+        u = np.append(u, np.squeeze(uvnc.variables['u'][:]),axis=0)
+        v = np.append(v, np.squeeze(uvnc.variables['v'][:]),axis=0)
+        uvnc.close()
+
+
 # define region of interest
 #(129.,-12),(139.,-18),(145.5,-24),(141,-31),(115,-27)
 seaus = region_mask(141.,-31.)
@@ -221,32 +281,44 @@ index = event.sum(axis=1).sum(axis=1)
 index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 _,m = plot_pr(pr[index,...].mean(axis=0),p,axes[3][1])
+ucomp = u[index,...].mean(axis=0)
+vcomp = v[index,...].mean(axis=0)
+quivers = plot_uv(ucomp,vcomp,m)
 m.drawmeridians([60,100,140,180,220],labels=[0,0,0,1],dashes=[5,700],fontsize=7)
 ndays=index.sum()
 axes[3][1].set_title('h) n='+str(ndays), loc='left')
     
 event.mask = np.logical_not(eaus)
 index = event.sum(axis=1).sum(axis=1)
-index = index>9
+index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 _,m = plot_pr(pr[index,...].mean(axis=0),p,axes[2][1])
+ucomp = u[index,...].mean(axis=0)
+vcomp = v[index,...].mean(axis=0)
+quivers = plot_uv(ucomp,vcomp,m)
 ndays=index.sum()
 axes[2][1].set_title('f) n='+str(ndays), loc='left')
 
 event.mask = np.logical_not(neaus)
 index = event.sum(axis=1).sum(axis=1)
-index = index>9
+index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 _,m = plot_pr(pr[index,...].mean(axis=0),p,axes[1][1])
+ucomp = u[index,...].mean(axis=0)
+vcomp = v[index,...].mean(axis=0)
+quivers = plot_uv(ucomp,vcomp,m)
 ndays=index.sum()
 axes[1][1].set_title('d) n='+str(ndays), loc='left')
 
 event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
-index = index>9
+index = index>10
 _, p = stats.ttest_ind(pr[index,...], pr, axis=0, equal_var=False)
 cont,m = plot_pr(pr[index,...].mean(axis=0),p,axes[0][1])
+ucomp = u[index,...].mean(axis=0)
+vcomp = v[index,...].mean(axis=0)
+quivers = plot_uv(ucomp,vcomp,m)
 ndays=index.sum()
 axes[0][1].set_title('b) n='+str(ndays), loc='left')
 
@@ -254,5 +326,5 @@ cax = f.add_axes([0.1,0.07,0.8,0.02])
 plt.colorbar(cont,cax=cax,orientation='horizontal')
 cax.set_xlabel('Pa')
 f.suptitle('El Nino            La Nina', fontsize=20)
-#plt.show()
-plt.savefig('mslp_composites.eps',format='eps')
+plt.show()
+#plt.savefig('mslp_composites.eps',format='eps')

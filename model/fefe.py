@@ -316,7 +316,7 @@ axes[3][1].set_title('h) SE n='+str(ndays), loc='left')
     
 event.mask = np.logical_not(eaus)
 index = event.sum(axis=1).sum(axis=1)
-index = index>9
+index = index>10
 abs_data = aEF[index,...]
 data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
@@ -328,7 +328,7 @@ axes[2][1].set_title('f) E n='+str(ndays), loc='left')
 
 event.mask = np.logical_not(neaus)
 index = event.sum(axis=1).sum(axis=1)
-index = index>9
+index = index>10
 abs_data = aEF[index,...]
 data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0
@@ -341,7 +341,7 @@ axes[1][1].set_title('d) NE n='+str(ndays), loc='left')
 event.mask = np.logical_not(naus)
 event.mask[event<0] = 1
 index = event.sum(axis=1).sum(axis=1)
-index = index>9
+index = index>10
 abs_data = aEF[index,...]
 data = aEF[index,...].mean(axis=0) - cEF_clim
 data[lsm<50] = 0

@@ -13,7 +13,7 @@ import scipy.stats as stats
 import pdb
 
 ## USER
-vname = 'shtfl'
+vname = 'lhtfl'
 
 # Load the heatwave file
 print('Loading data')
@@ -65,9 +65,20 @@ clim[120:151,...] = clim1[4] # This constructs a climatology to be subtracted fr
 lats = ncfile.variables['lat'][:]
 lons = ncfile.variables['lon'][:]
 
+
+
 # Define index of nov 1st and mar 31
 nov1 = 304
 mar31 = 454
+
+# E(61,79), NE(58,78), SE(65,78), N(55,74)
+east = (61,79)
+neast = (58,78)
+seast = (65,78)
+print('east',lats[east[0]],'N',lons[east[1]],'E')
+print('northeast',lats[neast[0]],'N',lons[neast[1]],'E')
+print('southeast',lats[seast[0]],'N',lons[seast[1]],'E')
+yy,xx = 58,78
 
 # Define finction to select region from hwdata
 def select_region(lon, lat):
@@ -113,10 +124,11 @@ for year in elninoyears:
     neaus_o = np.append(neaus_o, htfl[neaus,...],axis=0)
     naus_o = np.append(naus_o, htfl[naus,...],axis=0)
     eaus_o = np.append(eaus_o, htfl[eaus,...],axis=0)
-    if not neaus.any():
+    if not seaus.any():
         obstso = np.append(obstso, np.nan)
     else:
-        obstso = np.append(obstso, htfl[neaus,31,79].mean(axis=0))
+        obstso = np.append(obstso, htfl[seaus,yy,xx].mean(axis=0))
+
 
 # Create la nina arrays
 shape = (0,)+(ncfile.variables[vname].shape[1:])
@@ -151,10 +163,10 @@ for year in laninayears:
     neaus_a = np.append(neaus_a, htfl[neaus,...],axis=0)
     naus_a = np.append(naus_a, htfl[naus,...],axis=0)
     eaus_a = np.append(eaus_a, htfl[eaus,...],axis=0)
-    if not neaus.any():
+    if not seaus.any():
         obstsa = np.append(obstsa, np.nan)
     else:
-        obstsa = np.append(obstsa, htfl[neaus,31,79].mean(axis=0))
+        obstsa = np.append(obstsa, htfl[seaus,yy,xx].mean(axis=0))
 
 def plot_Q(data,ax,ndays=0):
     if vname=='lhtfl':
@@ -268,11 +280,13 @@ plt.savefig(vname+'_hwdays_composites.eps',format='eps')
 
 #Example gridpoint
 plt.figure()
+plt.axhline(np.nanmean(obstsa),color='b')
+plt.axhline(np.nanmean(obstso),color='r')
 plt.scatter(laninayears, obstsa)
 plt.scatter(elninoyears, obstso)
 plt.ylabel('$W/m^{2}$')
 plt.xlabel('year')
 plt.legend(['La Nina','El Nino'])
-plt.savefig('gridpoint_scatter_'+vname+'.eps',format='eps')
+plt.savefig('gridpoint_scatter_'+vname+'_NE.eps',format='eps')
 
 print 'done'

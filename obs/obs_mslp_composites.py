@@ -10,7 +10,7 @@ import netCDF4 as nc
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import scipy.stats as stats
-
+import pdb
 
 # Load the heatwave file
 hwfile = '/srv/ccrc/data48/z5032520/20crv2/EHF_heatwaves_20crv2_1901-2012_daily.nc'
@@ -44,9 +44,15 @@ mlats = monmslpnc.variables['lat'][:]
 mlons = monmslpnc.variables['lon'][:]
 dates = nc.num2date(monmslpnc.variables['time'][:],monmslpnc.variables['time'].units)
 years = np.array([i.year for i in dates])
-#months = np.array(d.month for d in dates])
+months = np.array([d.month for d in dates])
 startyear = 1901
 mmslp = mmslp[years>=startyear,...]
+months = months[years>=startyear]
+years = years[years>=startyear]
+clim1 = np.ones((5,)+mmslp.shape[1:])
+for i,m in enumerate([11,12,1,2,3]):
+    clim1[i,...] = mmslp[months==m,...].mean(axis=0)
+
 #clim = mmslp
 elclim = np.ones((0,)+(mmslp.shape[1:]))
 for year in elninoyears:
@@ -117,7 +123,7 @@ for year in elninoyears:
     if (year+1)%4==0:
         mslpdata = np.delete(mslpdata,424,axis=0)
     mslpdata = mslpdata[nov1:mar31+1,...]
-    mslpdata = anomalise(mslpdata,elpclim)
+    mslpdata = anomalise(mslpdata,clim1)
     # Select the heatwave data for this year
     hwdata = hwevents[(hwyears==year)|(hwyears==year+1),...]
     hwdata = hwdata[nov1:mar31+1,...]
@@ -150,7 +156,7 @@ for year in laninayears:
     if (year+1)%4==0:
         mslpdata = np.delete(mslpdata,424,axis=0)
     mslpdata = mslpdata[nov1:mar31+1,...]
-    mslpdata = anomalise(mslpdata,lapclim)
+    mslpdata = anomalise(mslpdata,clim1)
     # Select the heatwave data for this year
     hwdata = hwevents[(hwyears==year)|(hwyears==year+1),...]
     hwdata = hwdata[nov1:mar31+1,...]
@@ -246,6 +252,6 @@ cax = f.add_axes([0.1,0.07,0.8,0.02])
 cbar = plt.colorbar(contours,cax=cax,orientation='horizontal',ticks=np.arange(-600,601,200))
 cbar.set_label('$Pa$')
 f.suptitle('El Nino            La Nina', fontsize=20)
-plt.savefig('mslp_hwdays_composites.eps',format='eps')
+plt.savefig('mslp_hwdays_composites2.eps',format='eps')
 #plt.show()
 print 'done'

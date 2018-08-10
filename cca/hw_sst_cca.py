@@ -7,8 +7,8 @@ from pyclimate.bpcca import BPCCA
 from scipy.signal import detrend
 
 # Load variables
-sstfile = ('/media/Jupiter/observations/HadISST/pacific_SST.nc')
-hwfile = ('/media/Jupiter/reanalysis/AWAP/yearly/ehfhw/'
+sstfile = ('/srv/ccrc/data35/z5032520/HadISST/pacific_SST.nc')
+hwfile = ('/srv/ccrc/data35/z5032520/AWAP/yearly/ehfhw/'
         'CCRC_NARCliM_1911-2014_EHFheatwaves_summer_AWAP0.5deg_detrended.nc')
 hwf, hwn, hwd, hwa, hwm, hwt, hw_lats, hw_lons, times\
         = load_data.load_heat_waves(hwfile)

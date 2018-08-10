@@ -165,7 +165,6 @@ def plotstd_map2(data,lats,lons,units,rng,fname):
     plt.savefig(fname,format='png',dpi=250)
 
 
-
 def plot_fill(data,sig,lats,lons,units,rng,fname):
     plt.clf()
     mp = Basemap(projection='robin', lon_0=180)
